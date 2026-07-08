@@ -1,0 +1,22 @@
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# Publish output
+publish/
+*.publishsettings
+
+# OS / editor
+Thumbs.db
+Desktop.ini
+*.swp

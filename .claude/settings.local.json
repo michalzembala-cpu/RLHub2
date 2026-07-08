@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"browser-UA → HTTP %{http_code} size:%{size_download}\\\\n\" -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0.0.0 Safari/537.36\" \"https://www.reddit.com/r/RocketLeagueEsports/.rss\")",
+      "Bash(dotnet build *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} size:%{size_download}\\\\n\" \"https://news.google.com/rss/search?q=Rocket%20League&hl=en-US&gl=US&ceid=US:en\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} size:%{size_download}\\\\n\" \"https://news.google.com/rss/search?q=Rocket%20League%20RLCS&hl=en-US&gl=US&ceid=US:en\")",
+      "Bash(curl -s \"https://news.google.com/rss/search?q=Rocket%20League&hl=en-US&gl=US&ceid=US:en\")",
+      "Bash(grep -m1 -oE \"<title>.{0,90}\")",
+      "WebFetch(domain:gist.github.com)",
+      "WebSearch",
+      "Read(//c/Users/micha/OneDrive/Dokumenty/My Games/Rocket League/**)"
+    ]
+  }
+}
