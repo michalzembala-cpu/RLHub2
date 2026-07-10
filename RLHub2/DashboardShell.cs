@@ -18,6 +18,7 @@ namespace RLHub2
 
         private readonly System.Windows.Forms.Timer animTimer;
         private int targetWidth;
+        private bool _animating;
 
         private readonly System.Windows.Forms.Timer _pageAnim;
         private UserControl? _animPage;
@@ -40,11 +41,17 @@ namespace RLHub2
 
             navButtons = new[]
             {
-                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnNews, btnProfile,
+                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnProfile, btnRecords, btnNews,
                 btnTournaments, btnSeasons, btnSettings
             };
 
             ApplyThemeColors();
+
+            // Double-buffer the panels that resize during the sidebar animation — kills flicker.
+            EnableDoubleBuffer(sidebar);
+            EnableDoubleBuffer(navPanel);
+            EnableDoubleBuffer(header);
+            EnableDoubleBuffer(panelContent);
 
             try { Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath); }
             catch { /* ignore */ }
@@ -56,19 +63,20 @@ namespace RLHub2
             btnRoad.Click += (s, e) => NavigateKey("road");
             btnCoach.Click += (s, e) => NavigateKey("coach");
             btnSession.Click += (s, e) => NavigateKey("session");
+            btnRecords.Click += (s, e) => NavigateKey("records");
             btnNews.Click += (s, e) => NavigateKey("news");
             btnProfile.Click += (s, e) => NavigateKey("profile");
             btnTournaments.Click += (s, e) => NavigateKey("tournaments");
             btnSeasons.Click += (s, e) => NavigateKey("seasons");
             btnSettings.Click += (s, e) => NavigateKey("settings");
 
-            animTimer = new System.Windows.Forms.Timer { Interval = 15 };
+            animTimer = new System.Windows.Forms.Timer { Interval = 10 };
             animTimer.Tick += AnimTick;
 
             _pageAnim = new System.Windows.Forms.Timer { Interval = 15 };
             _pageAnim.Tick += PageAnimTick;
 
-            navPanel.SizeChanged += (s, e) => ResizeNav();
+            navPanel.SizeChanged += (s, e) => { if (!_animating) ResizeNav(); };
 
             // Restore sidebar collapsed state (instant, no animation).
             collapsed = config.SidebarCollapsed;
@@ -109,6 +117,16 @@ namespace RLHub2
             };
         }
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED — flicker-free child compositing
+                return cp;
+            }
+        }
+
         private HomePage CreateHome()
         {
             var home = new HomePage();
@@ -124,6 +142,7 @@ namespace RLHub2
                 case "road": Navigate("road", btnRoad, () => new RoadPage()); break;
                 case "coach": Navigate("coach", btnCoach, () => new CoachPage()); break;
                 case "session": Navigate("session", btnSession, () => new SessionPage()); break;
+                case "records": Navigate("records", btnRecords, () => new RecordsPage()); break;
                 case "news": Navigate("news", btnNews, () => new NewsPage()); break;
                 case "profile": Navigate("profile", btnProfile, () => new ProfilePage()); break;
                 case "tournaments": Navigate("tournaments", btnTournaments, () => new TournamentsPage()); break;
@@ -194,6 +213,7 @@ namespace RLHub2
             btnRoad.Text = Localization.T("nav_road");
             btnCoach.Text = Localization.T("nav_coach");
             btnSession.Text = Localization.T("nav_session");
+            btnRecords.Text = Localization.T("nav_records");
             btnNews.Text = Localization.T("nav_news");
             btnProfile.Text = Localization.T("nav_profile");
             btnTournaments.Text = Localization.T("nav_tournaments");
@@ -261,6 +281,13 @@ namespace RLHub2
                 b.Collapsed = collapsed;
             SetSectionHeadersVisible(!collapsed);
 
+            // Set the nav item widths ONCE to their final value (not every frame) and turn
+            // off scrolling during the slide, so nothing reflows/repaints per frame.
+            _animating = true;
+            navPanel.AutoScroll = false;
+            foreach (Control c in navPanel.Controls)
+                c.Width = Math.Max(10, targetWidth - c.Margin.Horizontal);
+
             _store.SaveSidebarCollapsed(collapsed);
             animTimer.Start();
         }
@@ -273,14 +300,24 @@ namespace RLHub2
             {
                 sidebar.Width = targetWidth;
                 animTimer.Stop();
+                _animating = false;
+                navPanel.AutoScroll = true;
+                ResizeNav();
                 return;
             }
 
-            int step = (int)(diff * 0.22f);
+            int step = (int)(diff * 0.30f); // ease-out
             if (step == 0)
-                step = Math.Sign(diff);
+                step = Math.Sign(diff) * 2;
 
             sidebar.Width += step;
+        }
+
+        private static void EnableDoubleBuffer(Control c)
+        {
+            typeof(Control).GetProperty("DoubleBuffered",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(c, true, null);
         }
     }
 }

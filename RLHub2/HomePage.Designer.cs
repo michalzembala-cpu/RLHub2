@@ -16,6 +16,7 @@ namespace RLHub2
         private SparkCard spark;
 
         private TableLayoutPanel newsLayout;
+        private StatTile seasonTile;
         private NewsPreviewCard newsCard;
         private Button btnOpenNews;
 
@@ -28,6 +29,7 @@ namespace RLHub2
             rankHero = new RankHero();
             spark = new SparkCard();
             newsLayout = new TableLayoutPanel();
+            seasonTile = new StatTile();
             newsCard = new NewsPreviewCard();
             btnOpenNews = new Button();
 
@@ -96,10 +98,22 @@ namespace RLHub2
             newsLayout.BackColor = Color.Transparent;
             newsLayout.Margin = new Padding(0);
             newsLayout.ColumnCount = 1;
-            newsLayout.RowCount = 2;
+            newsLayout.RowCount = 3;
             newsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+            newsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 92f));
             newsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
             newsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 54f));
+
+            // ===== SEASON COUNTDOWN TILE =====
+            seasonTile.Dock = DockStyle.Fill;
+            seasonTile.Margin = new Padding(0, 0, 0, 12);
+            seasonTile.Accent = blue;
+            seasonTile.Title = "SEASON 23";
+            seasonTile.Value = "—";
+            seasonTile.Subtitle = "";
+            seasonTile.TitleFontSize = 9.5f;
+            seasonTile.ValueFontSize = 19f;
+            seasonTile.SubtitleFontSize = 9.5f;
 
             newsCard.Dock = DockStyle.Fill;
             newsCard.Margin = new Padding(0);
@@ -115,8 +129,9 @@ namespace RLHub2
             btnOpenNews.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnOpenNews.Cursor = Cursors.Hand;
 
-            newsLayout.Controls.Add(newsCard, 0, 0);
-            newsLayout.Controls.Add(btnOpenNews, 0, 1);
+            newsLayout.Controls.Add(seasonTile, 0, 0);
+            newsLayout.Controls.Add(newsCard, 0, 1);
+            newsLayout.Controls.Add(btnOpenNews, 0, 2);
 
             contentLayout.Controls.Add(leftLayout, 0, 0);
             contentLayout.Controls.Add(newsLayout, 1, 0);

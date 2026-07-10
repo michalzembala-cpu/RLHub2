@@ -8,6 +8,14 @@ namespace RLHub2.Services
     // No public API for changelogs — content is curated. Bilingual (PL/EN).
     public class SeasonService
     {
+        // Current season + its (estimated) end. Season 23 started 2026-06-10; end is based
+        // on the ~91-day free-to-play cycle (2026-09-23, 15:00 UTC) — not officially confirmed.
+        public const string CurrentSeasonName = "Season 23";
+        public static readonly System.DateTime CurrentSeasonStart =
+            new(2026, 6, 10, 16, 0, 0, System.DateTimeKind.Utc);
+        public static readonly System.DateTime CurrentSeasonEnd =
+            new(2026, 9, 23, 15, 0, 0, System.DateTimeKind.Utc);
+
         public List<Season> GetSeasons()
         {
             bool pl = Localization.IsPolish;
@@ -20,46 +28,50 @@ namespace RLHub2.Services
                     Changes = pl
                         ? new()
                         {
+                            "Start sezonu: 10 czerwca 2026",
                             "Sezonowy, miękki reset rang na start",
-                            "Demo Spawn Control — wybór strony bramki do odrodzenia po demolce",
-                            "Ulepszony Custom Training — kontrola ruchu i prędkości auta na starcie strzału (też w powietrzu)",
-                            "Speed Stat Graphs — podgląd prędkości auta i piłki na żywo",
+                            "Demo Spawn Control — po demolce wybierasz miejsce odrodzenia na swojej połowie",
+                            "Custom Training — kontrola prędkości startowej auta i pochylenia (scenariusze powietrzne)",
+                            "Trzy nowe narzędzia w grze — najczęściej proszone przez community",
                         }
                         : new()
                         {
+                            "Season start: June 10, 2026",
                             "Seasonal soft rank reset at start",
-                            "Demo Spawn Control — choose which goal side to respawn from after a demo",
-                            "Custom Training upgrades — set car movement and speed at shot start (incl. mid-air)",
-                            "Speed Stat Graphs — real-time car and ball velocity overlay",
+                            "Demo Spawn Control — after a demo, pick your respawn spot on your side of the field",
+                            "Custom Training — set the car's starting speed and pitch (aerial scenarios)",
+                            "Three new in-game tools — most-requested community features",
                         },
                     NewFeatures = pl
                         ? new()
                         {
-                            "Motyw FIFA World Cup 26™",
+                            "Motyw FIFA World Cup 2026™",
                             "Nowa arena: United Futura",
-                            "Nocny wariant areny Futura Garden",
-                            "Limitowany event FIFA World Cup 2026 (do 20 lipca)",
+                            "Futura Garden — wariant nocny",
+                            "Rocket Pass Premium: Ryza Trophy (Tier 1) i Ryza T60 (Tier 40)",
+                            "Rocket Pass: nowe Boosty, Traile, Anteny i Hymny",
                         }
                         : new()
                         {
-                            "FIFA World Cup 26™ theme",
+                            "FIFA World Cup 2026™ theme",
                             "New arena: United Futura",
-                            "Night variant of the Futura Garden arena",
-                            "FIFA World Cup 2026 limited-time event (until July 20)",
+                            "Futura Garden — Night variant",
+                            "Rocket Pass Premium: Ryza Trophy (Tier 1) and Ryza T60 (Tier 40)",
+                            "Rocket Pass: new Boosts, Trails, Antennas and Anthems",
                         },
                     Rewards = pl
                         ? new()
                         {
-                            "Event: ukończ 10 z 14 wyzwań World Cup → nadwozie Hyundai Ioniq 6",
-                            "Dodatkowo: Goal Explosion, Boost i uniwersalny Decal",
-                            "Sezonowe nagrody za rangę (poziomy nagród Brąz → SSL)",
+                            "Event World Cup: ukończ 10 z 14 wyzwań → nadwozie Hyundai Ioniq 6",
+                            "Nagrody za event — więcej im wyżej Twój kraj w globalnym rankingu (do 20 lipca)",
+                            "Sezonowe nagrody za rangę (Brąz → SSL)",
                             "Tytuł sezonu za szczytową rangę",
                         }
                         : new()
                         {
-                            "Event: complete 10 of 14 World Cup challenges → Hyundai Ioniq 6 body",
-                            "Plus a Goal Explosion, a Boost and a universal Decal",
-                            "Seasonal ranked rewards (reward levels Bronze → SSL)",
+                            "World Cup event: complete 10 of 14 challenges → Hyundai Ioniq 6 body",
+                            "Event rewards — more the higher your country climbs (until July 20)",
+                            "Seasonal ranked rewards (Bronze → SSL)",
                             "Season title for your peak rank",
                         },
                 },

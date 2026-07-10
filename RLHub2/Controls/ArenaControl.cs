@@ -13,24 +13,67 @@ namespace RLHub2.Controls
         // Override in a page to pick which arena shows behind it.
         protected virtual string ArenaFile => "stadion1.jpg";
 
+        // Cached, pre-dimmed arena bitmap. During a resize we draw this stretched (cheap)
+        // and rebuild the crisp version once the size settles — keeps resize animations smooth.
+        private Bitmap? _bgCache;
+        private readonly System.Windows.Forms.Timer _rebuildTimer;
+
         public ArenaControl()
         {
             DoubleBuffered = true;
             SetStyle(ControlStyles.ResizeRedraw, true);
             Theme.ThemeChanged += OnThemeChanged;
+
+            _rebuildTimer = new System.Windows.Forms.Timer { Interval = 60 };
+            _rebuildTimer.Tick += (s, e) =>
+            {
+                _rebuildTimer.Stop();
+                if (_bgCache == null || _bgCache.Width != Width || _bgCache.Height != Height)
+                    RebuildCache();
+            };
         }
 
         private void OnThemeChanged()
         {
             if (IsDisposed) return;
             Transparentify(this);
+            _bgCache?.Dispose();
+            _bgCache = null;
             Invalidate(true);
+        }
+
+        private void RebuildCache()
+        {
+            if (Width < 2 || Height < 2) return;
+            var bmp = new Bitmap(Width, Height);
+            using (var g = Graphics.FromImage(bmp))
+                ArenaBackground.Paint(g, bmp.Width, bmp.Height, ArenaBackground.Load(ArenaFile), Theme.IsDark);
+            var old = _bgCache;
+            _bgCache = bmp;
+            old?.Dispose();
+            Invalidate();
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            ArenaBackground.Paint(e.Graphics, Width, Height,
-                ArenaBackground.Load(ArenaFile), Theme.IsDark);
+            if (Width < 2 || Height < 2) return;
+            var g = e.Graphics;
+
+            if (_bgCache == null) RebuildCache();
+            if (_bgCache == null) return;
+
+            if (_bgCache.Width == Width && _bgCache.Height == Height)
+            {
+                g.DrawImageUnscaled(_bgCache, 0, 0);
+            }
+            else
+            {
+                // in-between frame during a resize: stretch the cached bitmap (cheap),
+                // and debounce a crisp rebuild for when the size stops changing
+                g.DrawImage(_bgCache, new Rectangle(0, 0, Width, Height));
+                _rebuildTimer.Stop();
+                _rebuildTimer.Start();
+            }
         }
 
         protected override void OnLoad(EventArgs e)
@@ -57,7 +100,13 @@ namespace RLHub2.Controls
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) Theme.ThemeChanged -= OnThemeChanged;
+            if (disposing)
+            {
+                Theme.ThemeChanged -= OnThemeChanged;
+                _rebuildTimer?.Stop();
+                _rebuildTimer?.Dispose();
+                _bgCache?.Dispose();
+            }
             base.Dispose(disposing);
         }
     }

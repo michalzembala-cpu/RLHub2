@@ -23,6 +23,7 @@ namespace RLHub2
         {
             InitializeComponent();
             ApplyLanguage();
+            StyleFilters();
 
             btnAll.Click += (s, e) => SetFilter("ALL");
             btnRlcs.Click += (s, e) => SetFilter("RLCS");
@@ -44,6 +45,34 @@ namespace RLHub2
             catch { _all = new List<TournamentEvent>(); }
             finally { btnRefresh.Enabled = true; }
             RenderList();
+        }
+
+        private void StyleFilters()
+        {
+            foreach (var b in new[] { btnAll, btnRlcs, btnMajor, btnRegional })
+            {
+                b.AutoSize = true;
+                b.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+                b.MinimumSize = new Size(0, 38);
+                b.Padding = new Padding(16, 0, 16, 0);
+                b.FlatStyle = FlatStyle.Flat;
+                b.FlatAppearance.BorderSize = 0;
+                b.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                b.Cursor = Cursors.Hand;
+                b.Margin = new Padding(0, 6, 8, 6);
+            }
+
+            btnRefresh.AutoSize = true;
+            btnRefresh.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnRefresh.MinimumSize = new Size(0, 38);
+            btnRefresh.Padding = new Padding(16, 0, 16, 0);
+            btnRefresh.FlatStyle = FlatStyle.Flat;
+            btnRefresh.FlatAppearance.BorderSize = 0;
+            btnRefresh.ForeColor = Color.White;
+            btnRefresh.BackColor = Theme.Accent;
+            btnRefresh.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            btnRefresh.Cursor = Cursors.Hand;
+            btnRefresh.Margin = new Padding(24, 6, 10, 6);
         }
 
         private void ApplyLanguage()

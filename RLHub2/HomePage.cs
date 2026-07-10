@@ -17,6 +17,7 @@ namespace RLHub2
 
         private readonly NewsService _newsService = new();
         private readonly MmrStore _mmr = new();
+        private System.Windows.Forms.Timer? _seasonTimer;
 
         private static readonly (string Name, int Mmr, Color Gem)[] Tiers =
         {
@@ -43,6 +44,29 @@ namespace RLHub2
             btnOpenNews.Resize += (s, e) => ApplyButtonRegion();
 
             Load += HomePage_Load;
+
+            // live season countdown in the header
+            _seasonTimer = new System.Windows.Forms.Timer { Interval = 60000 };
+            _seasonTimer.Tick += (s, e) => UpdateSeasonHeader();
+            _seasonTimer.Start();
+            Disposed += (s, e) => _seasonTimer?.Dispose();
+        }
+
+        private void UpdateSeasonHeader()
+        {
+            if (IsDisposed) return;
+            var left = SeasonService.CurrentSeasonEnd - DateTime.UtcNow;
+            if (left <= TimeSpan.Zero)
+            {
+                seasonTile.Value = Localization.IsPolish ? "Zakończony" : "Ended";
+                seasonTile.Subtitle = "";
+            }
+            else
+            {
+                seasonTile.Value = $"{left.Days}d {left.Hours}h {left.Minutes}m";
+                seasonTile.Subtitle = (Localization.IsPolish ? "kończy się " : "ends ")
+                    + SeasonService.CurrentSeasonEnd.ToLocalTime().ToString("dd.MM.yyyy");
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -74,6 +98,7 @@ namespace RLHub2
 
         private async void HomePage_Load(object? sender, EventArgs e)
         {
+            UpdateSeasonHeader();
             PopulateStats();
             await LoadNews();
         }
@@ -90,7 +115,7 @@ namespace RLHub2
 
             if (list.Count == 0)
             {
-                header.Subtitle = "Season 23  •  " + Localization.T("home_no_data");
+                header.Subtitle = Localization.T("home_no_data");
                 rankHero.Icon = null;
                 rankHero.TierLabel = "—";
                 rankHero.MmrText = "";
@@ -139,7 +164,7 @@ namespace RLHub2
 
             rankHero.FootText = $"Peak {peak}   ·   {wsign}{weekly} this week";
 
-            header.Subtitle = $"Season 23   •   {tier.Name}   •   {wsign}{weekly} MMR";
+            header.Subtitle = $"{tier.Name}   •   {wsign}{weekly} MMR";
 
             spark.SetValues(list.TakeLast(16).Select(x => x.Value));
         }
