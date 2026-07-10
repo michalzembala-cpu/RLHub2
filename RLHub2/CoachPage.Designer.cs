@@ -10,10 +10,12 @@ namespace RLHub2
         private TableLayoutPanel rootLayout;
         private Label lblTitle;
         private TableLayoutPanel tilesLayout;
-        private StatTile cardG;
-        private StatTile cardS;
-        private StatTile cardA;
-        private StatTile cardW;
+        private StatTile tileOverall;
+        private StatTile tileAtk;
+        private StatTile tileDef;
+        private StatTile tileShot;
+        private StatTile tileBoost;
+        private StatTile tilePos;
         private Label lblAdviceHeader;
         private Panel advicePanel;
         private Label lblAdvice;
@@ -23,10 +25,12 @@ namespace RLHub2
             rootLayout = new TableLayoutPanel();
             lblTitle = new Label();
             tilesLayout = new TableLayoutPanel();
-            cardG = new StatTile();
-            cardS = new StatTile();
-            cardA = new StatTile();
-            cardW = new StatTile();
+            tileOverall = new StatTile();
+            tileAtk = new StatTile();
+            tileDef = new StatTile();
+            tileShot = new StatTile();
+            tileBoost = new StatTile();
+            tilePos = new StatTile();
             lblAdviceHeader = new Label();
             advicePanel = new Panel();
             lblAdvice = new Label();
@@ -45,8 +49,8 @@ namespace RLHub2
             rootLayout.RowCount = 4;
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50f));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 120f));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36f));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 112f));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
             lblTitle.Text = "AI COACH";
@@ -57,21 +61,26 @@ namespace RLHub2
             tilesLayout.Dock = DockStyle.Fill;
             tilesLayout.BackColor = pageColor;
             tilesLayout.Margin = new Padding(0, 6, 0, 0);
-            tilesLayout.ColumnCount = 4;
+            tilesLayout.ColumnCount = 6;
             tilesLayout.RowCount = 1;
-            for (int i = 0; i < 4; i++)
-                tilesLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25f));
+            for (int i = 0; i < 6; i++)
+                tilesLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 6));
             tilesLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
-            Tile(cardG, Color.FromArgb(255, 140, 0));
-            Tile(cardS, Color.FromArgb(0, 140, 255));
-            Tile(cardA, Color.FromArgb(150, 90, 255));
-            Tile(cardW, Color.FromArgb(46, 204, 113));
+            Tile(tileOverall, Color.FromArgb(120, 60, 255));
+            Tile(tileAtk, Color.FromArgb(255, 140, 0));
+            Tile(tileDef, Color.FromArgb(0, 140, 255));
+            Tile(tileShot, Color.FromArgb(46, 204, 113));
+            Tile(tileBoost, Color.FromArgb(0, 200, 180));
+            Tile(tilePos, Color.FromArgb(235, 70, 140));
 
-            tilesLayout.Controls.Add(cardG, 0, 0);
-            tilesLayout.Controls.Add(cardS, 1, 0);
-            tilesLayout.Controls.Add(cardA, 2, 0);
-            tilesLayout.Controls.Add(cardW, 3, 0);
+            tileOverall.Title = "OVERALL";
+            tilesLayout.Controls.Add(tileOverall, 0, 0);
+            tilesLayout.Controls.Add(tileAtk, 1, 0);
+            tilesLayout.Controls.Add(tileDef, 2, 0);
+            tilesLayout.Controls.Add(tileShot, 3, 0);
+            tilesLayout.Controls.Add(tileBoost, 4, 0);
+            tilesLayout.Controls.Add(tilePos, 5, 0);
 
             lblAdviceHeader.Text = "ADVICE";
             lblAdviceHeader.Dock = DockStyle.Fill;
@@ -82,11 +91,13 @@ namespace RLHub2
             advicePanel.Dock = DockStyle.Fill;
             advicePanel.BackColor = Theme.Surface;
             advicePanel.Margin = new Padding(0, 4, 0, 0);
-            advicePanel.Padding = new Padding(20);
+            advicePanel.Padding = new Padding(20, 16, 20, 16);
+            advicePanel.AutoScroll = true;
 
-            lblAdvice.Dock = DockStyle.Fill;
+            lblAdvice.Dock = DockStyle.Top;
+            lblAdvice.AutoSize = true;
             lblAdvice.ForeColor = Theme.TextPrimary;
-            lblAdvice.Font = new Font("Segoe UI", 13F);
+            lblAdvice.Font = new Font("Segoe UI", 11.5F);
             advicePanel.Controls.Add(lblAdvice);
 
             rootLayout.Controls.Add(lblTitle, 0, 0);
@@ -103,10 +114,12 @@ namespace RLHub2
         private void Tile(StatTile t, Color accent)
         {
             t.Dock = DockStyle.Fill;
-            t.Margin = new Padding(8);
+            t.Margin = new Padding(0, 0, 10, 0);
             t.Accent = accent;
             t.Value = "—";
-            t.ValueFontSize = 26f;
+            t.TitleFontSize = 9f;
+            t.ValueFontSize = 24f;
+            t.SubtitleFontSize = 8.5f;
         }
     }
 }

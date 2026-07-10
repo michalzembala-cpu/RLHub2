@@ -39,20 +39,23 @@ namespace RLHub2.Services
             catch { }
         }
 
-        // Adds new matches (by Id), keeps newest, returns how many were new.
+        // Upserts matches by Id (a re-fetched match replaces the old one so advanced
+        // stats fill in), keeps newest, returns how many were brand new.
         public int Merge(IEnumerable<BallMatch> incoming)
         {
-            var list = Load();
-            var seen = new HashSet<string>(list.Select(m => m.Id), StringComparer.OrdinalIgnoreCase);
+            var byId = new Dictionary<string, BallMatch>(StringComparer.OrdinalIgnoreCase);
+            foreach (var m in Load())
+                if (!string.IsNullOrEmpty(m.Id)) byId[m.Id] = m;
+
             int added = 0;
             foreach (var m in incoming)
             {
-                if (string.IsNullOrEmpty(m.Id) || seen.Contains(m.Id)) continue;
-                list.Add(m);
-                seen.Add(m.Id);
-                added++;
+                if (string.IsNullOrEmpty(m.Id)) continue;
+                if (!byId.ContainsKey(m.Id)) added++;
+                byId[m.Id] = m;
             }
-            list = list.OrderByDescending(m => m.Date).Take(MaxKept).ToList();
+
+            var list = byId.Values.OrderByDescending(m => m.Date).Take(MaxKept).ToList();
             Save(list);
             return added;
         }

@@ -27,5 +27,22 @@ namespace RLHub2.Models
         public int RankTier { get; set; }             // 0-22
         public int RankDivision { get; set; }         // 0-3
         public int MmrApprox { get; set; }            // approximated from rank
+
+        // ===== advanced stats (from ballchasing boost/positioning) =====
+        public bool HasAdvanced { get; set; }
+        public double ShootingPct { get; set; }
+        public double BoostBpm { get; set; }          // boost used per minute
+        public double BoostAvg { get; set; }          // average amount 0-100
+        public int BoostBigPads { get; set; }
+        public int BoostSmallPads { get; set; }
+        public double BoostStolen { get; set; }
+        public double BoostTimeZero { get; set; }      // seconds at 0 boost
+        public double PosBehindBallPct { get; set; }
+        public double PosDefThirdPct { get; set; }
+        public double PosOffThirdPct { get; set; }
+        public double PosMostBackPct { get; set; }
+        public double AvgDistToBall { get; set; }
+        public int DemosInflicted { get; set; }
+        public int DemosTaken { get; set; }
     }
 }

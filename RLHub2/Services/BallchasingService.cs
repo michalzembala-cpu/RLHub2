@@ -221,14 +221,41 @@ namespace RLHub2.Services
                     if (p.TryGetProperty("id", out var idObj) && idObj.ValueKind == JsonValueKind.Object)
                         pp.Platform = idObj.TryGetProperty("platform", out var pf) ? pf.GetString() ?? "" : "";
 
-                    if (p.TryGetProperty("stats", out var stats) && stats.TryGetProperty("core", out var core))
+                    if (p.TryGetProperty("stats", out var stats))
                     {
-                        pp.Goals = CoreInt(core, "goals");
-                        pp.Saves = CoreInt(core, "saves");
-                        pp.Assists = CoreInt(core, "assists");
-                        pp.Shots = CoreInt(core, "shots");
-                        pp.Score = CoreInt(core, "score");
-                        pp.Mvp = core.TryGetProperty("mvp", out var mv) && mv.ValueKind == JsonValueKind.True;
+                        if (stats.TryGetProperty("core", out var core))
+                        {
+                            pp.Goals = CoreInt(core, "goals");
+                            pp.Saves = CoreInt(core, "saves");
+                            pp.Assists = CoreInt(core, "assists");
+                            pp.Shots = CoreInt(core, "shots");
+                            pp.Score = CoreInt(core, "score");
+                            pp.Mvp = core.TryGetProperty("mvp", out var mv) && mv.ValueKind == JsonValueKind.True;
+                            pp.ShootingPct = CoreDouble(core, "shooting_percentage");
+                        }
+                        if (stats.TryGetProperty("boost", out var boost))
+                        {
+                            pp.HasAdvanced = true;
+                            pp.BoostBpm = CoreDouble(boost, "bpm");
+                            pp.BoostAvg = CoreDouble(boost, "avg_amount");
+                            pp.BoostBigPads = CoreInt(boost, "count_collected_big");
+                            pp.BoostSmallPads = CoreInt(boost, "count_collected_small");
+                            pp.BoostStolen = CoreDouble(boost, "amount_stolen");
+                            pp.BoostTimeZero = CoreDouble(boost, "time_zero_boost");
+                        }
+                        if (stats.TryGetProperty("positioning", out var pos))
+                        {
+                            pp.PosBehindBallPct = CoreDouble(pos, "percent_behind_ball");
+                            pp.PosDefThirdPct = CoreDouble(pos, "percent_defensive_third");
+                            pp.PosOffThirdPct = CoreDouble(pos, "percent_offensive_third");
+                            pp.PosMostBackPct = CoreDouble(pos, "percent_most_back");
+                            pp.AvgDistToBall = CoreDouble(pos, "avg_distance_to_ball");
+                        }
+                        if (stats.TryGetProperty("demo", out var demo))
+                        {
+                            pp.DemosInflicted = CoreInt(demo, "inflicted");
+                            pp.DemosTaken = CoreInt(demo, "taken");
+                        }
                     }
                     if (p.TryGetProperty("rank", out var rank) && rank.ValueKind == JsonValueKind.Object)
                     {
@@ -270,7 +297,23 @@ namespace RLHub2.Services
                 RankName = me.RankName,
                 RankTier = me.RankTier,
                 RankDivision = me.RankDiv,
-                MmrApprox = RankMmr.Approx(me.RankTier, me.RankDiv)
+                MmrApprox = RankMmr.Approx(me.RankTier, me.RankDiv),
+
+                HasAdvanced = me.HasAdvanced,
+                ShootingPct = me.ShootingPct,
+                BoostBpm = me.BoostBpm,
+                BoostAvg = me.BoostAvg,
+                BoostBigPads = me.BoostBigPads,
+                BoostSmallPads = me.BoostSmallPads,
+                BoostStolen = me.BoostStolen,
+                BoostTimeZero = me.BoostTimeZero,
+                PosBehindBallPct = me.PosBehindBallPct,
+                PosDefThirdPct = me.PosDefThirdPct,
+                PosOffThirdPct = me.PosOffThirdPct,
+                PosMostBackPct = me.PosMostBackPct,
+                AvgDistToBall = me.AvgDistToBall,
+                DemosInflicted = me.DemosInflicted,
+                DemosTaken = me.DemosTaken,
             };
         }
 
@@ -282,6 +325,12 @@ namespace RLHub2.Services
             public bool Mvp;
             public string RankName = "";
             public int RankTier, RankDiv;
+
+            public bool HasAdvanced;
+            public double ShootingPct, BoostBpm, BoostAvg, BoostStolen, BoostTimeZero;
+            public int BoostBigPads, BoostSmallPads;
+            public double PosBehindBallPct, PosDefThirdPct, PosOffThirdPct, PosMostBackPct, AvgDistToBall;
+            public int DemosInflicted, DemosTaken;
         }
 
         private sealed class PReplay
@@ -317,6 +366,13 @@ namespace RLHub2.Services
                 if (v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int i)) return i;
                 if (v.ValueKind == JsonValueKind.Number) return (int)v.GetDouble();
             }
+            return 0;
+        }
+
+        private static double CoreDouble(JsonElement obj, string name)
+        {
+            if (obj.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number)
+                return v.GetDouble();
             return 0;
         }
 
