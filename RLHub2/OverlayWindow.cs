@@ -58,15 +58,20 @@ namespace RLHub2
         private static readonly Color Purple = Color.FromArgb(150, 90, 255);
         private static readonly Color Muted = Color.FromArgb(150, 160, 195);
 
+        // The overlay tracks one playlist — showing whichever match happened to be last mixed
+        // 2v2 and 3v3 into the same number, which are different ratings entirely.
+        private const string MmrMode = "2v2";
+        private static readonly TimeSpan StaleAfter = TimeSpan.FromDays(7);
+
         private readonly SessionStore _store = new();
-        private readonly BallMatchStore _ballStore = new();
+        private readonly MmrStore _mmrStore = new();
         private readonly StatsApiClient _client = StatsApiClient.Instance;
         private readonly System.Windows.Forms.Timer _dataTimer;
         private readonly System.Windows.Forms.Timer _topTimer;
 
         private int _wins, _losses, _streak;
-        private int _mmr, _mmrDelta;
-        private bool _hasMmr;
+        private int _mmr;
+        private bool _hasMmr, _mmrStale;
         private Image? _rankIcon;
 
         private bool _dragging;
@@ -153,20 +158,27 @@ namespace RLHub2
                 _streak = last ? c : -c;
             }
 
-            var ranked = _ballStore.LoadForActive()
-                .Where(m => m.Ranked && m.MmrApprox > 0)
-                .OrderBy(m => m.Date).ToList();
-            _hasMmr = ranked.Count > 0;
+            // MMR comes from the MMR tab, not from ballchasing. Ballchasing stopped returning
+            // player ranks (verified: no replay uploaded after ~April has rank data, not even
+            // other people's), and rank was the only thing we could approximate MMR from — so
+            // the ballchasing value would be frozen at whatever it was months ago. Entries typed
+            // in by hand land in the same store, so whatever you enter shows up here.
+            var points = _mmrStore.LoadForActive()
+                .Where(e => e.Mode == MmrMode && e.Value > 0)
+                .OrderBy(e => e.Timestamp).ToList();
+
+            _hasMmr = points.Count > 0;
             if (_hasMmr)
             {
-                var latest = ranked[^1];
-                _mmr = latest.MmrApprox;
-                _rankIcon = RankIcons.GetForRankName(latest.RankName);
-                var since = DateTime.Now.AddHours(-24);
-                var recent = ranked.Where(m => m.Date >= since).ToList();
-                _mmrDelta = recent.Count >= 2 ? _mmr - recent[0].MmrApprox : 0;
+                var latest = points[^1];
+                _mmr = latest.Value;
+
+                // Months-old data must not read as live — the number is dimmed when stale.
+                _mmrStale = DateTime.Now - latest.Timestamp > StaleAfter;
+
+                _rankIcon = RankIcons.Get(RankMmr.TierName(_mmr));
             }
-            else { _mmr = 0; _mmrDelta = 0; _rankIcon = null; }
+            else { _mmr = 0; _rankIcon = null; _mmrStale = false; }
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -206,8 +218,12 @@ namespace RLHub2
 
             DrawNumber(g, _wins.ToString(), WinsX, NumY, SideH, Color.FromArgb(150, 255, 170), Green, center, false);
 
+            // Stale MMR is drawn grey instead of purple, so a months-old number never passes
+            // for a live one. Nothing to show at all → a dash, not a zero.
             string mmrText = _hasMmr ? _mmr.ToString() : "—";
-            DrawNumber(g, mmrText, MmrX, NumY, MmrH, Color.FromArgb(130, 160, 255), Color.FromArgb(175, 95, 255), center, false);
+            var mmrTop = _mmrStale ? Color.FromArgb(150, 155, 175) : Color.FromArgb(130, 160, 255);
+            var mmrBottom = _mmrStale ? Color.FromArgb(95, 100, 120) : Color.FromArgb(175, 95, 255);
+            DrawNumber(g, mmrText, MmrX, NumY, MmrH, mmrTop, mmrBottom, center, false);
 
             DrawNumber(g, _losses.ToString(), LossX, NumY, SideH, Color.FromArgb(255, 130, 140), Red, center, false);
 

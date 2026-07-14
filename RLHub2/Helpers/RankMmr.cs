@@ -19,6 +19,21 @@ namespace RLHub2.Helpers
             1400                     // 22    Supersonic Legend
         };
 
+        // Reverse mapping: which rank does an MMR value sit in? Used to pick a rank icon for an
+        // MMR that was typed in by hand and has no ballchasing rank attached to it. Thresholds
+        // match the ladder on the Home page.
+        public static string TierName(int mmr) => mmr switch
+        {
+            >= 1400 => "Supersonic Legend",
+            >= 1200 => "Grand Champion",
+            >= 1000 => "Champion",
+            >= 850 => "Diamond",
+            >= 700 => "Platinum",
+            >= 550 => "Gold",
+            >= 400 => "Silver",
+            _ => "Bronze",
+        };
+
         public static int Approx(int tier, int division)
         {
             if (tier <= 0) return 0;
