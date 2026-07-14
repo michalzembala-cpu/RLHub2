@@ -19,7 +19,7 @@ namespace RLHub2
 
         private readonly SettingsStore _store = new();
         private List<Account> _accounts;
-        private readonly List<Rectangle> _hits = new();   // tiles + the trailing "add" tile
+        private readonly List<Rectangle> _hits = new();   // one per profile tile
         private int _hover = -1;
 
         private Image? _blurred;
@@ -121,8 +121,8 @@ namespace RLHub2
 
             string title = Localization.IsPolish ? "Kto gra?" : "Who's playing?";
             string sub = Localization.IsPolish
-                ? "Wybierz profil lub dodaj nowe konto"
-                : "Pick a profile or add another account";
+                ? "Wybierz profil"
+                : "Pick a profile";
 
             var ts = g.MeasureString(title, titleFont);
             var ss = g.MeasureString(sub, subFont);
@@ -137,8 +137,6 @@ namespace RLHub2
             for (int i = 0; i < _accounts.Count; i++)
                 DrawProfile(g, _hits[i], _accounts[i], i == _hover, _accounts[i].Name == active);
 
-            DrawAdd(g, _hits[^1], _hover == _accounts.Count);
-
             // hint at the bottom — drag & drop is not discoverable otherwise
             using var hintFont = new Font("Segoe UI", 9f);
             using var hintBrush = new SolidBrush(Color.FromArgb(170, 255, 255, 255));
@@ -152,7 +150,8 @@ namespace RLHub2
         private void LayoutTiles(float top)
         {
             _hits.Clear();
-            int count = _accounts.Count + 1;                 // +1 for the add tile
+            int count = _accounts.Count;
+            if (count == 0) return;
             int totalW = count * Tile + (count - 1) * Gap;
             int x = (Width - totalW) / 2;
             int y = (int)top;
@@ -198,27 +197,6 @@ namespace RLHub2
             }
         }
 
-        private static void DrawAdd(Graphics g, Rectangle r, bool hover)
-        {
-            // Steam's add tile is smaller than a profile — it isn't a person.
-            int inset = 16;
-            var box = Rectangle.Inflate(r, -inset, -inset);
-
-            using (var b = new SolidBrush(hover ? Color.FromArgb(35, 38, 52) : Color.FromArgb(18, 20, 30)))
-                g.FillRectangle(b, box);
-
-            using var pen = new Pen(hover ? Color.White : Color.FromArgb(210, 220, 235), 5f);
-            int cx = box.X + box.Width / 2, cy = box.Y + box.Height / 2, arm = box.Width / 5;
-            g.DrawLine(pen, cx - arm, cy, cx + arm, cy);
-            g.DrawLine(pen, cx, cy - arm, cx, cy + arm);
-
-            if (hover)
-            {
-                using var ring = new Pen(Color.White, 3f);
-                g.DrawRectangle(ring, Rectangle.Inflate(box, 2, 2));
-            }
-        }
-
         private void OnMove(object? sender, MouseEventArgs e)
         {
             int h = _hits.FindIndex(r => r.Contains(e.Location));
@@ -231,9 +209,7 @@ namespace RLHub2
         private void OnClick(object? sender, MouseEventArgs e)
         {
             int i = _hits.FindIndex(r => r.Contains(e.Location));
-            if (i < 0) return;
-
-            if (i == _accounts.Count) { AddAccount(); return; }
+            if (i < 0 || i >= _accounts.Count) return;
 
             if (e.Button == MouseButtons.Right) { PickAvatar(_accounts[i].Name); return; }
 
@@ -252,21 +228,6 @@ namespace RLHub2
             };
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
             Avatars.Set(account, dlg.FileName);
-            Invalidate();
-        }
-
-        private void AddAccount()
-        {
-            using var dlg = new AccountDialog();
-            if (dlg.ShowDialog(this) != DialogResult.OK) return;
-
-            var name = dlg.AccountName;
-            if (string.IsNullOrWhiteSpace(name)) return;
-            if (_accounts.Any(a => string.Equals(a.Name, name, StringComparison.OrdinalIgnoreCase))) return;
-
-            _accounts.Add(new Account { Name = name, Aliases = dlg.Aliases });
-            _store.SaveAccounts(_accounts);
-            _accounts = _store.LoadAccounts();
             Invalidate();
         }
 
@@ -296,82 +257,6 @@ namespace RLHub2
         {
             if (disposing) _blurred?.Dispose();
             base.Dispose(disposing);
-        }
-    }
-
-    // Small modal for adding an account: current in-game name + any old names it was renamed from.
-    public class AccountDialog : Form
-    {
-        private readonly TextBox _name = new();
-        private readonly TextBox _aliases = new();
-
-        public string AccountName => _name.Text.Trim();
-        public List<string> Aliases => _aliases.Text
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-
-        public AccountDialog()
-        {
-            Text = Localization.IsPolish ? "Nowe konto" : "New account";
-            FormBorderStyle = FormBorderStyle.FixedDialog;
-            StartPosition = FormStartPosition.CenterParent;
-            MaximizeBox = MinimizeBox = false;
-            ClientSize = new Size(420, 200);
-            BackColor = Color.FromArgb(16, 18, 30);
-            ForeColor = Color.White;
-            Font = new Font("Segoe UI", 10f);
-
-            Label L(string t, int y)
-            {
-                var l = new Label { Text = t, AutoSize = true, Location = new Point(20, y), ForeColor = Color.FromArgb(180, 190, 210) };
-                Controls.Add(l);
-                return l;
-            }
-            void Input(TextBox t, int y)
-            {
-                t.Location = new Point(20, y);
-                t.Size = new Size(380, 26);
-                t.BackColor = Color.FromArgb(28, 31, 46);
-                t.ForeColor = Color.White;
-                t.BorderStyle = BorderStyle.FixedSingle;
-                Controls.Add(t);
-            }
-
-            L(Localization.IsPolish ? "Nazwa w grze" : "In-game name", 18);
-            Input(_name, 40);
-            L(Localization.IsPolish ? "Stare nazwy (po przecinku, opcjonalnie)" : "Old names (comma separated, optional)", 78);
-            Input(_aliases, 100);
-
-            var ok = new Button
-            {
-                Text = "OK",
-                DialogResult = DialogResult.OK,
-                Location = new Point(290, 145),
-                Size = new Size(110, 30),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Theme.Accent,
-                ForeColor = Color.White,
-                Cursor = Cursors.Hand,
-            };
-            ok.FlatAppearance.BorderSize = 0;
-
-            var cancel = new Button
-            {
-                Text = Localization.IsPolish ? "Anuluj" : "Cancel",
-                DialogResult = DialogResult.Cancel,
-                Location = new Point(170, 145),
-                Size = new Size(110, 30),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(40, 44, 60),
-                ForeColor = Color.White,
-                Cursor = Cursors.Hand,
-            };
-            cancel.FlatAppearance.BorderSize = 0;
-
-            Controls.Add(ok);
-            Controls.Add(cancel);
-            AcceptButton = ok;
-            CancelButton = cancel;
         }
     }
 }
