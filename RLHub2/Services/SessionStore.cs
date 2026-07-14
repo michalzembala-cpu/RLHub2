@@ -39,6 +39,11 @@ namespace RLHub2.Services
             return Load().FindAll(m => mine(m.Account));
         }
 
+        // A specific account rather than the selected one — the overlay follows whichever
+        // account is actually in the game. Untagged legacy entries belong to whoever asks.
+        public List<SessionMatch> LoadFor(string account)
+            => Load().FindAll(m => string.IsNullOrEmpty(m.Account) || m.Account == account);
+
         public void Save(List<SessionMatch> list)
         {
             try { File.WriteAllText(_path, JsonSerializer.Serialize(list ?? new List<SessionMatch>(), Options)); }

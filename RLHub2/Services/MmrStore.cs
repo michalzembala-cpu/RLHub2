@@ -58,6 +58,11 @@ namespace RLHub2.Services
             return Load().FindAll(e => mine(e.Account));
         }
 
+        // A specific account rather than the selected one — the overlay follows whichever
+        // account is actually in the game. Untagged legacy entries belong to whoever asks.
+        public List<MmrEntry> LoadFor(string account)
+            => Load().FindAll(e => string.IsNullOrEmpty(e.Account) || e.Account == account);
+
         // Replaces ONLY the active account's entries, keeping every other account's data.
         public void SaveForActive(List<MmrEntry> activeEntries)
         {

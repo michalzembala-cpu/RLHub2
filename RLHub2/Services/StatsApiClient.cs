@@ -32,6 +32,11 @@ namespace RLHub2.Services
         // Raised (on the UI thread) with a finished match.
         public event Action<SessionMatch>? MatchLogged;
 
+        // Fires when the account detected in-game changes (null until the first match).
+        public event Action<string>? AccountDetected;
+
+        public string? DetectedAccount { get; private set; }
+
         public bool IsConnected => _connected;
 
         // When listening began — used to scope "this session".
@@ -41,6 +46,7 @@ namespace RLHub2.Services
 
         // Latest per-match snapshot, rebuilt from UpdateState events.
         private readonly Dictionary<string, PlayerStat> _players = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _checkedNames = new(StringComparer.OrdinalIgnoreCase);
         private string _lastMatchGuid = "";
         private string _loggedMatchGuid = "";
 
@@ -97,6 +103,7 @@ namespace RLHub2.Services
                 }
                 SetConnected(false);
                 _players.Clear();
+                _checkedNames.Clear();
                 if (_running) Sleep(3000);
             }
         }
@@ -194,6 +201,7 @@ namespace RLHub2.Services
                 e.Contains("initialized") || e.Contains("countdown"))
             {
                 _players.Clear();
+                _checkedNames.Clear();
                 _lastMatchGuid = GetString(data, "match_guid", "MatchGuid", "matchGuid") ?? _lastMatchGuid;
                 return;
             }
@@ -235,7 +243,26 @@ namespace RLHub2.Services
                     Shots = GetInt(p, "shots", "Shots"),
                     Score = GetInt(p, "score", "Score"),
                 };
+
+                NoteAccount(name);
             }
+        }
+
+        // The account you are actually playing on right now, recognised from the players in
+        // the live match (aliases included, so a renamed account still matches). Lets the
+        // overlay show the data of the account in the game rather than the one selected in
+        // the app, which are not always the same.
+        private void NoteAccount(string playerName)
+        {
+            // State packets arrive ~10x a second with every player in them; the answer for a
+            // given name never changes mid-match, so ask once per name.
+            if (!_checkedNames.Add(playerName)) return;
+
+            var acc = Helpers.Accounts.MatchByName(playerName);
+            if (acc == null || acc.Name == DetectedAccount) return;
+
+            DetectedAccount = acc.Name;
+            Post(() => AccountDetected?.Invoke(acc.Name));
         }
 
         private void FinishMatch()
@@ -284,6 +311,7 @@ namespace RLHub2.Services
             _loggedMatchGuid = _lastMatchGuid;
             _store.Append(match);
             _players.Clear();
+            _checkedNames.Clear();
 
             Post(() => MatchLogged?.Invoke(match));
         }

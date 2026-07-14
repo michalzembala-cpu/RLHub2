@@ -107,6 +107,7 @@ namespace RLHub2
 
             _client.MatchLogged += OnMatch;
             _client.ConnectionChanged += OnConn;
+            _client.AccountDetected += OnAccount;
 
             _dataTimer = new System.Windows.Forms.Timer { Interval = 30000 };
             _dataTimer.Tick += (s, e) => { Recompute(); Invalidate(); };
@@ -139,10 +140,17 @@ namespace RLHub2
 
         private void OnMatch(Models.SessionMatch _) { if (!IsDisposed) { Recompute(); Invalidate(); } }
         private void OnConn(bool c) { if (!IsDisposed) Invalidate(); }
+        private void OnAccount(string _) { if (!IsDisposed) { Recompute(); Invalidate(); } }
 
         private void Recompute()
         {
-            var session = _store.LoadForActive()
+            // Follow the account that is actually in the game, not the one selected in the app —
+            // you can be playing on one profile while browsing another. Before any match is seen
+            // (game closed, or still in the menu) there is nothing to follow, so fall back to the
+            // selected profile.
+            string account = _client.DetectedAccount ?? Accounts.ActiveName;
+
+            var session = _store.LoadFor(account)
                 .Where(m => m.Time >= _client.StartedAt)
                 .OrderBy(m => m.Time).ToList();
 
@@ -163,7 +171,7 @@ namespace RLHub2
             // other people's), and rank was the only thing we could approximate MMR from — so
             // the ballchasing value would be frozen at whatever it was months ago. Entries typed
             // in by hand land in the same store, so whatever you enter shows up here.
-            var points = _mmrStore.LoadForActive()
+            var points = _mmrStore.LoadFor(account)
                 .Where(e => e.Mode == MmrMode && e.Value > 0)
                 .OrderBy(e => e.Timestamp).ToList();
 
@@ -404,6 +412,7 @@ namespace RLHub2
                 _topTimer?.Stop(); _topTimer?.Dispose();
                 _client.MatchLogged -= OnMatch;
                 _client.ConnectionChanged -= OnConn;
+                _client.AccountDetected -= OnAccount;
             }
             base.Dispose(disposing);
         }
