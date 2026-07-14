@@ -40,7 +40,10 @@ namespace RLHub2.Services
 
         // Archived seasons for the currently active account.
         public List<SeasonSnapshot> LoadForActive()
-            => Load().Where(s => Helpers.Accounts.BelongsToActive(s.Account)).ToList();
+        {
+            var mine = Helpers.Accounts.ActiveFilter();
+            return Load().Where(s => mine(s.Account)).ToList();
+        }
 
         public bool Contains(string season, string account)
             => Load().Any(s => s.Season == season && s.Account == account);

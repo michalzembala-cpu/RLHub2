@@ -53,12 +53,16 @@ namespace RLHub2.Services
 
         // Only the entries belonging to the currently active account.
         public List<MmrEntry> LoadForActive()
-            => Load().FindAll(e => Helpers.Accounts.BelongsToActive(e.Account));
+        {
+            var mine = Helpers.Accounts.ActiveFilter();
+            return Load().FindAll(e => mine(e.Account));
+        }
 
         // Replaces ONLY the active account's entries, keeping every other account's data.
         public void SaveForActive(List<MmrEntry> activeEntries)
         {
-            var all = Load().FindAll(e => !Helpers.Accounts.BelongsToActive(e.Account));
+            var mine = Helpers.Accounts.ActiveFilter();
+            var all = Load().FindAll(e => !mine(e.Account));
             all.AddRange(activeEntries ?? new List<MmrEntry>());
             all.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
             Save(all);

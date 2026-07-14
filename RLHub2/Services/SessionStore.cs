@@ -34,7 +34,10 @@ namespace RLHub2.Services
 
         // Only the matches belonging to the currently active account.
         public List<SessionMatch> LoadForActive()
-            => Load().FindAll(m => Helpers.Accounts.BelongsToActive(m.Account));
+        {
+            var mine = Helpers.Accounts.ActiveFilter();
+            return Load().FindAll(m => mine(m.Account));
+        }
 
         public void Save(List<SessionMatch> list)
         {

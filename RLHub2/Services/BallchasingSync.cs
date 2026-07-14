@@ -104,6 +104,12 @@ namespace RLHub2.Services
             var names = Accounts.AllNames().ToList();
             bool filterByAccounts = names.Count > 0;
 
+            // Header scans are the expensive part (a disk read per replay), and their answer
+            // never changes — so ask each file only once, ever.
+            var scanStore = new ReplayScanStore();
+            var verdicts = filterByAccounts ? scanStore.Load(names) : new Dictionary<string, bool>();
+            bool verdictsChanged = false;
+
             int uploaded = 0, attempts = 0, scans = 0;
             foreach (var f in files)
             {
@@ -112,9 +118,15 @@ namespace RLHub2.Services
 
                 if (filterByAccounts)
                 {
-                    if (scans >= MaxScanPerSync) break;
-                    scans++;
-                    if (!FileContainsAnyName(f.FullName, names)) continue;
+                    if (!verdicts.TryGetValue(f.Name, out bool mine))
+                    {
+                        if (scans >= MaxScanPerSync) break;
+                        scans++;
+                        mine = FileContainsAnyName(f.FullName, names);
+                        verdicts[f.Name] = mine;
+                        verdictsChanged = true;
+                    }
+                    if (!mine) continue;
                 }
 
                 attempts++;
@@ -129,6 +141,7 @@ namespace RLHub2.Services
                 await Task.Delay(1200);
             }
 
+            if (verdictsChanged) scanStore.Save(verdicts, names);
             uploadedStore.Save(done);
             quota.Add(uploaded);
             return uploaded;

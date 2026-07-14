@@ -35,7 +35,10 @@ namespace RLHub2.Services
 
         // Only the matches belonging to the currently active account.
         public List<BallMatch> LoadForActive()
-            => Load().Where(m => Helpers.Accounts.BelongsToActive(m.Account)).ToList();
+        {
+            var mine = Helpers.Accounts.ActiveFilter();
+            return Load().Where(m => mine(m.Account)).ToList();
+        }
 
         public void Save(List<BallMatch> list)
         {

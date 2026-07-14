@@ -40,5 +40,13 @@ namespace RLHub2.Helpers
         // Data with no account tag (from before multi-account) is treated as the active one.
         public static bool BelongsToActive(string? tag)
             => string.IsNullOrEmpty(tag) || tag == ActiveName;
+
+        // Same test, but with the active name snapshotted once. Filtering a list of matches
+        // through BelongsToActive would look the active account up per entry.
+        public static Func<string?, bool> ActiveFilter()
+        {
+            var active = ActiveName;
+            return tag => string.IsNullOrEmpty(tag) || tag == active;
+        }
     }
 }

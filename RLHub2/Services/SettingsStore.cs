@@ -47,29 +47,64 @@ namespace RLHub2.Services
             _path = Path.Combine(dir, "settings.json");
         }
 
+        // Load() is called a lot — every Accounts.ActiveName lookup goes through it, and those
+        // happen once per stored match when a page filters its data. Hitting the disk each time
+        // meant hundreds of reads + JSON parses per page load, so the config is cached and only
+        // re-read when the file actually changes on disk (or we write it ourselves).
+        private static readonly object CacheLock = new();
+        private static AppConfig? _cache;
+        private static DateTime _cacheStamp;
+        private static long _cacheLength = -1;
+
         public AppConfig Load()
         {
-            try
+            lock (CacheLock)
             {
-                if (!File.Exists(_path))
-                    return new AppConfig();
-                return JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(_path)) ?? new AppConfig();
-            }
-            catch
-            {
-                return new AppConfig();
+                try
+                {
+                    var info = new FileInfo(_path);
+                    if (!info.Exists)
+                    {
+                        _cache = null;
+                        _cacheLength = -1;
+                        return new AppConfig();
+                    }
+
+                    if (_cache != null && info.LastWriteTimeUtc == _cacheStamp && info.Length == _cacheLength)
+                        return _cache;
+
+                    var cfg = JsonSerializer.Deserialize<AppConfig>(File.ReadAllText(_path)) ?? new AppConfig();
+                    _cache = cfg;
+                    _cacheStamp = info.LastWriteTimeUtc;
+                    _cacheLength = info.Length;
+                    return cfg;
+                }
+                catch
+                {
+                    return _cache ?? new AppConfig();
+                }
             }
         }
 
         public void Save(AppConfig config)
         {
-            try
+            lock (CacheLock)
             {
-                File.WriteAllText(_path, JsonSerializer.Serialize(config, Options));
-            }
-            catch
-            {
-                // ignore write failures
+                try
+                {
+                    File.WriteAllText(_path, JsonSerializer.Serialize(config, Options));
+
+                    var info = new FileInfo(_path);
+                    _cache = config;
+                    _cacheStamp = info.LastWriteTimeUtc;
+                    _cacheLength = info.Length;
+                }
+                catch
+                {
+                    // ignore write failures — but never serve a config we failed to persist
+                    _cache = null;
+                    _cacheLength = -1;
+                }
             }
         }
 
