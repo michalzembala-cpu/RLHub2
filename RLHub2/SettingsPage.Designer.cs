@@ -7,6 +7,7 @@ namespace RLHub2
 {
     partial class SettingsPage
     {
+        private FlowLayoutPanel flow;
         private Label lblTitle;
 
         private Panel langPanel;
@@ -42,6 +43,7 @@ namespace RLHub2
 
         private void InitializeComponent()
         {
+            flow = new FlowLayoutPanel();
             lblTitle = new Label();
             langPanel = new Panel();
             lblLanguage = new Label();
@@ -78,208 +80,160 @@ namespace RLHub2
 
             this.BackColor = pageColor;
             this.Dock = DockStyle.Fill;
-            this.Padding = new Padding(24);
-            this.AutoScroll = true;
+
+            // Cards stack vertically and are stretched to the page width at runtime
+            // (see SettingsPage.FitCards), so nothing is pinned to a fixed 460px column.
+            flow.Dock = DockStyle.Fill;
+            flow.BackColor = pageColor;
+            flow.Padding = new Padding(24, 20, 24, 24);
+            flow.FlowDirection = FlowDirection.TopDown;
+            flow.WrapContents = false;
+            flow.AutoScroll = true;
 
             lblTitle.Text = "SETTINGS";
             lblTitle.AutoSize = true;
             lblTitle.ForeColor = Theme.TextPrimary;
             lblTitle.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            lblTitle.Location = new Point(24, 24);
+            lblTitle.Margin = new Padding(2, 0, 0, 16);
 
-            // ===== LANGUAGE CARD =====
-            langPanel.Location = new Point(24, 84);
-            langPanel.Size = new Size(460, 134);
-            langPanel.BackColor = panelColor;
-
-            lblLanguage.Text = "LANGUAGE";
-            lblLanguage.AutoSize = true;
-            lblLanguage.ForeColor = Theme.AccentSoft;
-            lblLanguage.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblLanguage.Location = new Point(20, 16);
-
-            lblLanguageHint.Text = "Language of the whole application";
-            lblLanguageHint.AutoSize = true;
-            lblLanguageHint.ForeColor = Theme.TextMuted;
-            lblLanguageHint.Font = new Font("Segoe UI", 9.5F);
-            lblLanguageHint.Location = new Point(20, 44);
-
+            // ===== LANGUAGE =====
+            Card(langPanel, panelColor, 134);
+            SectionTitle(lblLanguage, "LANGUAGE");
+            Hint(lblLanguageHint, "Language of the whole application");
             segLanguage.Location = new Point(20, 74);
             segLanguage.Size = new Size(280, 46);
+            langPanel.Controls.AddRange(new Control[] { lblLanguage, lblLanguageHint, segLanguage });
 
-            langPanel.Controls.Add(lblLanguage);
-            langPanel.Controls.Add(lblLanguageHint);
-            langPanel.Controls.Add(segLanguage);
-
-            // ===== THEME CARD =====
-            themePanel.Location = new Point(24, 234);
-            themePanel.Size = new Size(460, 134);
-            themePanel.BackColor = panelColor;
-
-            lblTheme.Text = "THEME";
-            lblTheme.AutoSize = true;
-            lblTheme.ForeColor = Theme.AccentSoft;
-            lblTheme.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblTheme.Location = new Point(20, 16);
-
-            lblThemeHint.Text = "Light or dark appearance";
-            lblThemeHint.AutoSize = true;
-            lblThemeHint.ForeColor = Theme.TextMuted;
-            lblThemeHint.Font = new Font("Segoe UI", 9.5F);
-            lblThemeHint.Location = new Point(20, 44);
-
+            // ===== THEME =====
+            Card(themePanel, panelColor, 134);
+            SectionTitle(lblTheme, "THEME");
+            Hint(lblThemeHint, "Light or dark appearance");
             segTheme.Location = new Point(20, 74);
             segTheme.Size = new Size(280, 46);
+            themePanel.Controls.AddRange(new Control[] { lblTheme, lblThemeHint, segTheme });
 
-            themePanel.Controls.Add(lblTheme);
-            themePanel.Controls.Add(lblThemeHint);
-            themePanel.Controls.Add(segTheme);
-
-            // ===== ACCENT CARD =====
-            accentPanel.Location = new Point(24, 384);
-            accentPanel.Size = new Size(460, 134);
-            accentPanel.BackColor = panelColor;
-
-            lblAccent.Text = "ACCENT COLOR";
-            lblAccent.AutoSize = true;
-            lblAccent.ForeColor = Theme.AccentSoft;
-            lblAccent.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblAccent.Location = new Point(20, 16);
-
-            lblAccentHint.Text = "Pick the highlight color";
-            lblAccentHint.AutoSize = true;
-            lblAccentHint.ForeColor = Theme.TextMuted;
-            lblAccentHint.Font = new Font("Segoe UI", 9.5F);
-            lblAccentHint.Location = new Point(20, 44);
-
+            // ===== ACCENT =====
+            Card(accentPanel, panelColor, 134);
+            SectionTitle(lblAccent, "ACCENT COLOR");
+            Hint(lblAccentHint, "Pick the highlight color");
             accentPicker.Location = new Point(18, 74);
+            accentPanel.Controls.AddRange(new Control[] { lblAccent, lblAccentHint, accentPicker });
 
-            accentPanel.Controls.Add(lblAccent);
-            accentPanel.Controls.Add(lblAccentHint);
-            accentPanel.Controls.Add(accentPicker);
+            // ===== TRACKER KEY + ACTIVE ACCOUNT =====
+            Card(keyPanel, panelColor, 200);
+            SectionTitle(lblKey, "TRACKER.GG API KEY");
+            Hint(lblKeyHint, "Get a free key at tracker.gg/developers, then paste it here for real profiles");
 
-            // ===== TRACKER KEY CARD =====
-            keyPanel.Location = new Point(24, 534);
-            keyPanel.Size = new Size(460, 220);
-            keyPanel.BackColor = panelColor;
-
-            lblKey.Text = "TRACKER.GG API KEY";
-            lblKey.AutoSize = true;
-            lblKey.ForeColor = Theme.AccentSoft;
-            lblKey.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblKey.Location = new Point(20, 16);
-
-            lblKeyHint.Text = "Get a free key at tracker.gg/developers, then paste it here for real profiles";
-            lblKeyHint.MaximumSize = new Size(420, 0);
-            lblKeyHint.AutoSize = true;
-            lblKeyHint.ForeColor = Theme.TextMuted;
-            lblKeyHint.Font = new Font("Segoe UI", 9.5F);
-            lblKeyHint.Location = new Point(20, 44);
-
+            Input(txtKey, inputBg);
             txtKey.Location = new Point(20, 90);
-            txtKey.Width = 300;
-            txtKey.BackColor = inputBg;
-            txtKey.ForeColor = Theme.TextPrimary;
-            txtKey.BorderStyle = BorderStyle.FixedSingle;
-            txtKey.Font = new Font("Segoe UI", 11F);
+            txtKey.Size = new Size(CardW - 40, 26);
+            txtKey.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            lblNick.Text = "PLAYER NICK";
+            lblNick.Text = "ACTIVE ACCOUNT";
             lblNick.AutoSize = true;
             lblNick.ForeColor = Theme.TextMuted;
             lblNick.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblNick.Location = new Point(20, 126);
 
             cmbAccount.Location = new Point(20, 148);
-            cmbAccount.Width = 300;
+            cmbAccount.Size = new Size(CardW - 20 - 130 - 10, 24);
             cmbAccount.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbAccount.FlatStyle = FlatStyle.Flat;
             cmbAccount.BackColor = inputBg;
             cmbAccount.ForeColor = Theme.TextPrimary;
             cmbAccount.Font = new Font("Segoe UI", 11F);
+            cmbAccount.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            btnSaveKey.Location = new Point(330, 147);
-            btnSaveKey.Size = new Size(110, 28);
-            btnSaveKey.Text = "SAVE";
-            btnSaveKey.FlatStyle = FlatStyle.Flat;
-            btnSaveKey.FlatAppearance.BorderSize = 0;
-            btnSaveKey.ForeColor = Color.White;
-            btnSaveKey.BackColor = Theme.Accent;
-            btnSaveKey.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            btnSaveKey.Cursor = Cursors.Hand;
+            AccentButton(btnSaveKey, "SAVE", 110);
+            btnSaveKey.Location = new Point(CardW - 130, 147);
+            btnSaveKey.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
-            keyPanel.Controls.Add(lblKey);
-            keyPanel.Controls.Add(lblKeyHint);
-            keyPanel.Controls.Add(txtKey);
-            keyPanel.Controls.Add(lblNick);
-            keyPanel.Controls.Add(cmbAccount);
-            keyPanel.Controls.Add(btnSaveKey);
+            keyPanel.Controls.AddRange(new Control[] { lblKey, lblKeyHint, txtKey, lblNick, cmbAccount, btnSaveKey });
 
-            // ===== BALLCHASING KEY CARD =====
-            bcPanel.Location = new Point(24, 774);
-            bcPanel.Size = new Size(460, 224);
-            bcPanel.BackColor = panelColor;
+            // ===== BALLCHASING =====
+            Card(bcPanel, panelColor, 224);
+            SectionTitle(lblBc, "BALLCHASING API KEY");
+            Hint(lblBcHint, "Free key at ballchasing.com/upload → Settings.");
 
-            lblBc.Text = "BALLCHASING API KEY";
-            lblBc.AutoSize = true;
-            lblBc.ForeColor = Theme.AccentSoft;
-            lblBc.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblBc.Location = new Point(20, 16);
-
-            lblBcHint.Text = "Free key at ballchasing.com/upload → Settings. Enables real matches, ranks and auto MMR.";
-            lblBcHint.MaximumSize = new Size(420, 0);
-            lblBcHint.AutoSize = true;
-            lblBcHint.ForeColor = Theme.TextMuted;
-            lblBcHint.Font = new Font("Segoe UI", 9.5F);
-            lblBcHint.Location = new Point(20, 44);
-
+            Input(txtBcKey, inputBg);
             txtBcKey.Location = new Point(20, 96);
-            txtBcKey.Width = 300;
-            txtBcKey.BackColor = inputBg;
-            txtBcKey.ForeColor = Theme.TextPrimary;
-            txtBcKey.BorderStyle = BorderStyle.FixedSingle;
-            txtBcKey.Font = new Font("Segoe UI", 11F);
+            txtBcKey.Size = new Size(CardW - 20 - 130 - 10, 26);
             txtBcKey.UseSystemPasswordChar = true;
+            txtBcKey.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            btnTestBc.Location = new Point(330, 95);
-            btnTestBc.Size = new Size(110, 28);
-            btnTestBc.Text = "TEST";
-            btnTestBc.FlatStyle = FlatStyle.Flat;
-            btnTestBc.FlatAppearance.BorderSize = 0;
-            btnTestBc.ForeColor = Color.White;
-            btnTestBc.BackColor = Theme.Accent;
-            btnTestBc.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            btnTestBc.Cursor = Cursors.Hand;
+            AccentButton(btnTestBc, "TEST", 110);
+            btnTestBc.Location = new Point(CardW - 130, 95);
+            btnTestBc.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
             lblBcStatus.Text = "";
             lblBcStatus.AutoSize = true;
-            lblBcStatus.MaximumSize = new Size(420, 0);
             lblBcStatus.ForeColor = Theme.TextSecondary;
             lblBcStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             lblBcStatus.Location = new Point(20, 134);
 
             chkDeleteOld.Location = new Point(20, 162);
             chkDeleteOld.AutoSize = true;
-            chkDeleteOld.MaximumSize = new Size(420, 0);
             chkDeleteOld.ForeColor = Theme.TextSecondary;
             chkDeleteOld.Font = new Font("Segoe UI", 9.5F);
             chkDeleteOld.Cursor = Cursors.Hand;
 
-            bcPanel.Controls.Add(lblBc);
-            bcPanel.Controls.Add(lblBcHint);
-            bcPanel.Controls.Add(txtBcKey);
-            bcPanel.Controls.Add(btnTestBc);
-            bcPanel.Controls.Add(lblBcStatus);
-            bcPanel.Controls.Add(chkDeleteOld);
+            bcPanel.Controls.AddRange(new Control[] { lblBc, lblBcHint, txtBcKey, btnTestBc, lblBcStatus, chkDeleteOld });
 
-            this.Controls.Add(bcPanel);
-            this.Controls.Add(keyPanel);
-            this.Controls.Add(accentPanel);
-            this.Controls.Add(themePanel);
-            this.Controls.Add(langPanel);
-            this.Controls.Add(lblTitle);
+            flow.Controls.AddRange(new Control[] { lblTitle, langPanel, themePanel, accentPanel, keyPanel, bcPanel });
+            this.Controls.Add(flow);
 
             ResumeLayout(false);
-            PerformLayout();
+        }
+
+        // ===== small builders so every card looks the same =====
+
+        // Design width; FitCards() stretches this to the real page width at runtime and the
+        // anchored children keep their gaps to the card edges.
+        private const int CardW = 600;
+
+        private static void Card(Panel p, Color back, int height)
+        {
+            p.BackColor = back;
+            p.Size = new Size(CardW, height);
+            p.Margin = new Padding(0, 0, 0, 16);
+        }
+
+        private static void SectionTitle(Label l, string text)
+        {
+            l.Text = text;
+            l.AutoSize = true;
+            l.ForeColor = Theme.AccentSoft;
+            l.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            l.Location = new Point(20, 16);
+        }
+
+        private static void Hint(Label l, string text)
+        {
+            l.Text = text;
+            l.AutoSize = true;
+            l.ForeColor = Theme.TextMuted;
+            l.Font = new Font("Segoe UI", 9.5F);
+            l.Location = new Point(20, 44);
+        }
+
+        private static void Input(TextBox t, Color back)
+        {
+            t.BackColor = back;
+            t.ForeColor = Theme.TextPrimary;
+            t.BorderStyle = BorderStyle.FixedSingle;
+            t.Font = new Font("Segoe UI", 11F);
+        }
+
+        private static void AccentButton(Button b, string text, int width)
+        {
+            b.Text = text;
+            b.Size = new Size(width, 28);
+            b.FlatStyle = FlatStyle.Flat;
+            b.FlatAppearance.BorderSize = 0;
+            b.ForeColor = Color.White;
+            b.BackColor = Theme.Accent;
+            b.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            b.Cursor = Cursors.Hand;
         }
     }
 }

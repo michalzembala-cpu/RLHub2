@@ -13,10 +13,17 @@ namespace RLHub2
 
         private readonly SettingsStore _store = new();
 
+        // Cards never grow past this — full-width text fields on a 1920px window would be
+        // unreadable, and settings read better in a column.
+        private const int MaxCardWidth = 900;
+
         public SettingsPage()
         {
             InitializeComponent();
             ApplyLanguage();
+
+            flow.Resize += (s, e) => FitCards();
+            FitCards();
 
             segLanguage.SetSelectedSilent(Localization.IsPolish ? 0 : 1);
             segTheme.SetSelectedSilent(Theme.IsDark ? 0 : 1);
@@ -64,6 +71,40 @@ namespace RLHub2
             chkDeleteOld.Checked = _store.LoadDeleteReplaysAfterDays() > 0;
             chkDeleteOld.CheckedChanged += (s, e) =>
                 _store.SaveDeleteReplaysAfterDays(chkDeleteOld.Checked ? 7 : 0);
+        }
+
+        private bool _fitting;
+
+        // Stretch every card to the available width (capped), and re-wrap the hint labels.
+        // Two passes: widening the cards can make the vertical scrollbar appear, which shrinks
+        // ClientSize — without the second pass the cards would then be a scrollbar too wide and
+        // WinForms would add a horizontal scrollbar.
+        private void FitCards()
+        {
+            if (_fitting) return;
+            _fitting = true;
+            try
+            {
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    int avail = flow.ClientSize.Width - flow.Padding.Horizontal;
+                    if (avail < 200) return;
+                    int w = Math.Min(MaxCardWidth, avail);
+
+                    foreach (Control c in flow.Controls)
+                        if (c is Panel card)
+                            card.Width = w;
+
+                    lblKeyHint.MaximumSize = new Size(w - 40, 0);
+                    lblBcHint.MaximumSize = new Size(w - 40, 0);
+                    lblBcStatus.MaximumSize = new Size(w - 40, 0);
+                    chkDeleteOld.MaximumSize = new Size(w - 40, 0);
+
+                    flow.PerformLayout();
+                    if (!flow.HorizontalScroll.Visible) break;
+                }
+            }
+            finally { _fitting = false; }
         }
 
         private async Task TestBallchasing()
