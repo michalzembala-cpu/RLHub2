@@ -30,7 +30,8 @@ namespace RLHub2
         private Label lblKeyHint;
         private TextBox txtKey;
         private Label lblNick;
-        private ComboBox cmbAccount;
+        private Button btnProfile;
+        private CheckBox chkAskProfile;
         private Button btnSaveKey;
 
         private Panel bcPanel;
@@ -62,7 +63,8 @@ namespace RLHub2
             lblKeyHint = new Label();
             txtKey = new TextBox();
             lblNick = new Label();
-            cmbAccount = new ComboBox();
+            btnProfile = new Button();
+            chkAskProfile = new CheckBox();
             btnSaveKey = new Button();
             bcPanel = new Panel();
             lblBc = new Label();
@@ -120,7 +122,7 @@ namespace RLHub2
             accentPanel.Controls.AddRange(new Control[] { lblAccent, lblAccentHint, accentPicker });
 
             // ===== TRACKER KEY + ACTIVE ACCOUNT =====
-            Card(keyPanel, panelColor, 200);
+            Card(keyPanel, panelColor, 224);
             SectionTitle(lblKey, "TRACKER.GG API KEY");
             Hint(lblKeyHint, "Get a free key at tracker.gg/developers, then paste it here for real profiles");
 
@@ -135,20 +137,33 @@ namespace RLHub2
             lblNick.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblNick.Location = new Point(20, 126);
 
-            cmbAccount.Location = new Point(20, 148);
-            cmbAccount.Size = new Size(CardW - 20 - 130 - 10, 24);
-            cmbAccount.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbAccount.FlatStyle = FlatStyle.Flat;
-            cmbAccount.BackColor = inputBg;
-            cmbAccount.ForeColor = Theme.TextPrimary;
-            cmbAccount.Font = new Font("Segoe UI", 11F);
-            cmbAccount.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            // The account is chosen on the Big-Picture-style picker, not in a combo box.
+            btnProfile.Text = "PROFILE";
+            btnProfile.Size = new Size(CardW - 20 - 130 - 10, 30);
+            btnProfile.Location = new Point(20, 146);
+            btnProfile.FlatStyle = FlatStyle.Flat;
+            btnProfile.FlatAppearance.BorderSize = 1;
+            btnProfile.FlatAppearance.BorderColor = Theme.Accent;
+            btnProfile.BackColor = inputBg;
+            btnProfile.ForeColor = Theme.TextPrimary;
+            btnProfile.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnProfile.TextAlign = ContentAlignment.MiddleLeft;
+            btnProfile.Padding = new Padding(10, 0, 0, 0);
+            btnProfile.Cursor = Cursors.Hand;
+            btnProfile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            chkAskProfile.Location = new Point(20, 186);
+            chkAskProfile.AutoSize = true;
+            chkAskProfile.ForeColor = Theme.TextSecondary;
+            chkAskProfile.Font = new Font("Segoe UI", 9.5F);
+            chkAskProfile.Cursor = Cursors.Hand;
 
             AccentButton(btnSaveKey, "SAVE", 110);
-            btnSaveKey.Location = new Point(CardW - 130, 147);
+            btnSaveKey.Location = new Point(CardW - 130, 146);
+            btnSaveKey.Size = new Size(110, 30);
             btnSaveKey.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
-            keyPanel.Controls.AddRange(new Control[] { lblKey, lblKeyHint, txtKey, lblNick, cmbAccount, btnSaveKey });
+            keyPanel.Controls.AddRange(new Control[] { lblKey, lblKeyHint, txtKey, lblNick, btnProfile, chkAskProfile, btnSaveKey });
 
             // ===== BALLCHASING =====
             Card(bcPanel, panelColor, 224);

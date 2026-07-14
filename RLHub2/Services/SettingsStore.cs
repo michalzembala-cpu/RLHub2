@@ -24,6 +24,9 @@ namespace RLHub2.Services
         public List<Account> Accounts { get; set; } = new();
         public string ActiveAccount { get; set; } = "";
 
+        // Show the "Who's playing?" picker on launch (only ever asked when there is >1 account).
+        public bool AskProfileOnStart { get; set; } = true;
+
         // Send local .replay files to the Recycle Bin once they are safely on ballchasing
         // and older than this many days. 0 = never delete.
         public int DeleteReplaysAfterDays { get; set; } = 0;
@@ -164,6 +167,15 @@ namespace RLHub2.Services
         {
             var cfg = Load();
             cfg.ActiveAccount = name ?? "";
+            Save(cfg);
+        }
+
+        public bool LoadAskProfileOnStart() => Load().AskProfileOnStart;
+
+        public void SaveAskProfileOnStart(bool on)
+        {
+            var cfg = Load();
+            cfg.AskProfileOnStart = on;
             Save(cfg);
         }
 

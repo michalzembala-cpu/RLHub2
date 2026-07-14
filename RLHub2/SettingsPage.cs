@@ -30,14 +30,20 @@ namespace RLHub2
             txtKey.Text = _store.LoadTrackerKey();
             txtBcKey.Text = _store.LoadBallchasingKey();
 
-            // account switcher
-            cmbAccount.Items.Clear();
-            foreach (var a in Accounts.All) cmbAccount.Items.Add(a.Name);
-            cmbAccount.SelectedItem = Accounts.ActiveName;
-            cmbAccount.SelectedIndexChanged += (s, e) =>
+            // account switcher — opens the Big-Picture-style picker
+            UpdateProfileButton();
+            btnProfile.Click += (s, e) =>
             {
-                if (cmbAccount.SelectedItem is string name) Accounts.SetActive(name);
+                using var picker = new ProfilePickerForm();
+                picker.ShowDialog(FindForm());
+                UpdateProfileButton();
             };
+            Accounts.ActiveChanged += UpdateProfileButton;
+            Disposed += (s, e) => Accounts.ActiveChanged -= UpdateProfileButton;
+
+            chkAskProfile.Checked = _store.LoadAskProfileOnStart();
+            chkAskProfile.CheckedChanged += (s, e) =>
+                _store.SaveAskProfileOnStart(chkAskProfile.Checked);
 
             segLanguage.SelectedIndexChanged += (s, e) =>
             {
@@ -73,6 +79,14 @@ namespace RLHub2
                 _store.SaveDeleteReplaysAfterDays(chkDeleteOld.Checked ? 7 : 0);
         }
 
+        private void UpdateProfileButton()
+        {
+            if (IsDisposed) return;
+            var name = Accounts.ActiveName;
+            if (string.IsNullOrWhiteSpace(name)) name = Localization.IsPolish ? "brak konta" : "no account";
+            btnProfile.Text = "👤  " + name + "     " + (Localization.IsPolish ? "— zmień" : "— change");
+        }
+
         private bool _fitting;
 
         // Stretch every card to the available width (capped), and re-wrap the hint labels.
@@ -99,6 +113,7 @@ namespace RLHub2
                     lblBcHint.MaximumSize = new Size(w - 40, 0);
                     lblBcStatus.MaximumSize = new Size(w - 40, 0);
                     chkDeleteOld.MaximumSize = new Size(w - 40, 0);
+                    chkAskProfile.MaximumSize = new Size(w - 40, 0);
 
                     flow.PerformLayout();
                     if (!flow.HorizontalScroll.Visible) break;
@@ -147,6 +162,9 @@ namespace RLHub2
             lblKey.Text = Localization.T("settings_key");
             lblKeyHint.Text = Localization.T("settings_key_hint");
             lblNick.Text = Localization.IsPolish ? "AKTYWNE KONTO" : "ACTIVE ACCOUNT";
+            chkAskProfile.Text = Localization.IsPolish
+                ? "Pytaj o profil przy starcie aplikacji"
+                : "Ask which profile to use on startup";
             lblBc.Text = Localization.IsPolish ? "KLUCZ API BALLCHASING" : "BALLCHASING API KEY";
             lblBcHint.Text = Localization.IsPolish
                 ? "Darmowy klucz na ballchasing.com/upload → Settings. Daje prawdziwe mecze, rangi i automatyczne MMR."

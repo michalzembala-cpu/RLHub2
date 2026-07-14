@@ -1,4 +1,5 @@
 using RLHub2.Helpers;
+using RLHub2.Services;
 
 namespace RLHub2
 {
@@ -14,6 +15,12 @@ namespace RLHub2
 
             using (var splash = new SplashForm())
                 splash.ShowDialog();
+
+            // "Who's playing?" — pointless with a single account, so only ask when there's a choice.
+            var store = new SettingsStore();
+            if (store.LoadAskProfileOnStart() && Accounts.All.Count > 1)
+                using (var picker = new ProfilePickerForm())
+                    picker.ShowDialog();
 
             Application.Run(new DashboardShell());
         }
