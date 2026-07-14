@@ -31,7 +31,9 @@ namespace RLHub2
         private Func<UserControl>? _currentFactory;
         private readonly ToolTip _navTip = new() { InitialDelay = 300, ReshowDelay = 100 };
 
-        public DashboardShell()
+        // startPage overrides the remembered last page. Picking a profile is the start of a
+        // fresh session, so it lands on Home rather than wherever the previous run left off.
+        public DashboardShell(string? startPage = null)
         {
             var config = _store.Load();
             Localization.Initialize(config.Language?.ToLowerInvariant() == "en"
@@ -120,7 +122,7 @@ namespace RLHub2
             };
 
             ApplyNavTexts();
-            NavigateKey(config.LastPage);
+            NavigateKey(startPage ?? config.LastPage);
 
             // Start the live Stats API listener once, on the UI thread, so matches
             // are logged whenever the app is open and Rocket League is running.
