@@ -10,7 +10,10 @@ namespace RLHub2.Controls
     // Rounded news item: category pill, title, wrapped description, date. Hover glow.
     public class NewsCard : Control
     {
-        private bool _hovered;
+        // Smoothly animated hover (0 = out, 1 = fully hovered).
+        private float _hover;
+        private bool _hoverTarget;
+        private System.Windows.Forms.Timer? _hoverAnim;
 
         public int CornerRadius { get; set; } = 16;
         public string Category { get; set; } = "";
@@ -26,18 +29,40 @@ namespace RLHub2.Controls
             BackColor = Color.Transparent;
         }
 
+        private void EnsureHoverAnim()
+        {
+            if (_hoverAnim != null) return;
+            _hoverAnim = new System.Windows.Forms.Timer { Interval = 15 };
+            _hoverAnim.Tick += (s, e) =>
+            {
+                float target = _hoverTarget ? 1f : 0f;
+                float d = target - _hover;
+                if (Math.Abs(d) < 0.02f) { _hover = target; _hoverAnim!.Stop(); }
+                else _hover += d * 0.28f;
+                Invalidate();
+            };
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
-            _hovered = true;
-            Invalidate();
+            EnsureHoverAnim();
+            _hoverTarget = true;
+            _hoverAnim!.Start();
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
-            _hovered = false;
-            Invalidate();
+            EnsureHoverAnim();
+            _hoverTarget = false;
+            _hoverAnim!.Start();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) { _hoverAnim?.Stop(); _hoverAnim?.Dispose(); }
+            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -52,7 +77,14 @@ namespace RLHub2.Controls
             using (var bg = new LinearGradientBrush(rect, Theme.CardTop, Theme.CardBottom, 90f))
                 g.FillPath(bg, path);
 
-            using (var pen = new Pen(_hovered ? Accent : Color.FromArgb(60, Accent), _hovered ? 2f : 1f))
+            // Outer accent glow that fades in on hover.
+            if (_hover > 0.01f)
+                for (int i = 4; i >= 1; i--)
+                    using (var glow = new Pen(Color.FromArgb((int)(16 * _hover), Accent), 1.5f + i * 2f))
+                        g.DrawPath(glow, path);
+
+            int borderAlpha = (int)(60 + (255 - 60) * _hover);
+            using (var pen = new Pen(Color.FromArgb(borderAlpha, Accent), 1f + _hover))
                 g.DrawPath(pen, path);
 
             const int padX = 20;

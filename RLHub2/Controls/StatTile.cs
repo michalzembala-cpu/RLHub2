@@ -16,7 +16,17 @@ namespace RLHub2.Controls
         private string _value = "--";
         private string _subtitle = "";
         private Color _accent = Color.FromArgb(0, 140, 255);
-        private bool _hovered;
+
+        // Smoothly animated hover (0 = out, 1 = fully hovered).
+        private float _hover;
+        private bool _hoverTarget;
+        private System.Windows.Forms.Timer? _hoverAnim;
+
+        // Count-up animation for numeric values.
+        private string _shownValue = "--";
+        private System.Windows.Forms.Timer? _countAnim;
+        private int _countFrom, _countTo;
+        private float _countT;
 
         public int CornerRadius { get; set; } = 18;
         public float TitleFontSize { get; set; } = 9.5f;
@@ -30,10 +40,58 @@ namespace RLHub2.Controls
             set { _title = value ?? ""; Invalidate(); }
         }
 
+        // Plain whole numbers count up from the previous value; anything else
+        // (dashes, "5 – 3", "74d 18h", percentages…) is shown immediately.
         public string Value
         {
             get => _value;
-            set { _value = value ?? ""; Invalidate(); }
+            set
+            {
+                var v = value ?? "";
+                if (v == _value) return;
+                _value = v;
+
+                if (int.TryParse(v, out int target))
+                {
+                    int from = int.TryParse(_shownValue, out int cur) ? cur : 0;
+                    if (from != target) { StartCount(from, target); return; }
+                }
+
+                StopCount();
+                _shownValue = v;
+                Invalidate();
+            }
+        }
+
+        private void StartCount(int from, int to)
+        {
+            _countFrom = from;
+            _countTo = to;
+            _countT = 0f;
+
+            if (_countAnim == null)
+            {
+                _countAnim = new System.Windows.Forms.Timer { Interval = 16 };
+                _countAnim.Tick += (s, e) =>
+                {
+                    _countT += 0.07f;
+                    if (_countT >= 1f)
+                    {
+                        _countT = 1f;
+                        _countAnim!.Stop();
+                    }
+                    float eased = 1f - (float)Math.Pow(1 - _countT, 3); // ease-out cubic
+                    int val = (int)Math.Round(_countFrom + (_countTo - _countFrom) * eased);
+                    _shownValue = val.ToString();
+                    Invalidate();
+                };
+            }
+            _countAnim.Start();
+        }
+
+        private void StopCount()
+        {
+            _countAnim?.Stop();
         }
 
         public string Subtitle
@@ -56,18 +114,44 @@ namespace RLHub2.Controls
             SetStyle(ControlStyles.ResizeRedraw | ControlStyles.SupportsTransparentBackColor, true);
         }
 
+        private void EnsureHoverAnim()
+        {
+            if (_hoverAnim != null) return;
+            _hoverAnim = new System.Windows.Forms.Timer { Interval = 15 };
+            _hoverAnim.Tick += (s, e) =>
+            {
+                float target = _hoverTarget ? 1f : 0f;
+                float d = target - _hover;
+                if (Math.Abs(d) < 0.02f) { _hover = target; _hoverAnim!.Stop(); }
+                else _hover += d * 0.28f; // ease-out
+                Invalidate();
+            };
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
-            _hovered = true;
-            Invalidate();
+            EnsureHoverAnim();
+            _hoverTarget = true;
+            _hoverAnim!.Start();
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
-            _hovered = false;
-            Invalidate();
+            EnsureHoverAnim();
+            _hoverTarget = false;
+            _hoverAnim!.Start();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _hoverAnim?.Stop(); _hoverAnim?.Dispose();
+                _countAnim?.Stop(); _countAnim?.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -91,8 +175,9 @@ namespace RLHub2.Controls
                 g.FillRectangle(stripe, 0, 0, 6, Height);
             g.ResetClip();
 
-            // Border / hover glow.
-            using (var pen = new Pen(_hovered ? _accent : Color.FromArgb(70, _accent), _hovered ? 2f : 1f))
+            // Border / hover glow — alpha and thickness ease in with the hover animation.
+            int borderAlpha = (int)(70 + (255 - 70) * _hover);
+            using (var pen = new Pen(Color.FromArgb(borderAlpha, _accent), 1f + _hover))
                 g.DrawPath(pen, path);
 
             // Text block.
@@ -128,7 +213,7 @@ namespace RLHub2.Controls
             g.DrawString(_title.ToUpperInvariant(), titleFont, titleBrush, padX, y);
 
             y += titleFont.Height + 4;
-            g.DrawString(_value, valueFont, valueBrush, padX - 2, y);
+            g.DrawString(_shownValue, valueFont, valueBrush, padX - 2, y);
 
             if (!string.IsNullOrEmpty(_subtitle))
             {

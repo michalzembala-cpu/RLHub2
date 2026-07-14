@@ -20,6 +20,10 @@ namespace RLHub2
         private int targetWidth;
         private bool _animating;
 
+        // Hover-peek: temporarily expands a collapsed sidebar while the cursor is over it.
+        private readonly System.Windows.Forms.Timer _peekTimer;
+        private bool _peeking;
+
         private readonly System.Windows.Forms.Timer _pageAnim;
         private UserControl? _animPage;
 
@@ -73,8 +77,19 @@ namespace RLHub2
             animTimer = new System.Windows.Forms.Timer { Interval = 10 };
             animTimer.Tick += AnimTick;
 
-            _pageAnim = new System.Windows.Forms.Timer { Interval = 15 };
+            _pageAnim = new System.Windows.Forms.Timer { Interval = 10 };
             _pageAnim.Tick += PageAnimTick;
+
+            _peekTimer = new System.Windows.Forms.Timer { Interval = 120 };
+            _peekTimer.Tick += (s, e) => HoverPeekTick();
+            _peekTimer.Start();
+
+            // while the sidebar floats over the content it must track the form height itself
+            Resize += (s, e) =>
+            {
+                if (sidebar.Dock == DockStyle.None)
+                    sidebar.Height = ClientSize.Height;
+            };
 
             navPanel.SizeChanged += (s, e) => { if (!_animating) ResizeNav(); };
 
@@ -250,7 +265,7 @@ namespace RLHub2
 
             // Slide-up transition: start slightly lowered, animate to top, then dock.
             page.Dock = DockStyle.None;
-            page.Bounds = new Rectangle(0, 26,
+            page.Bounds = new Rectangle(0, 42,
                 Math.Max(1, panelContent.ClientSize.Width),
                 Math.Max(1, panelContent.ClientSize.Height));
             panelContent.Controls.Add(page);
@@ -277,19 +292,21 @@ namespace RLHub2
                 return;
             }
 
-            _animPage.Top = top - Math.Max(2, (int)(top * 0.30f));
+            _animPage.Top = top - Math.Max(2, (int)(top * 0.20f)); // ease-out glide
         }
 
         // ===== SIDEBAR COLLAPSE ANIMATION =====
-        private void ToggleSidebar()
-        {
-            collapsed = !collapsed;
-            targetWidth = collapsed ? CollapsedWidth : ExpandedWidth;
 
-            lblLogo.Visible = !collapsed;
+        // Drives the sidebar to expanded/collapsed WITHOUT touching the saved preference,
+        // so a hover-peek can reuse the exact same animation as the ☰ toggle.
+        private void ApplySidebarState(bool expanded)
+        {
+            targetWidth = expanded ? ExpandedWidth : CollapsedWidth;
+
+            lblLogo.Visible = expanded;
             foreach (var b in navButtons)
-                b.Collapsed = collapsed;
-            SetSectionHeadersVisible(!collapsed);
+                b.Collapsed = !expanded;
+            SetSectionHeadersVisible(expanded);
 
             // Set the nav item widths ONCE to their final value (not every frame) and turn
             // off scrolling during the slide, so nothing reflows/repaints per frame.
@@ -298,8 +315,58 @@ namespace RLHub2
             foreach (Control c in navPanel.Controls)
                 c.Width = Math.Max(10, targetWidth - c.Margin.Horizontal);
 
-            _store.SaveSidebarCollapsed(collapsed);
             animTimer.Start();
+        }
+
+        private void ToggleSidebar()
+        {
+            collapsed = !collapsed;
+            _peeking = false;
+            EndPeekOverlay();
+            ApplySidebarState(!collapsed);
+            _store.SaveSidebarCollapsed(collapsed);
+        }
+
+        // ===== HOVER PEEK (flyout: overlays the content instead of pushing it) =====
+
+        // Undock the sidebar so growing it draws OVER the page, and pad the content by the
+        // collapsed width so the page keeps exactly the same bounds (no reflow).
+        private void BeginPeekOverlay()
+        {
+            if (sidebar.Dock == DockStyle.None) return;
+            panelContent.Padding = new Padding(CollapsedWidth, 0, 0, 0);
+            sidebar.Dock = DockStyle.None;
+            sidebar.Bounds = new Rectangle(0, 0, CollapsedWidth, ClientSize.Height);
+            sidebar.BringToFront();
+        }
+
+        private void EndPeekOverlay()
+        {
+            if (sidebar.Dock == DockStyle.Left) return;
+            sidebar.Dock = DockStyle.Left;
+            sidebar.Width = CollapsedWidth;
+            panelContent.Padding = new Padding(0);
+        }
+
+        // While the sidebar is collapsed, hovering over it expands it temporarily.
+        private void HoverPeekTick()
+        {
+            if (!collapsed) { _peeking = false; return; }
+            if (!IsHandleCreated || sidebar.Width <= 0) return;
+
+            bool inside = sidebar.ClientRectangle.Contains(sidebar.PointToClient(Cursor.Position));
+
+            if (inside && !_peeking)
+            {
+                _peeking = true;
+                BeginPeekOverlay();
+                ApplySidebarState(true);
+            }
+            else if (!inside && _peeking)
+            {
+                _peeking = false;
+                ApplySidebarState(false); // re-docks once the collapse animation finishes
+            }
         }
 
         private void AnimTick(object? sender, EventArgs e)
@@ -313,6 +380,9 @@ namespace RLHub2
                 _animating = false;
                 navPanel.AutoScroll = true;
                 ResizeNav();
+
+                // Peek finished collapsing → put the sidebar back in the layout.
+                if (!_peeking) EndPeekOverlay();
                 return;
             }
 

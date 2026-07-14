@@ -18,12 +18,14 @@ namespace RLHub2
         private readonly TournamentService _service = new();
         private List<TournamentEvent> _all = new();
         private string _filter = "ALL";
+        private readonly Spinner _spinner = new();
 
         public TournamentsPage()
         {
             InitializeComponent();
             ApplyLanguage();
             StyleFilters();
+            SetupSpinner();
 
             btnAll.Click += (s, e) => SetFilter("ALL");
             btnRlcs.Click += (s, e) => SetFilter("RLCS");
@@ -41,10 +43,33 @@ namespace RLHub2
             btnRefresh.Enabled = false;
             lblStatus.Text = Localization.T("tour_loading");
             lblStatus.Visible = true;
+            SetLoading(true);
             try { _all = await _service.GetTournamentsAsync(); }
             catch { _all = new List<TournamentEvent>(); }
-            finally { btnRefresh.Enabled = true; }
+            finally { btnRefresh.Enabled = true; SetLoading(false); }
             RenderList();
+        }
+
+        private void SetupSpinner()
+        {
+            _spinner.Accent = Theme.Accent;
+            _spinner.Size = new Size(34, 34);
+            _spinner.Visible = false;
+            listHost.Controls.Add(_spinner);
+            _spinner.BringToFront();
+            listHost.Resize += (s, e) => CenterSpinner();
+            CenterSpinner();
+        }
+
+        private void CenterSpinner()
+            => _spinner.Location = new Point(
+                Math.Max(0, (listHost.Width - _spinner.Width) / 2),
+                Math.Max(0, listHost.Height / 2 - 48));
+
+        private void SetLoading(bool on)
+        {
+            _spinner.Visible = on;
+            if (on) { CenterSpinner(); _spinner.BringToFront(); }
         }
 
         private void StyleFilters()
@@ -90,9 +115,11 @@ namespace RLHub2
         {
             lblStatus.Text = Localization.T("tour_loading");
             lblStatus.Visible = true;
+            SetLoading(true);
 
             try { _all = await _service.GetTournamentsAsync(); }
             catch { _all = new List<TournamentEvent>(); }
+            finally { SetLoading(false); }
 
             SetFilter("ALL");
         }

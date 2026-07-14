@@ -18,12 +18,14 @@ namespace RLHub2
         private readonly NewsService _newsService = new();
         private List<NewsItem> _all = new();
         private string _category = "ALL";
+        private readonly Spinner _spinner = new();
 
         public NewsPage()
         {
             InitializeComponent();
             ApplyLanguage();
             StyleFilters();
+            SetupSpinner();
 
             btnAll.Click += (s, e) => SetCategory("ALL");
             btnGeneral.Click += (s, e) => SetCategory("General");
@@ -41,6 +43,7 @@ namespace RLHub2
             btnRefresh.Enabled = false;
             lblStatus.Text = Localization.T("news_loading");
             lblStatus.Visible = true;
+            SetLoading(true);
             try
             {
                 _all = await _newsService.GetNewsAsync();
@@ -52,8 +55,31 @@ namespace RLHub2
             finally
             {
                 btnRefresh.Enabled = true;
+                SetLoading(false);
             }
             RenderList();
+        }
+
+        private void SetupSpinner()
+        {
+            _spinner.Accent = Theme.Accent;
+            _spinner.Size = new Size(34, 34);
+            _spinner.Visible = false;
+            listHost.Controls.Add(_spinner);
+            _spinner.BringToFront();
+            listHost.Resize += (s, e) => CenterSpinner();
+            CenterSpinner();
+        }
+
+        private void CenterSpinner()
+            => _spinner.Location = new Point(
+                Math.Max(0, (listHost.Width - _spinner.Width) / 2),
+                Math.Max(0, listHost.Height / 2 - 48));
+
+        private void SetLoading(bool on)
+        {
+            _spinner.Visible = on;
+            if (on) { CenterSpinner(); _spinner.BringToFront(); }
         }
 
         private void StyleFilters()
@@ -106,6 +132,7 @@ namespace RLHub2
         {
             lblStatus.Text = Localization.T("news_loading");
             lblStatus.Visible = true;
+            SetLoading(true);
             try
             {
                 _all = await _newsService.GetNewsAsync();
@@ -113,6 +140,10 @@ namespace RLHub2
             catch
             {
                 _all = new List<NewsItem>();
+            }
+            finally
+            {
+                SetLoading(false);
             }
 
             SetCategory("ALL");
