@@ -137,7 +137,7 @@ namespace RLHub2
 
         private void Recompute()
         {
-            var session = _store.Load()
+            var session = _store.LoadForActive()
                 .Where(m => m.Time >= _client.StartedAt)
                 .OrderBy(m => m.Time).ToList();
 
@@ -153,7 +153,7 @@ namespace RLHub2
                 _streak = last ? c : -c;
             }
 
-            var ranked = _ballStore.Load()
+            var ranked = _ballStore.LoadForActive()
                 .Where(m => m.Ranked && m.MmrApprox > 0)
                 .OrderBy(m => m.Date).ToList();
             _hasMmr = ranked.Count > 0;

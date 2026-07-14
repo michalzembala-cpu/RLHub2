@@ -38,21 +38,27 @@ namespace RLHub2.Services
             catch { }
         }
 
-        public bool Contains(string season) => Load().Any(s => s.Season == season);
+        // Archived seasons for the currently active account.
+        public List<SeasonSnapshot> LoadForActive()
+            => Load().Where(s => Helpers.Accounts.BelongsToActive(s.Account)).ToList();
+
+        public bool Contains(string season, string account)
+            => Load().Any(s => s.Season == season && s.Account == account);
 
         public void Add(SeasonSnapshot snap)
         {
             var list = Load();
-            if (list.Any(s => s.Season == snap.Season)) return;
+            if (list.Any(s => s.Season == snap.Season && s.Account == snap.Account)) return;
             list.Add(snap);
             Save(list);
         }
 
-        // Archive the current season the first time it has actually ended.
+        // Archive the active account's current season the first time it has actually ended.
         public void ArchiveIfEnded()
         {
             if (DateTime.UtcNow < SeasonService.CurrentSeasonEnd) return;
-            if (Contains(SeasonService.CurrentSeasonName)) return;
+            string acc = Helpers.Accounts.ActiveName;
+            if (Contains(SeasonService.CurrentSeasonName, acc)) return;
 
             var snap = SeasonStats.ComputeCurrent();
             snap.InProgress = false;
@@ -68,12 +74,13 @@ namespace RLHub2.Services
         {
             var start = SeasonService.CurrentSeasonStart;
 
-            var ball = new BallMatchStore().Load().Where(m => m.Date.ToUniversalTime() >= start).ToList();
-            var mmr = new MmrStore().Load().Where(e => e.Timestamp.ToUniversalTime() >= start).ToList();
+            var ball = new BallMatchStore().LoadForActive().Where(m => m.Date.ToUniversalTime() >= start).ToList();
+            var mmr = new MmrStore().LoadForActive().Where(e => e.Timestamp.ToUniversalTime() >= start).ToList();
 
             var snap = new SeasonSnapshot
             {
                 Season = SeasonService.CurrentSeasonName,
+                Account = Helpers.Accounts.ActiveName,
                 InProgress = true,
                 Matches = ball.Count,
             };

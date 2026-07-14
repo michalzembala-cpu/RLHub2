@@ -29,7 +29,7 @@ namespace RLHub2
         private Label lblKeyHint;
         private TextBox txtKey;
         private Label lblNick;
-        private TextBox txtNick;
+        private ComboBox cmbAccount;
         private Button btnSaveKey;
 
         private Panel bcPanel;
@@ -38,6 +38,7 @@ namespace RLHub2
         private TextBox txtBcKey;
         private Button btnTestBc;
         private Label lblBcStatus;
+        private CheckBox chkDeleteOld;
 
         private void InitializeComponent()
         {
@@ -59,7 +60,7 @@ namespace RLHub2
             lblKeyHint = new Label();
             txtKey = new TextBox();
             lblNick = new Label();
-            txtNick = new TextBox();
+            cmbAccount = new ComboBox();
             btnSaveKey = new Button();
             bcPanel = new Panel();
             lblBc = new Label();
@@ -67,6 +68,7 @@ namespace RLHub2
             txtBcKey = new TextBox();
             btnTestBc = new Button();
             lblBcStatus = new Label();
+            chkDeleteOld = new CheckBox();
 
             var pageColor = Theme.PageBg;
             var panelColor = Theme.Surface;
@@ -187,12 +189,13 @@ namespace RLHub2
             lblNick.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblNick.Location = new Point(20, 126);
 
-            txtNick.Location = new Point(20, 148);
-            txtNick.Width = 300;
-            txtNick.BackColor = inputBg;
-            txtNick.ForeColor = Theme.TextPrimary;
-            txtNick.BorderStyle = BorderStyle.FixedSingle;
-            txtNick.Font = new Font("Segoe UI", 11F);
+            cmbAccount.Location = new Point(20, 148);
+            cmbAccount.Width = 300;
+            cmbAccount.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbAccount.FlatStyle = FlatStyle.Flat;
+            cmbAccount.BackColor = inputBg;
+            cmbAccount.ForeColor = Theme.TextPrimary;
+            cmbAccount.Font = new Font("Segoe UI", 11F);
 
             btnSaveKey.Location = new Point(330, 147);
             btnSaveKey.Size = new Size(110, 28);
@@ -208,12 +211,12 @@ namespace RLHub2
             keyPanel.Controls.Add(lblKeyHint);
             keyPanel.Controls.Add(txtKey);
             keyPanel.Controls.Add(lblNick);
-            keyPanel.Controls.Add(txtNick);
+            keyPanel.Controls.Add(cmbAccount);
             keyPanel.Controls.Add(btnSaveKey);
 
             // ===== BALLCHASING KEY CARD =====
             bcPanel.Location = new Point(24, 774);
-            bcPanel.Size = new Size(460, 186);
+            bcPanel.Size = new Size(460, 224);
             bcPanel.BackColor = panelColor;
 
             lblBc.Text = "BALLCHASING API KEY";
@@ -254,11 +257,19 @@ namespace RLHub2
             lblBcStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             lblBcStatus.Location = new Point(20, 134);
 
+            chkDeleteOld.Location = new Point(20, 162);
+            chkDeleteOld.AutoSize = true;
+            chkDeleteOld.MaximumSize = new Size(420, 0);
+            chkDeleteOld.ForeColor = Theme.TextSecondary;
+            chkDeleteOld.Font = new Font("Segoe UI", 9.5F);
+            chkDeleteOld.Cursor = Cursors.Hand;
+
             bcPanel.Controls.Add(lblBc);
             bcPanel.Controls.Add(lblBcHint);
             bcPanel.Controls.Add(txtBcKey);
             bcPanel.Controls.Add(btnTestBc);
             bcPanel.Controls.Add(lblBcStatus);
+            bcPanel.Controls.Add(chkDeleteOld);
 
             this.Controls.Add(bcPanel);
             this.Controls.Add(keyPanel);

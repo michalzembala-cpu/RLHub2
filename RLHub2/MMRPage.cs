@@ -94,8 +94,10 @@ namespace RLHub2
                 : Localization.T("mmr_hint_add");
             lblMmr.Text = Localization.T("mmr_col_mmr");
 
-            grid.Columns["colDate"].HeaderText = Localization.T("mmr_col_date");
-            grid.Columns["colMmr"].HeaderText = Localization.T("mmr_col_mmr");
+            if (grid.Columns["colDate"] is DataGridViewColumn cDate)
+                cDate.HeaderText = Localization.T("mmr_col_date");
+            if (grid.Columns["colMmr"] is DataGridViewColumn cMmr)
+                cMmr.HeaderText = Localization.T("mmr_col_mmr");
 
             chart.EmptyTitle = Localization.T("mmr_empty");
             chart.EmptySub = Localization.T("mmr_empty_sub");
@@ -119,7 +121,7 @@ namespace RLHub2
 
         private void LoadEntries()
         {
-            _entries = _store.Load();
+            _entries = _store.LoadForActive();
             ShowSelection();
         }
 
@@ -249,7 +251,7 @@ namespace RLHub2
         // ===== AUTO-FETCH MMR FROM TRACKER.GG =====
         private async System.Threading.Tasks.Task FetchMmrAsync()
         {
-            string nick = new SettingsStore().LoadTrackedNick();
+            string nick = Accounts.ActiveName;
             if (string.IsNullOrWhiteSpace(nick))
             {
                 Toast.Show(this, Localization.T("mmr_fetch_nonick"), ToastKind.Info, 4000);
@@ -267,14 +269,14 @@ namespace RLHub2
                 {
                     if (rank.Mmr > 0 && (rank.Mode == "1v1" || rank.Mode == "2v2" || rank.Mode == "3v3"))
                     {
-                        _entries.Add(new MmrEntry(DateTime.Now, rank.Mmr, rank.Mode));
+                        _entries.Add(new MmrEntry(DateTime.Now, rank.Mmr, rank.Mode) { Account = Accounts.ActiveName });
                         added++;
                     }
                 }
 
                 if (added > 0)
                 {
-                    _store.Save(_entries);
+                    _store.SaveForActive(_entries);
                     ShowSelection();
                     Toast.Show(this, Localization.T("mmr_fetched"), ToastKind.Success);
                 }
@@ -301,7 +303,7 @@ namespace RLHub2
         // ===== DATA: EXPORT / IMPORT / FOLDER =====
         private void ExportData()
         {
-            _store.Save(_entries);
+            _store.SaveForActive(_entries);
             using var dlg = new SaveFileDialog { Filter = "JSON|*.json", FileName = "mmr_entries.json" };
             if (dlg.ShowDialog() == DialogResult.OK)
             {
@@ -319,7 +321,7 @@ namespace RLHub2
             {
                 PushUndo();
                 _entries = _store.ImportFrom(dlg.FileName);
-                _store.Save(_entries);
+                _store.SaveForActive(_entries);
                 ShowSelection();
                 Toast.Show(this, Localization.T("mmr_imported"), ToastKind.Success);
             }
@@ -394,10 +396,10 @@ namespace RLHub2
             }
             else
             {
-                _entries.Add(new MmrEntry(DateTime.Now, value, _mode));
+                _entries.Add(new MmrEntry(DateTime.Now, value, _mode) { Account = Accounts.ActiveName });
             }
 
-            _store.Save(_entries);
+            _store.SaveForActive(_entries);
             RefreshChart();
             RefreshGrid();
         }
@@ -442,7 +444,7 @@ namespace RLHub2
             if (_editing == entry)
                 CancelEdit();
 
-            _store.Save(_entries);
+            _store.SaveForActive(_entries);
             RefreshChart();
             RefreshGrid();
         }
@@ -451,7 +453,7 @@ namespace RLHub2
         private void PushUndo()
         {
             _undo.Push(_entries
-                .Select(e => new MmrEntry(e.Timestamp, e.Value, e.Mode))
+                .Select(e => new MmrEntry(e.Timestamp, e.Value, e.Mode) { Account = e.Account })
                 .ToList());
         }
 
@@ -462,7 +464,7 @@ namespace RLHub2
 
             _entries = _undo.Pop();
             CancelEdit();
-            _store.Save(_entries);
+            _store.SaveForActive(_entries);
             RefreshChart();
             RefreshGrid();
         }

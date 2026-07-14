@@ -95,6 +95,16 @@ namespace RLHub2
                     BeginInvoke(new Action(OnLanguageChanged));
             };
 
+            // switching account reloads the current page with that account's data
+            Accounts.ActiveChanged += () =>
+            {
+                if (IsHandleCreated)
+                    BeginInvoke(new Action(() =>
+                    {
+                        if (_currentFactory != null) SwitchPage(_currentFactory());
+                    }));
+            };
+
             Theme.ThemeChanged += () =>
             {
                 if (IsHandleCreated)

@@ -6,6 +6,7 @@ namespace RLHub2.Models
     public class SessionMatch
     {
         public DateTime Time { get; set; }
+        public string Account { get; set; } = "";   // which account was playing
         public bool Won { get; set; }
         public int Goals { get; set; }
         public int Saves { get; set; }

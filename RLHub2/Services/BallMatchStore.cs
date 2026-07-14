@@ -33,6 +33,10 @@ namespace RLHub2.Services
             catch { return new List<BallMatch>(); }
         }
 
+        // Only the matches belonging to the currently active account.
+        public List<BallMatch> LoadForActive()
+            => Load().Where(m => Helpers.Accounts.BelongsToActive(m.Account)).ToList();
+
         public void Save(List<BallMatch> list)
         {
             try { File.WriteAllText(_path, JsonSerializer.Serialize(list ?? new List<BallMatch>(), Options)); }

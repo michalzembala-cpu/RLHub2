@@ -83,51 +83,43 @@ namespace RLHub2.Services
         // player is you — the player present in the most replays (you're in every one of
         // your own games). nickHint is used only if it actually matches a player. Returns
         // the matches plus the detected in-game name.
-        public async Task<(List<BallMatch> matches, string detectedNick, bool autoDetected)> GetOwnMatchesAsync(string nickHint, int count = 30)
+        // YOUR matches across ALL configured accounts. Each replay is matched against every
+        // account's aliases (so replays from before a rename still land on the right
+        // account) and the resulting BallMatch is tagged with that account's name.
+        public async Task<List<BallMatch>> GetOwnMatchesAsync(int count = 30)
         {
             string key = new SettingsStore().LoadBallchasingKey();
             if (string.IsNullOrWhiteSpace(key)) throw new NoKeyException();
 
+            var accounts = Accounts.All;
+            if (accounts.Count == 0) return new List<BallMatch>();
+
             var ids = await FetchIdsAsync("uploader=me", count, key);
-            var parsed = new List<PReplay>();
+            var matches = new List<BallMatch>();
+
             foreach (var id in ids)
             {
                 var pr = await FetchReplayAsync(id, key);
-                if (pr != null) parsed.Add(pr);
                 await Task.Delay(320);
-            }
-            if (parsed.Count == 0) return (new List<BallMatch>(), "", false);
+                if (pr == null) continue;
 
-            string hint = (nickHint ?? "").Trim();
-            string identity;
-            bool autoDetected;
+                // find which of our accounts played this replay
+                foreach (var acc in accounts)
+                {
+                    var me = pr.Players.FirstOrDefault(p => acc.Matches(p.Name));
+                    if (me == null) continue;
 
-            if (hint.Length > 0)
-            {
-                // Track ONLY the chosen main account. If it isn't present in the uploads,
-                // return nothing rather than silently switching to another account.
-                bool hintExists = parsed.Any(pr => pr.Players.Any(p =>
-                    string.Equals(p.Name, hint, StringComparison.OrdinalIgnoreCase)));
-                if (!hintExists) return (new List<BallMatch>(), "", false);
-                identity = hint;
-                autoDetected = false;
-            }
-            else
-            {
-                // No main set yet → auto-detect the player present in the most replays.
-                var freq = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                foreach (var pr in parsed)
-                    foreach (var p in pr.Players)
-                        freq[p.Name] = freq.TryGetValue(p.Name, out var c) ? c + 1 : 1;
-                identity = freq.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key).FirstOrDefault().Key ?? "";
-                autoDetected = true;
+                    var m = BuildMatch(pr, me.Name);
+                    if (m != null)
+                    {
+                        m.Account = acc.Name;
+                        matches.Add(m);
+                    }
+                    break; // one account per replay
+                }
             }
 
-            var matches = parsed
-                .Select(pr => BuildMatch(pr, identity))
-                .Where(m => m != null).Cast<BallMatch>()
-                .OrderByDescending(m => m.Date).ToList();
-            return (matches, identity, autoDetected);
+            return matches.OrderByDescending(m => m.Date).ToList();
         }
 
         // Read-only lookup of another player's public matches (by in-game name).

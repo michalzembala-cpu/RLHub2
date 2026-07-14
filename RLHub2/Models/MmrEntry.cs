@@ -10,6 +10,9 @@ namespace RLHub2.Models
         // Playlist: "1v1", "2v2" or "3v3".
         public string Mode { get; set; } = "2v2";
 
+        // Which of the user's accounts this entry belongs to.
+        public string Account { get; set; } = "";
+
         public MmrEntry() { }
 
         public MmrEntry(DateTime timestamp, int value)

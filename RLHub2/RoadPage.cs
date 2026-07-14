@@ -40,7 +40,7 @@ namespace RLHub2
             ladderPanel.Paint += DrawLadder;
             ladderPanel.Resize += (s, e) => ladderPanel.Invalidate();
 
-            Load += (s, e) => { _entries = _store.Load(); Recompute(); };
+            Load += (s, e) => { _entries = _store.LoadForActive(); Recompute(); };
         }
 
         private void ApplyLanguage()

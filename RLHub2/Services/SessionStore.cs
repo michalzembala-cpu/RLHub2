@@ -32,6 +32,10 @@ namespace RLHub2.Services
             catch { return new List<SessionMatch>(); }
         }
 
+        // Only the matches belonging to the currently active account.
+        public List<SessionMatch> LoadForActive()
+            => Load().FindAll(m => Helpers.Accounts.BelongsToActive(m.Account));
+
         public void Save(List<SessionMatch> list)
         {
             try { File.WriteAllText(_path, JsonSerializer.Serialize(list ?? new List<SessionMatch>(), Options)); }

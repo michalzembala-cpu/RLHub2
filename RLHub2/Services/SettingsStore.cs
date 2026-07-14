@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using RLHub2.Helpers;
+using RLHub2.Models;
 
 namespace RLHub2.Services
 {
@@ -14,9 +17,16 @@ namespace RLHub2.Services
         public bool SidebarCollapsed { get; set; } = false;
         public string Theme { get; set; } = "dark"; // "dark" or "light"
         public string Accent { get; set; } = "#783CFF"; // hex accent color
-        public string TrackedNick { get; set; } = ""; // player nick for tracker.gg fetch
+        public string TrackedNick { get; set; } = ""; // legacy single nick (migrated to Accounts)
         public string BallchasingKey { get; set; } = ""; // ballchasing.com API key
         public bool BallchasingAutoUpload { get; set; } = true; // auto-upload local replays
+
+        public List<Account> Accounts { get; set; } = new();
+        public string ActiveAccount { get; set; } = "";
+
+        // Send local .replay files to the Recycle Bin once they are safely on ballchasing
+        // and older than this many days. 0 = never delete.
+        public int DeleteReplaysAfterDays { get; set; } = 0;
     }
 
     // Persists app settings (language, API key, ...) as JSON in %LocalAppData%\RLHub2\settings.json
@@ -116,12 +126,62 @@ namespace RLHub2.Services
             Save(cfg);
         }
 
+        // ===== accounts =====
+
+        // Accounts, migrating the legacy single nick on first use.
+        public List<Account> LoadAccounts()
+        {
+            var cfg = Load();
+            var list = cfg.Accounts ?? new List<Account>();
+            if (list.Count == 0 && !string.IsNullOrWhiteSpace(cfg.TrackedNick))
+            {
+                list.Add(new Account { Name = cfg.TrackedNick.Trim() });
+                cfg.Accounts = list;
+                cfg.ActiveAccount = list[0].Name;
+                Save(cfg);
+            }
+            return list;
+        }
+
+        public void SaveAccounts(List<Account> accounts)
+        {
+            var cfg = Load();
+            cfg.Accounts = accounts ?? new List<Account>();
+            if (!cfg.Accounts.Any(a => a.Name == cfg.ActiveAccount))
+                cfg.ActiveAccount = cfg.Accounts.FirstOrDefault()?.Name ?? "";
+            Save(cfg);
+        }
+
+        public string LoadActiveAccountName()
+        {
+            var cfg = Load();
+            var accounts = LoadAccounts();
+            if (accounts.Any(a => a.Name == cfg.ActiveAccount)) return cfg.ActiveAccount;
+            return accounts.FirstOrDefault()?.Name ?? "";
+        }
+
+        public void SaveActiveAccount(string name)
+        {
+            var cfg = Load();
+            cfg.ActiveAccount = name ?? "";
+            Save(cfg);
+        }
+
         public string LoadBallchasingKey() => Load().BallchasingKey ?? "";
 
         public void SaveBallchasingKey(string key)
         {
             var cfg = Load();
             cfg.BallchasingKey = (key ?? "").Trim();
+            Save(cfg);
+        }
+
+        public int LoadDeleteReplaysAfterDays() => Load().DeleteReplaysAfterDays;
+
+        public void SaveDeleteReplaysAfterDays(int days)
+        {
+            var cfg = Load();
+            cfg.DeleteReplaysAfterDays = days < 0 ? 0 : days;
             Save(cfg);
         }
 

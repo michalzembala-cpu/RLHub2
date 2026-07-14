@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using RLHub2.Helpers;
 using RLHub2.Models;
 
 namespace RLHub2.Services
@@ -14,18 +15,20 @@ namespace RLHub2.Services
         public int NewMatches { get; set; }
         public int MmrPoints { get; set; }
         public int Total { get; set; }
+        public int Deleted { get; set; }
         public string Error { get; set; } = "";
         public bool Ok => string.IsNullOrEmpty(Error);
     }
 
-    // Orchestrates: auto-upload new local replays → fetch parsed matches from
-    // ballchasing → persist matches and append approximated MMR to the chart.
+    // Orchestrates: auto-upload new local replays (for ANY of the user's accounts) →
+    // fetch parsed matches from ballchasing (tagged per account) → persist matches and
+    // append approximated MMR to the chart.
     public class BallchasingSync
     {
-        private const int DailyUploadCap = 10; // max replays uploaded per calendar day
+        private const int DailyUploadCap = 10;    // max replays uploaded per calendar day
         private const int MaxUploadAttempts = 40;
-        private const int MaxScanPerSync = 700;   // scan deep enough to reach the main account's older replays
-        private const int HeaderScanBytes = 65536; // player names live in the first ~64 KB of the header
+        private const int MaxScanPerSync = 700;   // scan deep enough to reach older replays
+        private const int HeaderScanBytes = 65536; // player names live in the header
 
         private static int _running; // guards against overlapping syncs
 
@@ -38,38 +41,33 @@ namespace RLHub2.Services
             {
                 var s = new SettingsStore();
                 string key = s.LoadBallchasingKey();
-                string nick = s.LoadTrackedNick();
                 if (string.IsNullOrWhiteSpace(key)) return new SyncResult { Error = "no key" };
+                if (Accounts.All.Count == 0) return new SyncResult { Error = "no accounts" };
 
                 var svc = new BallchasingService();
                 int uploaded = 0;
                 if (s.LoadBallchasingAutoUpload())
                 {
                     progress?.Invoke("upload");
-                    uploaded = await UploadNewReplays(svc, key, nick, progress);
+                    uploaded = await UploadNewReplays(svc, key, progress);
                 }
 
-                if (string.IsNullOrWhiteSpace(nick))
-                    return new SyncResult { Uploaded = uploaded, Error = "no nick" };
-
                 progress?.Invoke("fetch");
-                // own uploads — track the chosen main account (or auto-detect if none set)
-                var (matches, detected, autoDetected) = await svc.GetOwnMatchesAsync(nick, 30);
-
-                // Only fill in the main account automatically when the user hasn't set one.
-                // A user-chosen main is never overwritten.
-                if (autoDetected && string.IsNullOrWhiteSpace(nick) && !string.IsNullOrWhiteSpace(detected))
-                    s.SaveTrackedNick(detected);
+                var matches = await svc.GetOwnMatchesAsync(60);
 
                 int added = new BallMatchStore().Merge(matches);
                 int mmrAdded = AppendMmr(matches);
+
+                // Housekeeping: recycle local replays that are already safely on ballchasing.
+                int deleted = CleanupOldReplays(s.LoadDeleteReplaysAfterDays(), progress);
 
                 return new SyncResult
                 {
                     Uploaded = uploaded,
                     NewMatches = added,
                     MmrPoints = mmrAdded,
-                    Total = matches.Count
+                    Total = matches.Count,
+                    Deleted = deleted
                 };
             }
             catch (Exception ex) { return new SyncResult { Error = ex.Message }; }
@@ -89,23 +87,22 @@ namespace RLHub2.Services
             return list;
         }
 
-        private static async Task<int> UploadNewReplays(BallchasingService svc, string key, string mainNick, Action<string>? progress)
+        private static async Task<int> UploadNewReplays(BallchasingService svc, string key, Action<string>? progress)
         {
             var quota = new UploadQuotaStore();
             int remaining = DailyUploadCap - quota.UsedToday();
-            if (remaining <= 0) return 0; // daily cap already reached
+            if (remaining <= 0) return 0;
 
             var uploadedStore = new UploadedStore();
             var done = uploadedStore.Load();
 
-            var files = DemoFiles()
-                .OrderByDescending(f => f.LastWriteTimeUtc)
-                .ToList();
+            var files = DemoFiles().OrderByDescending(f => f.LastWriteTimeUtc).ToList();
             if (files.Count == 0) return 0;
 
-            // When a main account is set, only upload ITS replays (found by scanning the
-            // replay header for the name), so quota isn't spent on other accounts' games.
-            bool filterByMain = !string.IsNullOrWhiteSpace(mainNick);
+            // Only upload replays that one of OUR accounts played (matched by any of their
+            // in-game names, including old names from before a rename).
+            var names = Accounts.AllNames().ToList();
+            bool filterByAccounts = names.Count > 0;
 
             int uploaded = 0, attempts = 0, scans = 0;
             foreach (var f in files)
@@ -113,31 +110,23 @@ namespace RLHub2.Services
                 if (done.Contains(f.Name)) continue;
                 if (uploaded >= remaining || attempts >= MaxUploadAttempts) break;
 
-                if (filterByMain)
+                if (filterByAccounts)
                 {
-                    if (scans >= MaxScanPerSync) break;        // bound disk reads (OneDrive-friendly)
+                    if (scans >= MaxScanPerSync) break;
                     scans++;
-                    if (!FileContainsName(f.FullName, mainNick)) continue; // not a main-account replay
+                    if (!FileContainsAnyName(f.FullName, names)) continue;
                 }
 
                 attempts++;
-
                 progress?.Invoke($"upload {uploaded + 1}");
                 var res = await svc.UploadReplayAsync(f.FullName, key);
 
                 if (res == BallchasingService.UploadResult.RateLimited) break;
-                if (res == BallchasingService.UploadResult.Uploaded)
-                {
-                    done.Add(f.Name);
-                    uploaded++;
-                }
-                else if (res == BallchasingService.UploadResult.Duplicate)
-                {
-                    done.Add(f.Name); // already on ballchasing — never retry
-                }
+                if (res == BallchasingService.UploadResult.Uploaded) { done.Add(f.Name); uploaded++; }
+                else if (res == BallchasingService.UploadResult.Duplicate) done.Add(f.Name);
                 // Failed → leave unmarked so a transient error retries next sync
 
-                await Task.Delay(1200); // upload endpoint is rate-limited (~1/sec free)
+                await Task.Delay(1200);
             }
 
             uploadedStore.Save(done);
@@ -145,9 +134,9 @@ namespace RLHub2.Services
             return uploaded;
         }
 
-        // Rocket League stores player names as readable bytes in the replay header, so we
-        // can tell which account a .replay belongs to without uploading/parsing it.
-        private static bool FileContainsName(string path, string name)
+        // Player names live as readable bytes in the replay header, so we can tell which
+        // account a .replay belongs to without uploading or parsing it.
+        private static bool FileContainsAnyName(string path, List<string> names)
         {
             try
             {
@@ -156,9 +145,45 @@ namespace RLHub2.Services
                 var buf = new byte[len];
                 int read = fs.Read(buf, 0, len);
                 string text = System.Text.Encoding.Latin1.GetString(buf, 0, read);
-                return text.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
+                foreach (var n in names)
+                    if (text.IndexOf(n, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                return false;
             }
             catch { return false; }
+        }
+
+        // Sends local .replay files to the RECYCLE BIN (never a hard delete) once they are:
+        //   1) confirmed uploaded to ballchasing (so the file can be downloaded back), and
+        //   2) older than `days`.
+        // Replays whose upload failed are never touched. 0 days = feature off.
+        private static int CleanupOldReplays(int days, Action<string>? progress)
+        {
+            if (days <= 0) return 0;
+
+            var done = new UploadedStore().Load();
+            if (done.Count == 0) return 0;
+
+            var cutoff = DateTime.Now.AddDays(-days);
+            int deleted = 0;
+
+            foreach (var f in DemoFiles())
+            {
+                if (!done.Contains(f.Name)) continue;      // not confirmed on ballchasing
+                if (f.LastWriteTime > cutoff) continue;     // still within the keep window
+
+                try
+                {
+                    Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(
+                        f.FullName,
+                        Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+                        Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+                    deleted++;
+                }
+                catch { /* file locked / already gone — skip */ }
+            }
+
+            if (deleted > 0) progress?.Invoke($"recycled {deleted}");
+            return deleted;
         }
 
         private static int AppendMmr(List<BallMatch> matches)
@@ -171,10 +196,13 @@ namespace RLHub2.Services
                 .Where(x => x.Ranked && x.Mode.Length > 0 && x.MmrApprox > 0)
                 .OrderBy(x => x.Date))
             {
-                bool exists = entries.Any(e => e.Mode == m.Mode &&
+                bool exists = entries.Any(e =>
+                    e.Account == m.Account &&
+                    e.Mode == m.Mode &&
                     Math.Abs((e.Timestamp - m.Date).TotalMinutes) < 2);
                 if (exists) continue;
-                entries.Add(new MmrEntry(m.Date, m.MmrApprox, m.Mode));
+
+                entries.Add(new MmrEntry(m.Date, m.MmrApprox, m.Mode) { Account = m.Account });
                 added++;
             }
 

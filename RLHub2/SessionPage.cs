@@ -84,7 +84,7 @@ namespace RLHub2
 
         private void RefreshStats()
         {
-            _session = _store.Load()
+            _session = _store.LoadForActive()
                 .Where(m => m.Time >= _client.StartedAt)
                 .OrderBy(m => m.Time)
                 .ToList();

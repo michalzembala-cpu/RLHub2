@@ -21,8 +21,16 @@ namespace RLHub2
             segLanguage.SetSelectedSilent(Localization.IsPolish ? 0 : 1);
             segTheme.SetSelectedSilent(Theme.IsDark ? 0 : 1);
             txtKey.Text = _store.LoadTrackerKey();
-            txtNick.Text = _store.LoadTrackedNick();
             txtBcKey.Text = _store.LoadBallchasingKey();
+
+            // account switcher
+            cmbAccount.Items.Clear();
+            foreach (var a in Accounts.All) cmbAccount.Items.Add(a.Name);
+            cmbAccount.SelectedItem = Accounts.ActiveName;
+            cmbAccount.SelectedIndexChanged += (s, e) =>
+            {
+                if (cmbAccount.SelectedItem is string name) Accounts.SetActive(name);
+            };
 
             segLanguage.SelectedIndexChanged += (s, e) =>
             {
@@ -43,12 +51,19 @@ namespace RLHub2
             btnSaveKey.Click += (s, e) =>
             {
                 _store.SaveTrackerKey(txtKey.Text);
-                _store.SaveTrackedNick(txtNick.Text);
                 _store.SaveBallchasingKey(txtBcKey.Text);
                 Toast.Show(this, Localization.T("settings_saved"), ToastKind.Success);
             };
 
             btnTestBc.Click += async (s, e) => await TestBallchasing();
+
+            // auto-recycle replays that are already safely on ballchasing
+            chkDeleteOld.Text = Localization.IsPolish
+                ? "Usuwaj replaye starsze niż 7 dni (do Kosza, tylko te wgrane na Ballchasing)"
+                : "Recycle replays older than 7 days (only ones already on Ballchasing)";
+            chkDeleteOld.Checked = _store.LoadDeleteReplaysAfterDays() > 0;
+            chkDeleteOld.CheckedChanged += (s, e) =>
+                _store.SaveDeleteReplaysAfterDays(chkDeleteOld.Checked ? 7 : 0);
         }
 
         private async Task TestBallchasing()
@@ -90,7 +105,7 @@ namespace RLHub2
             lblAccentHint.Text = Localization.T("settings_accent_hint");
             lblKey.Text = Localization.T("settings_key");
             lblKeyHint.Text = Localization.T("settings_key_hint");
-            lblNick.Text = Localization.T("settings_nick");
+            lblNick.Text = Localization.IsPolish ? "AKTYWNE KONTO" : "ACTIVE ACCOUNT";
             btnSaveKey.Text = Localization.T("settings_save");
 
             segLanguage.SetOptions(new[] { "Polski", "English" });

@@ -25,9 +25,9 @@ namespace RLHub2.Services
         public static CoachReport Build()
         {
             bool pl = Localization.IsPolish;
-            var all = new BallMatchStore().Load().OrderBy(m => m.Date).ToList();
-            var mmr = new MmrStore().Load();
-            var session = new SessionStore().Load();
+            var all = new BallMatchStore().LoadForActive().OrderBy(m => m.Date).ToList();
+            var mmr = new MmrStore().LoadForActive();
+            var session = new SessionStore().LoadForActive();
 
             var rep = new CoachReport();
             if (all.Count == 0)

@@ -51,6 +51,19 @@ namespace RLHub2.Services
             }
         }
 
+        // Only the entries belonging to the currently active account.
+        public List<MmrEntry> LoadForActive()
+            => Load().FindAll(e => Helpers.Accounts.BelongsToActive(e.Account));
+
+        // Replaces ONLY the active account's entries, keeping every other account's data.
+        public void SaveForActive(List<MmrEntry> activeEntries)
+        {
+            var all = Load().FindAll(e => !Helpers.Accounts.BelongsToActive(e.Account));
+            all.AddRange(activeEntries ?? new List<MmrEntry>());
+            all.Sort((a, b) => a.Timestamp.CompareTo(b.Timestamp));
+            Save(all);
+        }
+
         public void Save(List<MmrEntry> entries)
         {
             var json = JsonSerializer.Serialize(entries ?? new List<MmrEntry>(), Options);

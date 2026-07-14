@@ -44,9 +44,9 @@ namespace RLHub2
 
         private void Compute()
         {
-            var mmr = new MmrStore().Load();
-            var ball = new BallMatchStore().Load();
-            var session = new SessionStore().Load();
+            var mmr = new MmrStore().LoadForActive();
+            var ball = new BallMatchStore().LoadForActive();
+            var session = new SessionStore().LoadForActive();
 
             // Highest MMR ever
             if (mmr.Count > 0)
@@ -109,7 +109,7 @@ namespace RLHub2
             _history = new List<SeasonSnapshot>();
             var current = SeasonStats.ComputeCurrent();
             if (current.Matches > 0) _history.Add(current);
-            _history.AddRange(new SeasonHistoryStore().Load());
+            _history.AddRange(new SeasonHistoryStore().LoadForActive());
             _history = _history.OrderByDescending(s => s.InProgress).ThenByDescending(s => s.EndedOn).ToList();
 
             historyPanel.Invalidate();

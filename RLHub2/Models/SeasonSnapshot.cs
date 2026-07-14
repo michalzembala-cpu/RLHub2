@@ -6,6 +6,7 @@ namespace RLHub2.Models
     public class SeasonSnapshot
     {
         public string Season { get; set; } = "";
+        public string Account { get; set; } = "";
         public string PeakRank { get; set; } = "";
         public string FinalRank { get; set; } = "";
         public int HighestMmr { get; set; }

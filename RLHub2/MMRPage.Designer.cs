@@ -52,6 +52,9 @@ namespace RLHub2
 
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             selectionView = new TableLayoutPanel();
             lblSelTitle = new Label();
             lblSelSub = new Label();
@@ -64,19 +67,16 @@ namespace RLHub2
             btnExport = new Button();
             btnImport = new Button();
             btnFolder = new Button();
-
             detailView = new TableLayoutPanel();
             headerPanel = new Panel();
-            btnBack = new Button();
-            lblDetailTitle = new Label();
             rangePanel = new FlowLayoutPanel();
             btnWeek = new Button();
             btnMonth = new Button();
             btnSeason = new Button();
             btnAll = new Button();
-
+            lblDetailTitle = new Label();
+            btnBack = new Button();
             chart = new MmrChartControl();
-
             bottomLayout = new TableLayoutPanel();
             historyPanel = new Panel();
             grid = new DataGridView();
@@ -84,7 +84,6 @@ namespace RLHub2
             btnEdit = new Button();
             btnDelete = new Button();
             btnUndo = new Button();
-
             formPanel = new Panel();
             lblFormTitle = new Label();
             lblMmr = new Label();
@@ -92,269 +91,513 @@ namespace RLHub2
             lblHint = new Label();
             btnCancelEdit = new Button();
             lblStats = new Label();
-
-            var pageColor = Theme.PageBg;
-            var panelColor = Theme.Surface;
-
+            dataGridViewTextBoxColumn1 = new DataGridViewTextBoxColumn();
+            dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
+            selectionView.SuspendLayout();
+            cardsLayout.SuspendLayout();
+            dataPanel.SuspendLayout();
+            detailView.SuspendLayout();
+            headerPanel.SuspendLayout();
+            rangePanel.SuspendLayout();
+            bottomLayout.SuspendLayout();
+            historyPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
+            gridToolbar.SuspendLayout();
+            formPanel.SuspendLayout();
             SuspendLayout();
-
-            // ===== PAGE =====
-            this.BackColor = pageColor;
-            this.Dock = DockStyle.Fill;
-
-            // =====================================================
-            //  SELECTION VIEW
-            // =====================================================
-            selectionView.Dock = DockStyle.Fill;
-            selectionView.BackColor = pageColor;
-            selectionView.Padding = new Padding(24);
+            // 
+            // selectionView
+            // 
+            selectionView.BackColor = Color.FromArgb(12, 12, 26);
             selectionView.ColumnCount = 1;
-            selectionView.RowCount = 4;
-            selectionView.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            selectionView.RowStyles.Add(new RowStyle(SizeType.Absolute, 50f));
-            selectionView.RowStyles.Add(new RowStyle(SizeType.Absolute, 34f));
-            selectionView.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-            selectionView.RowStyles.Add(new RowStyle(SizeType.Absolute, 56f));
-
-            lblSelTitle.Text = "MMR TRACKER";
-            lblSelTitle.AutoSize = true;
-            lblSelTitle.ForeColor = Theme.TextPrimary;
-            lblSelTitle.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            lblSelTitle.Margin = new Padding(4, 0, 0, 0);
-
-            lblSelSub.Text = "Choose a playlist";
-            lblSelSub.AutoSize = true;
-            lblSelSub.ForeColor = Theme.TextMuted;
-            lblSelSub.Font = new Font("Segoe UI", 11F);
-            lblSelSub.Margin = new Padding(6, 0, 0, 0);
-
-            cardsLayout.Dock = DockStyle.Fill;
-            cardsLayout.BackColor = pageColor;
-            cardsLayout.Margin = new Padding(0, 10, 0, 0);
-            cardsLayout.ColumnCount = 3;
-            cardsLayout.RowCount = 1;
-            cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34f));
-            cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
-            cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33f));
-            cardsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-
-            ConfigureCard(card1v1, "1V1", "Duel  •  500 – 900", Color.FromArgb(0, 140, 255));
-            ConfigureCard(card2v2, "2V2", "Doubles  •  700 – 1100", Color.FromArgb(150, 90, 255));
-            ConfigureCard(card3v3, "3V3", "Standard  •  500 – 900", Color.FromArgb(0, 200, 180));
-
-            cardsLayout.Controls.Add(card1v1, 0, 0);
-            cardsLayout.Controls.Add(card2v2, 1, 0);
-            cardsLayout.Controls.Add(card3v3, 2, 0);
-
-            // data toolbar (export / import / open folder)
-            dataPanel.Dock = DockStyle.Fill;
-            dataPanel.BackColor = pageColor;
-            dataPanel.Margin = new Padding(0, 8, 0, 0);
-            dataPanel.FlowDirection = FlowDirection.LeftToRight;
-            dataPanel.WrapContents = false;
-
-            StyleDataButton(btnFetch, "⭳ FETCH MMR");
-            btnFetch.BackColor = Theme.Accent;
-            btnFetch.ForeColor = Color.White;
-            btnFetch.Width = 150;
-            StyleDataButton(btnExport, "⭳ EXPORT");
-            StyleDataButton(btnImport, "⭱ IMPORT");
-            StyleDataButton(btnFolder, "📁 FOLDER");
-            dataPanel.Controls.Add(btnFetch);
-            dataPanel.Controls.Add(btnExport);
-            dataPanel.Controls.Add(btnImport);
-            dataPanel.Controls.Add(btnFolder);
-
+            selectionView.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             selectionView.Controls.Add(lblSelTitle, 0, 0);
             selectionView.Controls.Add(lblSelSub, 0, 1);
             selectionView.Controls.Add(cardsLayout, 0, 2);
             selectionView.Controls.Add(dataPanel, 0, 3);
-
-            // =====================================================
-            //  DETAIL VIEW
-            // =====================================================
-            detailView.Dock = DockStyle.Fill;
-            detailView.BackColor = pageColor;
-            detailView.Padding = new Padding(20);
-            detailView.Visible = false;
+            selectionView.Dock = DockStyle.Fill;
+            selectionView.Location = new Point(0, 0);
+            selectionView.Name = "selectionView";
+            selectionView.Padding = new Padding(24);
+            selectionView.RowCount = 4;
+            selectionView.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
+            selectionView.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+            selectionView.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            selectionView.RowStyles.Add(new RowStyle(SizeType.Absolute, 56F));
+            selectionView.Size = new Size(645, 609);
+            selectionView.TabIndex = 1;
+            // 
+            // lblSelTitle
+            // 
+            lblSelTitle.AutoSize = true;
+            lblSelTitle.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
+            lblSelTitle.ForeColor = Color.FromArgb(255, 255, 255);
+            lblSelTitle.Location = new Point(28, 24);
+            lblSelTitle.Margin = new Padding(4, 0, 0, 0);
+            lblSelTitle.Name = "lblSelTitle";
+            lblSelTitle.Size = new Size(237, 41);
+            lblSelTitle.TabIndex = 0;
+            lblSelTitle.Text = "MMR TRACKER";
+            // 
+            // lblSelSub
+            // 
+            lblSelSub.AutoSize = true;
+            lblSelSub.Font = new Font("Segoe UI", 11F);
+            lblSelSub.ForeColor = Color.FromArgb(140, 160, 200);
+            lblSelSub.Location = new Point(30, 74);
+            lblSelSub.Margin = new Padding(6, 0, 0, 0);
+            lblSelSub.Name = "lblSelSub";
+            lblSelSub.Size = new Size(121, 20);
+            lblSelSub.TabIndex = 1;
+            lblSelSub.Text = "Choose a playlist";
+            // 
+            // cardsLayout
+            // 
+            cardsLayout.BackColor = Color.FromArgb(12, 12, 26);
+            cardsLayout.ColumnCount = 3;
+            cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+            cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+            cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+            cardsLayout.Controls.Add(card1v1, 0, 0);
+            cardsLayout.Controls.Add(card2v2, 1, 0);
+            cardsLayout.Controls.Add(card3v3, 2, 0);
+            cardsLayout.Dock = DockStyle.Fill;
+            cardsLayout.Location = new Point(24, 118);
+            cardsLayout.Margin = new Padding(0, 10, 0, 0);
+            cardsLayout.Name = "cardsLayout";
+            cardsLayout.RowCount = 1;
+            cardsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            cardsLayout.Size = new Size(597, 411);
+            cardsLayout.TabIndex = 2;
+            // 
+            // card1v1
+            // 
+            card1v1.Accent = Color.FromArgb(0, 140, 255);
+            card1v1.BackColor = Color.Transparent;
+            card1v1.CornerRadius = 18;
+            card1v1.Icon = null;
+            card1v1.Location = new Point(3, 3);
+            card1v1.Name = "card1v1";
+            card1v1.Size = new Size(193, 92);
+            card1v1.Subtitle = "";
+            card1v1.SubtitleFontSize = 9F;
+            card1v1.TabIndex = 0;
+            card1v1.Title = "TITLE";
+            card1v1.TitleFontSize = 9.5F;
+            card1v1.Value = "--";
+            card1v1.ValueFontSize = 18F;
+            // 
+            // card2v2
+            // 
+            card2v2.Accent = Color.FromArgb(0, 140, 255);
+            card2v2.BackColor = Color.Transparent;
+            card2v2.CornerRadius = 18;
+            card2v2.Icon = null;
+            card2v2.Location = new Point(202, 3);
+            card2v2.Name = "card2v2";
+            card2v2.Size = new Size(192, 92);
+            card2v2.Subtitle = "";
+            card2v2.SubtitleFontSize = 9F;
+            card2v2.TabIndex = 1;
+            card2v2.Title = "TITLE";
+            card2v2.TitleFontSize = 9.5F;
+            card2v2.Value = "--";
+            card2v2.ValueFontSize = 18F;
+            // 
+            // card3v3
+            // 
+            card3v3.Accent = Color.FromArgb(0, 140, 255);
+            card3v3.BackColor = Color.Transparent;
+            card3v3.CornerRadius = 18;
+            card3v3.Icon = null;
+            card3v3.Location = new Point(400, 3);
+            card3v3.Name = "card3v3";
+            card3v3.Size = new Size(194, 92);
+            card3v3.Subtitle = "";
+            card3v3.SubtitleFontSize = 9F;
+            card3v3.TabIndex = 2;
+            card3v3.Title = "TITLE";
+            card3v3.TitleFontSize = 9.5F;
+            card3v3.Value = "--";
+            card3v3.ValueFontSize = 18F;
+            // 
+            // dataPanel
+            // 
+            dataPanel.BackColor = Color.FromArgb(12, 12, 26);
+            dataPanel.Controls.Add(btnFetch);
+            dataPanel.Controls.Add(btnExport);
+            dataPanel.Controls.Add(btnImport);
+            dataPanel.Controls.Add(btnFolder);
+            dataPanel.Dock = DockStyle.Fill;
+            dataPanel.Location = new Point(24, 537);
+            dataPanel.Margin = new Padding(0, 8, 0, 0);
+            dataPanel.Name = "dataPanel";
+            dataPanel.Size = new Size(597, 48);
+            dataPanel.TabIndex = 3;
+            dataPanel.WrapContents = false;
+            // 
+            // btnFetch
+            // 
+            btnFetch.BackColor = Color.FromArgb(120, 60, 255);
+            btnFetch.ForeColor = Color.White;
+            btnFetch.Location = new Point(3, 3);
+            btnFetch.Name = "btnFetch";
+            btnFetch.Size = new Size(150, 23);
+            btnFetch.TabIndex = 0;
+            btnFetch.UseVisualStyleBackColor = false;
+            // 
+            // btnExport
+            // 
+            btnExport.Location = new Point(159, 3);
+            btnExport.Name = "btnExport";
+            btnExport.Size = new Size(75, 23);
+            btnExport.TabIndex = 1;
+            // 
+            // btnImport
+            // 
+            btnImport.Location = new Point(240, 3);
+            btnImport.Name = "btnImport";
+            btnImport.Size = new Size(75, 23);
+            btnImport.TabIndex = 2;
+            // 
+            // btnFolder
+            // 
+            btnFolder.Location = new Point(321, 3);
+            btnFolder.Name = "btnFolder";
+            btnFolder.Size = new Size(75, 23);
+            btnFolder.TabIndex = 3;
+            // 
+            // detailView
+            // 
+            detailView.BackColor = Color.FromArgb(12, 12, 26);
             detailView.ColumnCount = 1;
+            detailView.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            detailView.Controls.Add(headerPanel, 0, 0);
+            detailView.Controls.Add(chart, 0, 1);
+            detailView.Controls.Add(bottomLayout, 0, 2);
+            detailView.Dock = DockStyle.Fill;
+            detailView.Location = new Point(0, 0);
+            detailView.Name = "detailView";
+            detailView.Padding = new Padding(20);
             detailView.RowCount = 3;
-            detailView.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            detailView.RowStyles.Add(new RowStyle(SizeType.Absolute, 52f));
-            detailView.RowStyles.Add(new RowStyle(SizeType.Percent, 62f));
-            detailView.RowStyles.Add(new RowStyle(SizeType.Percent, 38f));
-
-            // header
+            detailView.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
+            detailView.RowStyles.Add(new RowStyle(SizeType.Percent, 62F));
+            detailView.RowStyles.Add(new RowStyle(SizeType.Percent, 38F));
+            detailView.Size = new Size(645, 609);
+            detailView.TabIndex = 0;
+            detailView.Visible = false;
+            // 
+            // headerPanel
+            // 
+            headerPanel.BackColor = Color.FromArgb(12, 12, 26);
+            headerPanel.Controls.Add(rangePanel);
+            headerPanel.Controls.Add(lblDetailTitle);
+            headerPanel.Controls.Add(btnBack);
             headerPanel.Dock = DockStyle.Fill;
-            headerPanel.BackColor = pageColor;
+            headerPanel.Location = new Point(20, 20);
             headerPanel.Margin = new Padding(0);
-
-            StyleActionButton(btnBack, "← BACK", Color.FromArgb(60, 60, 90));
-            btnBack.Dock = DockStyle.Left;
-            btnBack.Width = 96;
-            btnBack.Margin = new Padding(0);
-
-            lblDetailTitle.Text = "MMR — 2V2";
-            lblDetailTitle.Dock = DockStyle.Left;
-            lblDetailTitle.Width = 320;
-            lblDetailTitle.TextAlign = ContentAlignment.MiddleLeft;
-            lblDetailTitle.ForeColor = Theme.TextPrimary;
-            lblDetailTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
-            lblDetailTitle.Padding = new Padding(16, 0, 0, 0);
-
-            rangePanel.Dock = DockStyle.Right;
+            headerPanel.Name = "headerPanel";
+            headerPanel.Size = new Size(605, 52);
+            headerPanel.TabIndex = 0;
+            // 
+            // rangePanel
+            // 
             rangePanel.AutoSize = true;
-            rangePanel.FlowDirection = FlowDirection.LeftToRight;
-            rangePanel.WrapContents = false;
-            rangePanel.BackColor = pageColor;
-
-            StyleRangeButton(btnWeek, "WEEK");
-            StyleRangeButton(btnMonth, "MONTH");
-            StyleRangeButton(btnSeason, "SEASON");
-            StyleRangeButton(btnAll, "ALL");
-
+            rangePanel.BackColor = Color.FromArgb(12, 12, 26);
             rangePanel.Controls.Add(btnWeek);
             rangePanel.Controls.Add(btnMonth);
             rangePanel.Controls.Add(btnSeason);
             rangePanel.Controls.Add(btnAll);
-
-            // header child order: back (left) first, title (left) second, range (right)
-            headerPanel.Controls.Add(rangePanel);
-            headerPanel.Controls.Add(lblDetailTitle);
-            headerPanel.Controls.Add(btnBack);
-
+            rangePanel.Dock = DockStyle.Right;
+            rangePanel.Location = new Point(281, 0);
+            rangePanel.Name = "rangePanel";
+            rangePanel.Size = new Size(324, 52);
+            rangePanel.TabIndex = 0;
+            rangePanel.WrapContents = false;
+            // 
+            // btnWeek
+            // 
+            btnWeek.Location = new Point(3, 3);
+            btnWeek.Name = "btnWeek";
+            btnWeek.Size = new Size(75, 23);
+            btnWeek.TabIndex = 0;
+            // 
+            // btnMonth
+            // 
+            btnMonth.Location = new Point(84, 3);
+            btnMonth.Name = "btnMonth";
+            btnMonth.Size = new Size(75, 23);
+            btnMonth.TabIndex = 1;
+            // 
+            // btnSeason
+            // 
+            btnSeason.Location = new Point(165, 3);
+            btnSeason.Name = "btnSeason";
+            btnSeason.Size = new Size(75, 23);
+            btnSeason.TabIndex = 2;
+            // 
+            // btnAll
+            // 
+            btnAll.Location = new Point(246, 3);
+            btnAll.Name = "btnAll";
+            btnAll.Size = new Size(75, 23);
+            btnAll.TabIndex = 3;
+            // 
+            // lblDetailTitle
+            // 
+            lblDetailTitle.Dock = DockStyle.Left;
+            lblDetailTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            lblDetailTitle.ForeColor = Color.FromArgb(255, 255, 255);
+            lblDetailTitle.Location = new Point(96, 0);
+            lblDetailTitle.Name = "lblDetailTitle";
+            lblDetailTitle.Padding = new Padding(16, 0, 0, 0);
+            lblDetailTitle.Size = new Size(320, 52);
+            lblDetailTitle.TabIndex = 1;
+            lblDetailTitle.Text = "MMR — 2V2";
+            lblDetailTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // btnBack
+            // 
+            btnBack.Dock = DockStyle.Left;
+            btnBack.Location = new Point(0, 0);
+            btnBack.Margin = new Padding(0);
+            btnBack.Name = "btnBack";
+            btnBack.Size = new Size(96, 52);
+            btnBack.TabIndex = 2;
+            // 
             // chart
+            // 
+            chart.Accent = Color.FromArgb(120, 60, 255);
+            chart.BackColor = Color.Transparent;
+            chart.CornerRadius = 18;
             chart.Dock = DockStyle.Fill;
+            chart.EmptySub = "Add your first MMR entry below";
+            chart.EmptyTitle = "No data yet";
+            chart.Location = new Point(20, 80);
             chart.Margin = new Padding(0, 8, 0, 10);
-
-            // bottom (history + form)
-            bottomLayout.Dock = DockStyle.Fill;
-            bottomLayout.BackColor = pageColor;
-            bottomLayout.Margin = new Padding(0);
+            chart.Name = "chart";
+            chart.Size = new Size(605, 302);
+            chart.TabIndex = 1;
+            chart.YMax = 900;
+            chart.YMin = 500;
+            // 
+            // bottomLayout
+            // 
+            bottomLayout.BackColor = Color.FromArgb(12, 12, 26);
             bottomLayout.ColumnCount = 2;
+            bottomLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 64F));
+            bottomLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 36F));
+            bottomLayout.Controls.Add(historyPanel, 0, 0);
+            bottomLayout.Controls.Add(formPanel, 1, 0);
+            bottomLayout.Dock = DockStyle.Fill;
+            bottomLayout.Location = new Point(20, 392);
+            bottomLayout.Margin = new Padding(0);
+            bottomLayout.Name = "bottomLayout";
             bottomLayout.RowCount = 1;
-            bottomLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 64f));
-            bottomLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 36f));
-            bottomLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
-
+            bottomLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            bottomLayout.Size = new Size(605, 197);
+            bottomLayout.TabIndex = 2;
+            // 
+            // historyPanel
+            // 
+            historyPanel.BackColor = Color.FromArgb(18, 18, 38);
+            historyPanel.Controls.Add(grid);
+            historyPanel.Controls.Add(gridToolbar);
             historyPanel.Dock = DockStyle.Fill;
-            historyPanel.BackColor = panelColor;
+            historyPanel.Location = new Point(0, 0);
             historyPanel.Margin = new Padding(0, 0, 12, 0);
+            historyPanel.Name = "historyPanel";
             historyPanel.Padding = new Padding(2);
-
-            grid.Dock = DockStyle.Fill;
-            grid.BackgroundColor = panelColor;
-            grid.BorderStyle = BorderStyle.None;
-            grid.EnableHeadersVisualStyles = false;
-            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            grid.ColumnHeadersHeight = 36;
-            grid.ColumnHeadersDefaultCellStyle.BackColor = Theme.GridHeaderBg;
-            grid.ColumnHeadersDefaultCellStyle.ForeColor = Theme.TextPrimary;
-            grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            grid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            grid.DefaultCellStyle.BackColor = Theme.GridRowBg;
-            grid.DefaultCellStyle.ForeColor = Theme.TextPrimary;
-            grid.DefaultCellStyle.SelectionBackColor = Theme.Accent;
-            grid.DefaultCellStyle.SelectionForeColor = Color.White;
-            grid.DefaultCellStyle.Font = new Font("Segoe UI", 10F);
-            grid.AlternatingRowsDefaultCellStyle.BackColor = Theme.GridAltBg;
-            grid.GridColor = Theme.GridLines;
-            grid.RowHeadersVisible = false;
+            historyPanel.Size = new Size(375, 197);
+            historyPanel.TabIndex = 0;
+            // 
+            // grid
+            // 
             grid.AllowUserToAddRows = false;
             grid.AllowUserToDeleteRows = false;
             grid.AllowUserToResizeRows = false;
-            grid.ReadOnly = true;
-            grid.MultiSelect = false;
-            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            grid.RowTemplate.Height = 30;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(22, 22, 44);
+            grid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDate", HeaderText = "DATE", FillWeight = 60 });
-            grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMmr", HeaderText = "MMR", FillWeight = 40 });
-
-            gridToolbar.Dock = DockStyle.Bottom;
-            gridToolbar.Height = 50;
-            gridToolbar.BackColor = panelColor;
-
-            StyleActionButton(btnEdit, "EDIT SELECTED", Color.FromArgb(0, 140, 255));
-            btnEdit.Location = new Point(6, 8);
-            btnEdit.Size = new Size(150, 34);
-
-            StyleActionButton(btnDelete, "DELETE", Color.FromArgb(220, 60, 70));
-            btnDelete.Location = new Point(164, 8);
-            btnDelete.Size = new Size(104, 34);
-
-            StyleActionButton(btnUndo, "↶ UNDO", Color.FromArgb(80, 80, 110));
-            btnUndo.Location = new Point(276, 8);
-            btnUndo.Size = new Size(96, 34);
-
+            grid.BackgroundColor = Color.FromArgb(18, 18, 38);
+            grid.BorderStyle = BorderStyle.None;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(26, 26, 52);
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(255, 255, 255);
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            grid.ColumnHeadersHeight = 36;
+            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            grid.Columns.AddRange(new DataGridViewColumn[] { dataGridViewTextBoxColumn1, dataGridViewTextBoxColumn2 });
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.FromArgb(18, 18, 38);
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(255, 255, 255);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(120, 60, 255);
+            dataGridViewCellStyle3.SelectionForeColor = Color.White;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            grid.DefaultCellStyle = dataGridViewCellStyle3;
+            grid.Dock = DockStyle.Fill;
+            grid.EnableHeadersVisualStyles = false;
+            grid.GridColor = Color.FromArgb(40, 40, 72);
+            grid.Location = new Point(2, 2);
+            grid.MultiSelect = false;
+            grid.Name = "grid";
+            grid.ReadOnly = true;
+            grid.RowHeadersVisible = false;
+            grid.RowTemplate.Height = 30;
+            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.Size = new Size(371, 143);
+            grid.TabIndex = 0;
+            // 
+            // gridToolbar
+            // 
+            gridToolbar.BackColor = Color.FromArgb(18, 18, 38);
             gridToolbar.Controls.Add(btnEdit);
             gridToolbar.Controls.Add(btnDelete);
             gridToolbar.Controls.Add(btnUndo);
-
-            historyPanel.Controls.Add(grid);
-            historyPanel.Controls.Add(gridToolbar);
-
-            // form
-            formPanel.Dock = DockStyle.Fill;
-            formPanel.BackColor = panelColor;
-            formPanel.Margin = new Padding(0);
-            formPanel.Padding = new Padding(20);
-
-            lblFormTitle.Text = "ADD ENTRY";
-            lblFormTitle.Location = new Point(20, 12);
-            lblFormTitle.AutoSize = true;
-            lblFormTitle.ForeColor = Theme.AccentSoft;
-            lblFormTitle.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-
-            lblMmr.Text = "MMR";
-            lblMmr.Location = new Point(20, 42);
-            lblMmr.AutoSize = true;
-            lblMmr.ForeColor = Theme.TextSecondary;
-            lblMmr.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-
-            txtMmr.Location = new Point(20, 64);
-            txtMmr.Width = 200;
-            txtMmr.MaxLength = 4;
-            txtMmr.Text = "800";
-            txtMmr.BackColor = Theme.SurfaceAlt;
-            txtMmr.ForeColor = Theme.TextPrimary;
-            txtMmr.BorderStyle = BorderStyle.FixedSingle;
-            txtMmr.Font = new Font("Segoe UI", 12F);
-
-            lblHint.Text = "↵  Press Enter to add";
-            lblHint.Location = new Point(20, 96);
-            lblHint.AutoSize = true;
-            lblHint.ForeColor = Theme.TextMuted;
-            lblHint.Font = new Font("Segoe UI", 9.5F, FontStyle.Italic);
-
-            StyleActionButton(btnCancelEdit, "CANCEL EDIT", Color.FromArgb(60, 60, 90));
-            btnCancelEdit.Location = new Point(20, 122);
-            btnCancelEdit.Size = new Size(200, 32);
-            btnCancelEdit.Visible = false;
-
-            lblStats.Location = new Point(20, 124);
-            lblStats.AutoSize = true;
-            lblStats.ForeColor = Theme.TextSecondary;
-            lblStats.Font = new Font("Segoe UI", 10F);
-
+            gridToolbar.Dock = DockStyle.Bottom;
+            gridToolbar.Location = new Point(2, 145);
+            gridToolbar.Name = "gridToolbar";
+            gridToolbar.Size = new Size(371, 50);
+            gridToolbar.TabIndex = 1;
+            // 
+            // btnEdit
+            // 
+            btnEdit.Location = new Point(6, 8);
+            btnEdit.Name = "btnEdit";
+            btnEdit.Size = new Size(150, 34);
+            btnEdit.TabIndex = 0;
+            // 
+            // btnDelete
+            // 
+            btnDelete.Location = new Point(164, 8);
+            btnDelete.Name = "btnDelete";
+            btnDelete.Size = new Size(104, 34);
+            btnDelete.TabIndex = 1;
+            // 
+            // btnUndo
+            // 
+            btnUndo.Location = new Point(276, 8);
+            btnUndo.Name = "btnUndo";
+            btnUndo.Size = new Size(96, 34);
+            btnUndo.TabIndex = 2;
+            // 
+            // formPanel
+            // 
+            formPanel.BackColor = Color.FromArgb(18, 18, 38);
             formPanel.Controls.Add(lblFormTitle);
             formPanel.Controls.Add(lblMmr);
             formPanel.Controls.Add(txtMmr);
             formPanel.Controls.Add(lblHint);
             formPanel.Controls.Add(btnCancelEdit);
             formPanel.Controls.Add(lblStats);
-
-            bottomLayout.Controls.Add(historyPanel, 0, 0);
-            bottomLayout.Controls.Add(formPanel, 1, 0);
-
-            detailView.Controls.Add(headerPanel, 0, 0);
-            detailView.Controls.Add(chart, 0, 1);
-            detailView.Controls.Add(bottomLayout, 0, 2);
-
-            // ===== ASSEMBLE =====
-            this.Controls.Add(detailView);
-            this.Controls.Add(selectionView);
-
+            formPanel.Dock = DockStyle.Fill;
+            formPanel.Location = new Point(387, 0);
+            formPanel.Margin = new Padding(0);
+            formPanel.Name = "formPanel";
+            formPanel.Padding = new Padding(20);
+            formPanel.Size = new Size(218, 197);
+            formPanel.TabIndex = 1;
+            // 
+            // lblFormTitle
+            // 
+            lblFormTitle.AutoSize = true;
+            lblFormTitle.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblFormTitle.ForeColor = Color.FromArgb(160, 118, 255);
+            lblFormTitle.Location = new Point(20, 12);
+            lblFormTitle.Name = "lblFormTitle";
+            lblFormTitle.Size = new Size(100, 21);
+            lblFormTitle.TabIndex = 0;
+            lblFormTitle.Text = "ADD ENTRY";
+            // 
+            // lblMmr
+            // 
+            lblMmr.AutoSize = true;
+            lblMmr.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblMmr.ForeColor = Color.FromArgb(170, 185, 220);
+            lblMmr.Location = new Point(20, 42);
+            lblMmr.Name = "lblMmr";
+            lblMmr.Size = new Size(40, 17);
+            lblMmr.TabIndex = 1;
+            lblMmr.Text = "MMR";
+            // 
+            // txtMmr
+            // 
+            txtMmr.BackColor = Color.FromArgb(28, 28, 56);
+            txtMmr.BorderStyle = BorderStyle.FixedSingle;
+            txtMmr.Font = new Font("Segoe UI", 12F);
+            txtMmr.ForeColor = Color.FromArgb(255, 255, 255);
+            txtMmr.Location = new Point(20, 64);
+            txtMmr.MaxLength = 4;
+            txtMmr.Name = "txtMmr";
+            txtMmr.Size = new Size(200, 29);
+            txtMmr.TabIndex = 2;
+            txtMmr.Text = "800";
+            // 
+            // lblHint
+            // 
+            lblHint.AutoSize = true;
+            lblHint.Font = new Font("Segoe UI", 9.5F, FontStyle.Italic);
+            lblHint.ForeColor = Color.FromArgb(140, 160, 200);
+            lblHint.Location = new Point(20, 96);
+            lblHint.Name = "lblHint";
+            lblHint.Size = new Size(123, 17);
+            lblHint.TabIndex = 3;
+            lblHint.Text = "↵  Press Enter to add";
+            // 
+            // btnCancelEdit
+            // 
+            btnCancelEdit.Location = new Point(20, 122);
+            btnCancelEdit.Name = "btnCancelEdit";
+            btnCancelEdit.Size = new Size(200, 32);
+            btnCancelEdit.TabIndex = 4;
+            btnCancelEdit.Visible = false;
+            // 
+            // lblStats
+            // 
+            lblStats.AutoSize = true;
+            lblStats.Font = new Font("Segoe UI", 10F);
+            lblStats.ForeColor = Color.FromArgb(170, 185, 220);
+            lblStats.Location = new Point(20, 124);
+            lblStats.Name = "lblStats";
+            lblStats.Size = new Size(0, 19);
+            lblStats.TabIndex = 5;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            dataGridViewTextBoxColumn1.Name = "colDate";
+            dataGridViewTextBoxColumn1.ReadOnly = true;
+            //
+            // dataGridViewTextBoxColumn2
+            //
+            dataGridViewTextBoxColumn2.Name = "colMmr";
+            dataGridViewTextBoxColumn2.ReadOnly = true;
+            // 
+            // MMRPage
+            // 
+            BackColor = Color.FromArgb(12, 12, 26);
+            Controls.Add(detailView);
+            Controls.Add(selectionView);
+            Name = "MMRPage";
+            Size = new Size(645, 609);
+            selectionView.ResumeLayout(false);
+            selectionView.PerformLayout();
+            cardsLayout.ResumeLayout(false);
+            dataPanel.ResumeLayout(false);
+            detailView.ResumeLayout(false);
+            headerPanel.ResumeLayout(false);
+            headerPanel.PerformLayout();
+            rangePanel.ResumeLayout(false);
+            bottomLayout.ResumeLayout(false);
+            historyPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)grid).EndInit();
+            gridToolbar.ResumeLayout(false);
+            formPanel.ResumeLayout(false);
+            formPanel.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -408,5 +651,8 @@ namespace RLHub2
             b.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             b.Cursor = Cursors.Hand;
         }
+
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
     }
 }

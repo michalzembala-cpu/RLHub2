@@ -6,6 +6,7 @@ namespace RLHub2.Models
     public class BallMatch
     {
         public string Id { get; set; } = "";
+        public string Account { get; set; } = "";   // which of the user's accounts this belongs to
         public DateTime Date { get; set; }
 
         public string PlaylistId { get; set; } = "";  // e.g. "ranked-doubles"

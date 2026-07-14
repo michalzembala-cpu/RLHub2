@@ -244,10 +244,15 @@ namespace RLHub2.Services
             // avoid double-logging the same match (MatchEnded + PodiumStart both fire)
             if (_lastMatchGuid.Length > 0 && _lastMatchGuid == _loggedMatchGuid) return;
 
-            string nick = new SettingsStore().LoadTrackedNick().Trim();
+            // Find which of the user's accounts is playing (matches any alias, so a
+            // renamed account is still recognised).
             PlayerStat? me = null;
-            if (nick.Length > 0 && _players.TryGetValue(nick, out var exact))
-                me = exact;
+            Models.Account? acc = null;
+            foreach (var p in _players.Values)
+            {
+                var a = Helpers.Accounts.MatchByName(p.Name);
+                if (a != null) { me = p; acc = a; break; }
+            }
 
             // team goals from the snapshot
             var teamGoals = new Dictionary<int, int>();
@@ -265,6 +270,7 @@ namespace RLHub2.Services
             var match = new SessionMatch
             {
                 Time = DateTime.Now,
+                Account = acc?.Name ?? "",
                 Won = mine > opp,
                 Goals = me?.Goals ?? 0,
                 Saves = me?.Saves ?? 0,

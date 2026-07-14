@@ -107,11 +107,11 @@ namespace RLHub2
 
         private void PopulateStats()
         {
-            string nick = new SettingsStore().LoadTrackedNick();
+            string nick = Accounts.ActiveName;
             if (string.IsNullOrWhiteSpace(nick)) nick = "Player";
             header.Value = nick;
 
-            var list = _mmr.Load().Where(x => x.Mode == "2v2").OrderBy(x => x.Timestamp).ToList();
+            var list = _mmr.LoadForActive().Where(x => x.Mode == "2v2").OrderBy(x => x.Timestamp).ToList();
 
             if (list.Count == 0)
             {

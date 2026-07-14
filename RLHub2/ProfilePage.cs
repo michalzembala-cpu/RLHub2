@@ -41,12 +41,12 @@ namespace RLHub2
 
         private async Task AutoLoadAsync()
         {
-            string nick = _settings.LoadTrackedNick();
+            string nick = Accounts.ActiveName;
 
             if (HasBallchasing)
             {
                 // show cached matches instantly, then sync (upload + fetch) in the background
-                var cached = _matchStore.Load();
+                var cached = _matchStore.LoadForActive();
                 if (cached.Count > 0)
                     Populate(BuildProfile(cached, nick));
 
@@ -58,7 +58,7 @@ namespace RLHub2
 
                 if (!IsDisposed)
                 {
-                    var updated = _matchStore.Load();
+                    var updated = _matchStore.LoadForActive();
                     if (updated.Count > 0)
                         Populate(BuildProfile(updated, string.IsNullOrWhiteSpace(nick) ? "Player" : nick));
                 }
