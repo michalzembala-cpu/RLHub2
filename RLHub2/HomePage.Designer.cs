@@ -48,7 +48,7 @@ namespace RLHub2
             rootLayout.ColumnCount = 1;
             rootLayout.RowCount = 2;
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 90f));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 120f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
 
             // ===== PLAYER HEADER =====
@@ -59,7 +59,7 @@ namespace RLHub2
             header.Value = "Player";
             header.Subtitle = "Season 23";
             header.TitleFontSize = 10f;
-            header.ValueFontSize = 23f;
+            header.ValueFontSize = 21f;
             header.SubtitleFontSize = 11f;
 
             // ===== CONTENT (rank+chart | news) =====
@@ -100,7 +100,7 @@ namespace RLHub2
             newsLayout.ColumnCount = 1;
             newsLayout.RowCount = 3;
             newsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            newsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 92f));
+            newsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 116f));
             newsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
             newsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 54f));
 

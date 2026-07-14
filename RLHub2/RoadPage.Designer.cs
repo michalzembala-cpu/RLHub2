@@ -42,7 +42,7 @@ namespace RLHub2
             lblTitle.Text = "ROAD TO SSL";
             lblTitle.AutoSize = true;
             lblTitle.ForeColor = Theme.TextPrimary;
-            lblTitle.Font = new Font("Segoe UI", 27F, FontStyle.Bold);
+            lblTitle.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
 
             modeSeg.Anchor = AnchorStyles.Left;
             modeSeg.Size = new Size(320, 52);

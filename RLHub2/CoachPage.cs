@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,7 +19,19 @@ namespace RLHub2
         {
             InitializeComponent();
             ApplyLanguage();
+
+            // An AutoSize label ignores its docked width, so long advice lines ran off the
+            // right edge. Cap the width to the panel so the text wraps instead.
+            advicePanel.Resize += (s, e) => FitAdviceWidth();
+            FitAdviceWidth();
+
             Load += async (s, e) => await LoadCoach();
+        }
+
+        private void FitAdviceWidth()
+        {
+            int w = advicePanel.ClientSize.Width - advicePanel.Padding.Horizontal;
+            lblAdvice.MaximumSize = new Size(Math.Max(120, w), 0);
         }
 
         private bool Pl => Localization.IsPolish;

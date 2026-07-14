@@ -113,8 +113,8 @@ namespace RLHub2
             lblRecent.Text = "RECENT MATCHES";
             lblRecent.AutoSize = true;
             lblRecent.Location = new Point(2, 6);
-            lblRecent.ForeColor = Theme.TextMuted;
-            lblRecent.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblRecent.ForeColor = Theme.AccentSoft;
+            lblRecent.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
 
             btnReset.Text = "RESET";
             btnReset.Size = new Size(96, 26);

@@ -84,13 +84,6 @@ namespace RLHub2
             _peekTimer.Tick += (s, e) => HoverPeekTick();
             _peekTimer.Start();
 
-            // while the sidebar floats over the content it must track the form height itself
-            Resize += (s, e) =>
-            {
-                if (sidebar.Dock == DockStyle.None)
-                    sidebar.Height = ClientSize.Height;
-            };
-
             navPanel.SizeChanged += (s, e) => { if (!_animating) ResizeNav(); };
 
             // Restore sidebar collapsed state (instant, no animation).
@@ -322,33 +315,13 @@ namespace RLHub2
         {
             collapsed = !collapsed;
             _peeking = false;
-            EndPeekOverlay();
             ApplySidebarState(!collapsed);
             _store.SaveSidebarCollapsed(collapsed);
         }
 
-        // ===== HOVER PEEK (flyout: overlays the content instead of pushing it) =====
-
-        // Undock the sidebar so growing it draws OVER the page, and pad the content by the
-        // collapsed width so the page keeps exactly the same bounds (no reflow).
-        private void BeginPeekOverlay()
-        {
-            if (sidebar.Dock == DockStyle.None) return;
-            panelContent.Padding = new Padding(CollapsedWidth, 0, 0, 0);
-            sidebar.Dock = DockStyle.None;
-            sidebar.Bounds = new Rectangle(0, 0, CollapsedWidth, ClientSize.Height);
-            sidebar.BringToFront();
-        }
-
-        private void EndPeekOverlay()
-        {
-            if (sidebar.Dock == DockStyle.Left) return;
-            sidebar.Dock = DockStyle.Left;
-            sidebar.Width = CollapsedWidth;
-            panelContent.Padding = new Padding(0);
-        }
-
-        // While the sidebar is collapsed, hovering over it expands it temporarily.
+        // ===== HOVER PEEK =====
+        // The sidebar stays docked, so expanding it pushes the page across rather than
+        // covering it — nothing on the page is ever hidden behind the menu.
         private void HoverPeekTick()
         {
             if (!collapsed) { _peeking = false; return; }
@@ -359,13 +332,12 @@ namespace RLHub2
             if (inside && !_peeking)
             {
                 _peeking = true;
-                BeginPeekOverlay();
                 ApplySidebarState(true);
             }
             else if (!inside && _peeking)
             {
                 _peeking = false;
-                ApplySidebarState(false); // re-docks once the collapse animation finishes
+                ApplySidebarState(false);
             }
         }
 
@@ -380,9 +352,6 @@ namespace RLHub2
                 _animating = false;
                 navPanel.AutoScroll = true;
                 ResizeNav();
-
-                // Peek finished collapsing → put the sidebar back in the layout.
-                if (!_peeking) EndPeekOverlay();
                 return;
             }
 

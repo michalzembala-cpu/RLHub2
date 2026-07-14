@@ -68,15 +68,33 @@ namespace RLHub2.Controls
                 return;
             }
 
+            // Fit the items to the card: shrink the titles to one line and, if still too
+            // tight, drop items — otherwise a short card made the blocks overlap.
             int count = Math.Min(3, _items.Count);
-            int rowH = (contentBottom - contentTop) / count;
+            int titleLines = 2;
+            int rowH;
+            Font titleFont, catFont;
 
-            // Fonts scale to the row height so the three items fill the card.
-            float titleSize = Clamp(rowH * 0.26f, 13f, 24f);
-            float catSize = Clamp(rowH * 0.16f, 9f, 14f);
+            while (true)
+            {
+                rowH = Math.Max(1, (contentBottom - contentTop) / count);
+                titleFont = new Font("Segoe UI", Clamp(rowH * 0.26f, 13f, 24f), FontStyle.Bold);
+                catFont = new Font("Segoe UI", Clamp(rowH * 0.16f, 9f, 14f), FontStyle.Regular);
 
-            using var titleFont = new Font("Segoe UI", titleSize, FontStyle.Bold);
-            using var catFont = new Font("Segoe UI", catSize, FontStyle.Regular);
+                int blockH = titleFont.Height * titleLines + 2 + catFont.Height;
+                if (blockH <= rowH) break;
+
+                titleFont.Dispose();
+                catFont.Dispose();
+
+                if (titleLines == 2) { titleLines = 1; continue; }
+                if (count > 1) { count--; titleLines = 2; continue; }
+
+                // single item, single line — accept whatever fits
+                titleFont = new Font("Segoe UI", 13f, FontStyle.Bold);
+                catFont = new Font("Segoe UI", 9f, FontStyle.Regular);
+                break;
+            }
             using var titleBrush = new SolidBrush(Theme.TextPrimary);
             using var catBrush = new SolidBrush(Theme.TextMuted);
             using var bulletBrush = new SolidBrush(Accent);
@@ -95,7 +113,7 @@ namespace RLHub2.Controls
             {
                 int rowTop = contentTop + i * rowH;
 
-                int titleH = titleFont.Height * 2; // allow up to two lines
+                int titleH = titleFont.Height * titleLines;
                 int catH = catFont.Height;
                 int blockH = titleH + 2 + catH;
                 int startY = rowTop + Math.Max(0, (rowH - blockH) / 2);
@@ -109,6 +127,9 @@ namespace RLHub2.Controls
                     g.DrawString(_items[i].Category.ToUpperInvariant(), catFont, catBrush,
                         textLeft, startY + titleH + 2);
             }
+
+            titleFont.Dispose();
+            catFont.Dispose();
 
             base.OnPaint(e);
         }

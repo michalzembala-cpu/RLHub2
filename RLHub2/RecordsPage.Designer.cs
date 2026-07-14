@@ -85,8 +85,8 @@ namespace RLHub2
             // ===== HISTORY =====
             lblHistory.Text = "SEASON HISTORY";
             lblHistory.Dock = DockStyle.Fill;
-            lblHistory.ForeColor = Theme.TextMuted;
-            lblHistory.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblHistory.ForeColor = Theme.AccentSoft;
+            lblHistory.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblHistory.TextAlign = ContentAlignment.MiddleLeft;
 
             historyPanel.Dock = DockStyle.Fill;

@@ -108,7 +108,7 @@ namespace RLHub2
             // 
             // selectionView
             // 
-            selectionView.BackColor = Color.FromArgb(12, 12, 26);
+            selectionView.BackColor = Theme.PageBg;
             selectionView.ColumnCount = 1;
             selectionView.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             selectionView.Controls.Add(lblSelTitle, 0, 0);
@@ -131,7 +131,7 @@ namespace RLHub2
             // 
             lblSelTitle.AutoSize = true;
             lblSelTitle.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            lblSelTitle.ForeColor = Color.FromArgb(255, 255, 255);
+            lblSelTitle.ForeColor = Theme.TextPrimary;
             lblSelTitle.Location = new Point(28, 24);
             lblSelTitle.Margin = new Padding(4, 0, 0, 0);
             lblSelTitle.Name = "lblSelTitle";
@@ -143,7 +143,7 @@ namespace RLHub2
             // 
             lblSelSub.AutoSize = true;
             lblSelSub.Font = new Font("Segoe UI", 11F);
-            lblSelSub.ForeColor = Color.FromArgb(140, 160, 200);
+            lblSelSub.ForeColor = Theme.TextMuted;
             lblSelSub.Location = new Point(30, 74);
             lblSelSub.Margin = new Padding(6, 0, 0, 0);
             lblSelSub.Name = "lblSelSub";
@@ -153,7 +153,7 @@ namespace RLHub2
             // 
             // cardsLayout
             // 
-            cardsLayout.BackColor = Color.FromArgb(12, 12, 26);
+            cardsLayout.BackColor = Theme.PageBg;
             cardsLayout.ColumnCount = 3;
             cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
             cardsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
@@ -223,7 +223,7 @@ namespace RLHub2
             // 
             // dataPanel
             // 
-            dataPanel.BackColor = Color.FromArgb(12, 12, 26);
+            dataPanel.BackColor = Theme.PageBg;
             dataPanel.Controls.Add(btnFetch);
             dataPanel.Controls.Add(btnExport);
             dataPanel.Controls.Add(btnImport);
@@ -269,7 +269,7 @@ namespace RLHub2
             // 
             // detailView
             // 
-            detailView.BackColor = Color.FromArgb(12, 12, 26);
+            detailView.BackColor = Theme.PageBg;
             detailView.ColumnCount = 1;
             detailView.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             detailView.Controls.Add(headerPanel, 0, 0);
@@ -289,7 +289,7 @@ namespace RLHub2
             // 
             // headerPanel
             // 
-            headerPanel.BackColor = Color.FromArgb(12, 12, 26);
+            headerPanel.BackColor = Theme.PageBg;
             headerPanel.Controls.Add(rangePanel);
             headerPanel.Controls.Add(lblDetailTitle);
             headerPanel.Controls.Add(btnBack);
@@ -303,7 +303,7 @@ namespace RLHub2
             // rangePanel
             // 
             rangePanel.AutoSize = true;
-            rangePanel.BackColor = Color.FromArgb(12, 12, 26);
+            rangePanel.BackColor = Theme.PageBg;
             rangePanel.Controls.Add(btnWeek);
             rangePanel.Controls.Add(btnMonth);
             rangePanel.Controls.Add(btnSeason);
@@ -347,7 +347,7 @@ namespace RLHub2
             // 
             lblDetailTitle.Dock = DockStyle.Left;
             lblDetailTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
-            lblDetailTitle.ForeColor = Color.FromArgb(255, 255, 255);
+            lblDetailTitle.ForeColor = Theme.TextPrimary;
             lblDetailTitle.Location = new Point(96, 0);
             lblDetailTitle.Name = "lblDetailTitle";
             lblDetailTitle.Padding = new Padding(16, 0, 0, 0);
@@ -383,7 +383,7 @@ namespace RLHub2
             // 
             // bottomLayout
             // 
-            bottomLayout.BackColor = Color.FromArgb(12, 12, 26);
+            bottomLayout.BackColor = Theme.PageBg;
             bottomLayout.ColumnCount = 2;
             bottomLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 64F));
             bottomLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 36F));
@@ -400,7 +400,7 @@ namespace RLHub2
             // 
             // historyPanel
             // 
-            historyPanel.BackColor = Color.FromArgb(18, 18, 38);
+            historyPanel.BackColor = Theme.Surface;
             historyPanel.Controls.Add(grid);
             historyPanel.Controls.Add(gridToolbar);
             historyPanel.Dock = DockStyle.Fill;
@@ -419,12 +419,12 @@ namespace RLHub2
             dataGridViewCellStyle1.BackColor = Color.FromArgb(22, 22, 44);
             grid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.BackgroundColor = Color.FromArgb(18, 18, 38);
+            grid.BackgroundColor = Theme.Surface;
             grid.BorderStyle = BorderStyle.None;
             dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = Color.FromArgb(26, 26, 52);
             dataGridViewCellStyle2.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            dataGridViewCellStyle2.ForeColor = Color.FromArgb(255, 255, 255);
+            dataGridViewCellStyle2.ForeColor = Theme.TextPrimary;
             dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
             dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
@@ -433,9 +433,9 @@ namespace RLHub2
             grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             grid.Columns.AddRange(new DataGridViewColumn[] { dataGridViewTextBoxColumn1, dataGridViewTextBoxColumn2 });
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = Color.FromArgb(18, 18, 38);
+            dataGridViewCellStyle3.BackColor = Theme.Surface;
             dataGridViewCellStyle3.Font = new Font("Segoe UI", 10F);
-            dataGridViewCellStyle3.ForeColor = Color.FromArgb(255, 255, 255);
+            dataGridViewCellStyle3.ForeColor = Theme.TextPrimary;
             dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(120, 60, 255);
             dataGridViewCellStyle3.SelectionForeColor = Color.White;
             dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
@@ -455,7 +455,7 @@ namespace RLHub2
             // 
             // gridToolbar
             // 
-            gridToolbar.BackColor = Color.FromArgb(18, 18, 38);
+            gridToolbar.BackColor = Theme.Surface;
             gridToolbar.Controls.Add(btnEdit);
             gridToolbar.Controls.Add(btnDelete);
             gridToolbar.Controls.Add(btnUndo);
@@ -488,7 +488,7 @@ namespace RLHub2
             // 
             // formPanel
             // 
-            formPanel.BackColor = Color.FromArgb(18, 18, 38);
+            formPanel.BackColor = Theme.Surface;
             formPanel.Controls.Add(lblFormTitle);
             formPanel.Controls.Add(lblMmr);
             formPanel.Controls.Add(txtMmr);
@@ -518,7 +518,7 @@ namespace RLHub2
             // 
             lblMmr.AutoSize = true;
             lblMmr.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            lblMmr.ForeColor = Color.FromArgb(170, 185, 220);
+            lblMmr.ForeColor = Theme.TextSecondary;
             lblMmr.Location = new Point(20, 42);
             lblMmr.Name = "lblMmr";
             lblMmr.Size = new Size(40, 17);
@@ -527,10 +527,10 @@ namespace RLHub2
             // 
             // txtMmr
             // 
-            txtMmr.BackColor = Color.FromArgb(28, 28, 56);
+            txtMmr.BackColor = Theme.SurfaceAlt;
             txtMmr.BorderStyle = BorderStyle.FixedSingle;
             txtMmr.Font = new Font("Segoe UI", 12F);
-            txtMmr.ForeColor = Color.FromArgb(255, 255, 255);
+            txtMmr.ForeColor = Theme.TextPrimary;
             txtMmr.Location = new Point(20, 64);
             txtMmr.MaxLength = 4;
             txtMmr.Name = "txtMmr";
@@ -542,7 +542,7 @@ namespace RLHub2
             // 
             lblHint.AutoSize = true;
             lblHint.Font = new Font("Segoe UI", 9.5F, FontStyle.Italic);
-            lblHint.ForeColor = Color.FromArgb(140, 160, 200);
+            lblHint.ForeColor = Theme.TextMuted;
             lblHint.Location = new Point(20, 96);
             lblHint.Name = "lblHint";
             lblHint.Size = new Size(123, 17);
@@ -561,7 +561,7 @@ namespace RLHub2
             // 
             lblStats.AutoSize = true;
             lblStats.Font = new Font("Segoe UI", 10F);
-            lblStats.ForeColor = Color.FromArgb(170, 185, 220);
+            lblStats.ForeColor = Theme.TextSecondary;
             lblStats.Location = new Point(20, 124);
             lblStats.Name = "lblStats";
             lblStats.Size = new Size(0, 19);
@@ -579,7 +579,7 @@ namespace RLHub2
             // 
             // MMRPage
             // 
-            BackColor = Color.FromArgb(12, 12, 26);
+            BackColor = Theme.PageBg;
             Controls.Add(detailView);
             Controls.Add(selectionView);
             Name = "MMRPage";
@@ -631,8 +631,12 @@ namespace RLHub2
         private void StyleRangeButton(Button b, string text)
         {
             b.Text = text;
-            b.Size = new Size(86, 34);
-            b.Margin = new Padding(6, 8, 0, 8);
+            // same pill style as the News/Tournaments filters: auto-sized to the label, 38 tall
+            b.AutoSize = true;
+            b.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            b.MinimumSize = new Size(0, 38);
+            b.Padding = new Padding(16, 0, 16, 0);
+            b.Margin = new Padding(0, 6, 8, 6);
             b.FlatStyle = FlatStyle.Flat;
             b.FlatAppearance.BorderSize = 0;
             b.ForeColor = Theme.TextPrimary;

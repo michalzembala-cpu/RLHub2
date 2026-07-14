@@ -38,7 +38,7 @@ namespace RLHub2
             // 
             // rootLayout
             // 
-            rootLayout.BackColor = Color.FromArgb(12, 12, 26);
+            rootLayout.BackColor = Theme.PageBg;
             rootLayout.ColumnCount = 1;
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             rootLayout.Controls.Add(lblTitle, 0, 0);
@@ -59,7 +59,7 @@ namespace RLHub2
             // 
             lblTitle.AutoSize = true;
             lblTitle.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
-            lblTitle.ForeColor = Color.FromArgb(255, 255, 255);
+            lblTitle.ForeColor = Theme.TextPrimary;
             lblTitle.Location = new Point(22, 20);
             lblTitle.Margin = new Padding(2, 0, 0, 0);
             lblTitle.Name = "lblTitle";
@@ -69,7 +69,7 @@ namespace RLHub2
             // 
             // catPanel
             // 
-            catPanel.BackColor = Color.FromArgb(12, 12, 26);
+            catPanel.BackColor = Theme.PageBg;
             catPanel.Controls.Add(btnAll);
             catPanel.Controls.Add(btnGeneral);
             catPanel.Controls.Add(btnEsports);
@@ -121,7 +121,7 @@ namespace RLHub2
             // 
             // listHost
             // 
-            listHost.BackColor = Color.FromArgb(12, 12, 26);
+            listHost.BackColor = Theme.PageBg;
             listHost.Controls.Add(listPanel);
             listHost.Controls.Add(lblStatus);
             listHost.Dock = DockStyle.Fill;
@@ -134,7 +134,7 @@ namespace RLHub2
             // listPanel
             // 
             listPanel.AutoScroll = true;
-            listPanel.BackColor = Color.FromArgb(12, 12, 26);
+            listPanel.BackColor = Theme.PageBg;
             listPanel.Dock = DockStyle.Fill;
             listPanel.FlowDirection = FlowDirection.TopDown;
             listPanel.Location = new Point(0, 0);
@@ -148,7 +148,7 @@ namespace RLHub2
             // 
             lblStatus.Dock = DockStyle.Fill;
             lblStatus.Font = new Font("Segoe UI", 13F, FontStyle.Italic);
-            lblStatus.ForeColor = Color.FromArgb(140, 160, 200);
+            lblStatus.ForeColor = Theme.TextMuted;
             lblStatus.Location = new Point(0, 0);
             lblStatus.Name = "lblStatus";
             lblStatus.Size = new Size(1066, 477);
@@ -158,7 +158,7 @@ namespace RLHub2
             // 
             // NewsPage
             // 
-            BackColor = Color.FromArgb(12, 12, 26);
+            BackColor = Theme.PageBg;
             Controls.Add(rootLayout);
             Name = "NewsPage";
             Size = new Size(1106, 625);

@@ -182,7 +182,6 @@ namespace RLHub2.Controls
 
             // Text block.
             using var titleFont = new Font("Segoe UI", TitleFontSize, FontStyle.Bold);
-            using var valueFont = new Font("Segoe UI", ValueFontSize, FontStyle.Bold);
             using var subFont = new Font("Segoe UI", SubtitleFontSize, FontStyle.Regular);
 
             using var titleBrush = new SolidBrush(Theme.TextSecondary);
@@ -209,19 +208,41 @@ namespace RLHub2.Controls
                 padX = badge.Right + 14;
             }
 
-            int y = 16;
-            g.DrawString(_title.ToUpperInvariant(), titleFont, titleBrush, padX, y);
+            // Title pinned to the top, subtitle pinned to the BOTTOM, value centred in the
+            // gap between them — and the value font shrinks if that gap is too small, so a
+            // short tile can never clip the subtitle or overlap the value on top of it.
+            int titleY = 14;
+            g.DrawString(_title.ToUpperInvariant(), titleFont, titleBrush, padX, titleY);
 
-            y += titleFont.Height + 4;
-            g.DrawString(_shownValue, valueFont, valueBrush, padX - 2, y);
+            bool hasSub = !string.IsNullOrEmpty(_subtitle);
+            float subH = hasSub ? subFont.Height : 0;
+            float subY = Height - subH - 10;
 
-            if (!string.IsNullOrEmpty(_subtitle))
-            {
-                y += valueFont.Height + 4;
-                g.DrawString(_subtitle, subFont, subBrush, padX, y);
-            }
+            float valTop = titleY + titleFont.Height + 2;
+            float valBottom = hasSub ? subY - 2 : Height - 8;
+            float valArea = Math.Max(14f, valBottom - valTop);
+
+            using var valueFont = FitFont(ValueFontSize, valArea);
+            float valY = valTop + Math.Max(0, (valArea - valueFont.Height) / 2f);
+            g.DrawString(_shownValue, valueFont, valueBrush, padX - 2, valY);
+
+            if (hasSub)
+                g.DrawString(_subtitle, subFont, subBrush, padX, subY);
 
             base.OnPaint(e);
+        }
+
+        // Largest bold "Segoe UI" at or below `size` whose line height fits `available`.
+        private static Font FitFont(float size, float available)
+        {
+            var f = new Font("Segoe UI", size, FontStyle.Bold);
+            while (f.Height > available && size > 9f)
+            {
+                f.Dispose();
+                size -= 1f;
+                f = new Font("Segoe UI", size, FontStyle.Bold);
+            }
+            return f;
         }
 
         private static Color Mix(Color a, Color b, float t)
