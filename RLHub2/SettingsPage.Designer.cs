@@ -10,6 +10,12 @@ namespace RLHub2
         private FlowLayoutPanel flow;
         private Label lblTitle;
 
+        private Panel gamePanel;
+        private Label lblGame;
+        private Label lblGameHint;
+        private Button btnGame;
+        private CheckBox chkAskGame;
+
         private Panel langPanel;
         private Label lblLanguage;
         private Label lblLanguageHint;
@@ -46,6 +52,11 @@ namespace RLHub2
         {
             flow = new FlowLayoutPanel();
             lblTitle = new Label();
+            gamePanel = new Panel();
+            lblGame = new Label();
+            lblGameHint = new Label();
+            btnGame = new Button();
+            chkAskGame = new CheckBox();
             langPanel = new Panel();
             lblLanguage = new Label();
             lblLanguageHint = new Label();
@@ -97,6 +108,33 @@ namespace RLHub2
             lblTitle.ForeColor = Theme.TextPrimary;
             lblTitle.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
             lblTitle.Margin = new Padding(2, 0, 0, 16);
+
+            // ===== GAME =====
+            Card(gamePanel, panelColor, 168);
+            SectionTitle(lblGame, "GAME");
+            Hint(lblGameHint, "Which game the app shows");
+
+            btnGame.Text = "GAME";
+            btnGame.Size = new Size(CardW - 40, 32);
+            btnGame.Location = new Point(20, 76);
+            btnGame.FlatStyle = FlatStyle.Flat;
+            btnGame.FlatAppearance.BorderSize = 1;
+            btnGame.FlatAppearance.BorderColor = Theme.Accent;
+            btnGame.BackColor = inputBg;
+            btnGame.ForeColor = Theme.TextPrimary;
+            btnGame.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnGame.TextAlign = ContentAlignment.MiddleLeft;
+            btnGame.Padding = new Padding(10, 0, 0, 0);
+            btnGame.Cursor = Cursors.Hand;
+            btnGame.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            chkAskGame.Location = new Point(20, 122);
+            chkAskGame.AutoSize = true;
+            chkAskGame.ForeColor = Theme.TextSecondary;
+            chkAskGame.Font = new Font("Segoe UI", 9.5F);
+            chkAskGame.Cursor = Cursors.Hand;
+
+            gamePanel.Controls.AddRange(new Control[] { lblGame, lblGameHint, btnGame, chkAskGame });
 
             // ===== LANGUAGE =====
             Card(langPanel, panelColor, 134);
@@ -194,7 +232,7 @@ namespace RLHub2
 
             bcPanel.Controls.AddRange(new Control[] { lblBc, lblBcHint, txtBcKey, btnTestBc, lblBcStatus, chkDeleteOld });
 
-            flow.Controls.AddRange(new Control[] { lblTitle, langPanel, themePanel, accentPanel, keyPanel, bcPanel });
+            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, langPanel, themePanel, accentPanel, keyPanel, bcPanel });
             this.Controls.Add(flow);
 
             ResumeLayout(false);

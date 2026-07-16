@@ -128,6 +128,18 @@ namespace RLHub2
                     BeginInvoke(new Action(OnLanguageChanged));
             };
 
+            // switching game swaps the whole nav and lands on that game's home page
+            Games.ActiveChanged += () =>
+            {
+                if (IsHandleCreated)
+                    BeginInvoke(new Action(() =>
+                    {
+                        ApplyGame();
+                        ResizeNav();
+                        NavigateKey(Games.HomePage(Games.Active));
+                    }));
+            };
+
             // switching account reloads the current page with that account's data
             Accounts.ActiveChanged += () =>
             {
@@ -145,6 +157,8 @@ namespace RLHub2
             };
 
             FormClosed += (s, e) => DropFrozen();
+
+            ApplyGame();
 
             ApplyNavTexts();
             NavigateKey(startPage ?? config.LastPage);
@@ -187,7 +201,10 @@ namespace RLHub2
 
         private void NavigateKey(string key)
         {
-            switch ((key ?? "home").ToLowerInvariant())
+            key = (key ?? "home").ToLowerInvariant();
+            if (!BelongsToActiveGame(key)) key = Games.HomePage(Games.Active);
+
+            switch (key)
             {
                 case "mmr": Navigate("mmr", btnMMR, () => new MMRPage()); break;
                 case "road": Navigate("road", btnRoad, () => new RoadPage()); break;
@@ -227,6 +244,39 @@ namespace RLHub2
                 SwitchPage(_currentFactory());
         }
 
+        // Show only the pages that belong to the game we're in. Each game's data, and most of
+        // its pages, mean nothing in the other one — Rocket League news on a CS2 sidebar would
+        // just be noise.
+        private void ApplyGame()
+        {
+            var game = Games.Active;
+            bool rl = game == GameId.RocketLeague;
+
+            btnHome.Visible = rl;
+            btnMMR.Visible = rl;
+            btnRoad.Visible = rl;
+            btnCoach.Visible = rl;
+            btnSession.Visible = rl;
+            btnProfile.Visible = rl;
+            btnRecords.Visible = rl;
+            btnTournaments.Visible = rl;
+            btnNews.Visible = rl;
+            btnSeasons.Visible = rl;
+            lblSecSocial.Visible = rl;
+
+            btnCs2.Visible = !rl;
+
+            lblLogo.Text = rl ? "RL HUB" : "CS2 HUB";
+        }
+
+        // A page key only reachable in the other game (a remembered LastPage after switching)
+        // would show a page whose nav item isn't even there.
+        private bool BelongsToActiveGame(string key)
+        {
+            bool cs2Page = key == "cs2";
+            return cs2Page == (Games.Active == GameId.Cs2) || key == "settings";
+        }
+
         private void ApplyThemeColors()
         {
             this.BackColor = Theme.PageBg;
@@ -253,7 +303,8 @@ namespace RLHub2
         private void SetSectionHeadersVisible(bool visible)
         {
             lblSecMain.Visible = visible;
-            lblSecSocial.Visible = visible;
+            // COMMUNITY only heads Rocket League items — in CS2 it would caption nothing.
+            lblSecSocial.Visible = visible && Games.Active == GameId.RocketLeague;
         }
 
         private void ApplyNavTexts()

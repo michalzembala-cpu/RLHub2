@@ -16,18 +16,28 @@ namespace RLHub2
             using (var splash = new SplashForm())
                 splash.ShowDialog();
 
-            // "Who's playing?" — pointless with a single account, so only ask when there's a choice.
             var store = new SettingsStore();
-            bool pickedProfile = false;
-            if (store.LoadAskProfileOnStart() && Accounts.All.Count > 1)
+
+            // Game first, then who you are: "which game" decides which pages exist, and only
+            // Rocket League has profiles to choose between.
+            bool picked = false;
+            if (store.LoadAskGameOnStart())
             {
-                using var picker = new ProfilePickerForm();
-                pickedProfile = picker.ShowDialog() == DialogResult.OK;
+                using var gamePicker = new GamePickerForm();
+                picked = gamePicker.ShowDialog() == DialogResult.OK;
             }
 
-            // Choosing a profile starts a fresh session — land on Home, not on whatever tab the
-            // previous run happened to end on.
-            Application.Run(new DashboardShell(pickedProfile ? "home" : null));
+            // "Who's playing?" — pointless with a single account, so only ask when there's a choice.
+            if (picked && Games.HasProfiles(Games.Active)
+                && store.LoadAskProfileOnStart() && Accounts.All.Count > 1)
+            {
+                using var picker = new ProfilePickerForm();
+                picker.ShowDialog();
+            }
+
+            // Picking starts a fresh session — land on the game's own home page, not on whatever
+            // tab the previous run happened to end on.
+            Application.Run(new DashboardShell(picked ? Games.HomePage(Games.Active) : null));
         }
     }
 }

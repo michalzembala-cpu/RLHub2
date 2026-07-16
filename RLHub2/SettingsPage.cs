@@ -30,6 +30,22 @@ namespace RLHub2
             txtKey.Text = _store.LoadTrackerKey();
             txtBcKey.Text = _store.LoadBallchasingKey();
 
+            // game switcher — opens the same Big-Picture-style picker as launch
+            UpdateGameButton();
+            btnGame.Click += (s, e) =>
+            {
+                using var picker = new GamePickerForm();
+                picker.ShowDialog(FindForm());
+                UpdateGameButton();
+            };
+            chkAskGame.Checked = _store.LoadAskGameOnStart();
+            chkAskGame.CheckedChanged += (s, e) => _store.SaveAskGameOnStart(chkAskGame.Checked);
+
+            // Profiles are a Rocket League idea — CS2 is whoever is signed into Steam.
+            bool hasProfiles = Games.HasProfiles(Games.Active);
+            keyPanel.Visible = hasProfiles;
+            bcPanel.Visible = hasProfiles;
+
             // account switcher — opens the Big-Picture-style picker
             UpdateProfileButton();
             btnProfile.Click += (s, e) =>
@@ -79,6 +95,13 @@ namespace RLHub2
                 _store.SaveDeleteReplaysAfterDays(chkDeleteOld.Checked ? 7 : 0);
         }
 
+        private void UpdateGameButton()
+        {
+            if (IsDisposed) return;
+            btnGame.Text = "🎮  " + Games.Name(Games.Active) + "     "
+                + (Localization.IsPolish ? "— zmień" : "— change");
+        }
+
         private void UpdateProfileButton()
         {
             if (IsDisposed) return;
@@ -114,6 +137,8 @@ namespace RLHub2
                     lblBcStatus.MaximumSize = new Size(w - 40, 0);
                     chkDeleteOld.MaximumSize = new Size(w - 40, 0);
                     chkAskProfile.MaximumSize = new Size(w - 40, 0);
+                    chkAskGame.MaximumSize = new Size(w - 40, 0);
+                    lblGameHint.MaximumSize = new Size(w - 40, 0);
 
                     flow.PerformLayout();
                     if (!flow.HorizontalScroll.Visible) break;
@@ -165,6 +190,13 @@ namespace RLHub2
             chkAskProfile.Text = Localization.IsPolish
                 ? "Pytaj o profil przy starcie aplikacji"
                 : "Ask which profile to use on startup";
+            lblGame.Text = Localization.IsPolish ? "GRA" : "GAME";
+            lblGameHint.Text = Localization.IsPolish
+                ? "Którą grę pokazuje aplikacja"
+                : "Which game the app shows";
+            chkAskGame.Text = Localization.IsPolish
+                ? "Pytaj o grę przy starcie aplikacji"
+                : "Ask which game to use on startup";
             lblBc.Text = Localization.IsPolish ? "KLUCZ API BALLCHASING" : "BALLCHASING API KEY";
             lblBcHint.Text = Localization.IsPolish
                 ? "Darmowy klucz na ballchasing.com/upload → Settings. Daje prawdziwe mecze, rangi i automatyczne MMR."

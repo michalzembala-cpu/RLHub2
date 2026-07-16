@@ -27,6 +27,10 @@ namespace RLHub2.Services
         // Show the "Who's playing?" picker on launch (only ever asked when there is >1 account).
         public bool AskProfileOnStart { get; set; } = true;
 
+        // Which game the app is currently in: "rl" or "cs2". Each game gets its own pages.
+        public string ActiveGame { get; set; } = "rl";
+        public bool AskGameOnStart { get; set; } = true;
+
         // Send local .replay files to the Recycle Bin once they are safely on ballchasing
         // and older than this many days. 0 = never delete.
         public int DeleteReplaysAfterDays { get; set; } = 0;
@@ -202,6 +206,15 @@ namespace RLHub2.Services
         {
             var cfg = Load();
             cfg.ActiveAccount = name ?? "";
+            Save(cfg);
+        }
+
+        public bool LoadAskGameOnStart() => Load().AskGameOnStart;
+
+        public void SaveAskGameOnStart(bool on)
+        {
+            var cfg = Load();
+            cfg.AskGameOnStart = on;
             Save(cfg);
         }
 
