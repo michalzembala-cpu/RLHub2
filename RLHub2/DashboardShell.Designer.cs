@@ -21,6 +21,7 @@ namespace RLHub2
         private NavButton btnRoad;
         private NavButton btnCoach;
         private NavButton btnSession;
+        private NavButton btnCs2;
         private NavButton btnNews;
         private NavButton btnProfile;
         private NavButton btnRecords;
@@ -45,6 +46,7 @@ namespace RLHub2
             btnRoad = new NavButton();
             btnCoach = new NavButton();
             btnSession = new NavButton();
+            btnCs2 = new NavButton();
             btnNews = new NavButton();
             btnProfile = new NavButton();
             btnRecords = new NavButton();
@@ -106,6 +108,7 @@ namespace RLHub2
             ConfigureNav(btnRoad, "Road to SSL", "\U0001F680");       // 🚀
             ConfigureNav(btnCoach, "AI Coach", "\U0001F916");         // 🤖
             ConfigureNav(btnSession, "Session", "\U0001F534");       // 🔴
+            ConfigureNav(btnCs2, "CS2", "\U0001F52B");               // 🔫
             ConfigureNav(btnProfile, "Profile", "\U0001F464");       // 👤
             ConfigureNav(btnRecords, "Records", "\U0001F3C5");       // 🏅
             ConfigureNav(btnTournaments, "Tournaments", "\U0001F3C6");// 🏆
@@ -122,6 +125,7 @@ namespace RLHub2
             navPanel.Controls.Add(btnRoad);
             navPanel.Controls.Add(btnCoach);
             navPanel.Controls.Add(btnSession);
+            navPanel.Controls.Add(btnCs2);
             navPanel.Controls.Add(btnProfile);
             navPanel.Controls.Add(btnRecords);
             navPanel.Controls.Add(lblSecSocial);

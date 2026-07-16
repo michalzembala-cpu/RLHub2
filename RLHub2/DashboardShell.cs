@@ -50,8 +50,8 @@ namespace RLHub2
 
             navButtons = new[]
             {
-                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnProfile, btnRecords, btnNews,
-                btnTournaments, btnSeasons, btnSettings
+                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnProfile, btnRecords,
+                btnNews, btnTournaments, btnSeasons, btnSettings
             };
 
             ApplyThemeColors();
@@ -72,6 +72,7 @@ namespace RLHub2
             btnRoad.Click += (s, e) => NavigateKey("road");
             btnCoach.Click += (s, e) => NavigateKey("coach");
             btnSession.Click += (s, e) => NavigateKey("session");
+            btnCs2.Click += (s, e) => NavigateKey("cs2");
             btnRecords.Click += (s, e) => NavigateKey("records");
             btnNews.Click += (s, e) => NavigateKey("news");
             btnProfile.Click += (s, e) => NavigateKey("profile");
@@ -154,6 +155,13 @@ namespace RLHub2
             Load += (s, e) =>
             {
                 StatsApiClient.Instance.Start();
+
+                // CS2 only talks to apps it has a config for, and it reads that config at
+                // startup — so write it now and listen; whatever is running today will be
+                // picked up the next time the game starts.
+                if (Cs2Install.IsInstalled && !Cs2Install.IsConfigured)
+                    Cs2Install.WriteConfig(Cs2GsiClient.Port);
+                Cs2GsiClient.Instance.Start();
                 _ = System.Threading.Tasks.Task.Run(async () =>
                 {
                     try { await new BallchasingSync().SyncAsync(); } catch { }
@@ -185,6 +193,7 @@ namespace RLHub2
                 case "road": Navigate("road", btnRoad, () => new RoadPage()); break;
                 case "coach": Navigate("coach", btnCoach, () => new CoachPage()); break;
                 case "session": Navigate("session", btnSession, () => new SessionPage()); break;
+                case "cs2": Navigate("cs2", btnCs2, () => new Cs2Page()); break;
                 case "records": Navigate("records", btnRecords, () => new RecordsPage()); break;
                 case "news": Navigate("news", btnNews, () => new NewsPage()); break;
                 case "profile": Navigate("profile", btnProfile, () => new ProfilePage()); break;
@@ -256,6 +265,7 @@ namespace RLHub2
             btnRoad.Text = Localization.T("nav_road");
             btnCoach.Text = Localization.T("nav_coach");
             btnSession.Text = Localization.T("nav_session");
+            btnCs2.Text = "CS2";
             btnRecords.Text = Localization.T("nav_records");
             btnNews.Text = Localization.T("nav_news");
             btnProfile.Text = Localization.T("nav_profile");
