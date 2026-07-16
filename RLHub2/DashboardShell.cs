@@ -31,6 +31,9 @@ namespace RLHub2
         private Func<UserControl>? _currentFactory;
         private readonly ToolTip _navTip = new() { InitialDelay = 300, ReshowDelay = 100 };
 
+        // A picture of the page, shown in its place while the bar animates over it. See FreezePage.
+        private Bitmap? _frozen;
+
         // startPage overrides the remembered last page. Picking a profile is the start of a
         // fresh session, so it lands on Home rather than wherever the previous run left off.
         public DashboardShell(string? startPage = null)
@@ -88,6 +91,25 @@ namespace RLHub2
 
             navPanel.SizeChanged += (s, e) => { if (!_animating) ResizeNav(); };
 
+            // The page owns a FIXED area — it starts where the collapsed bar ends and never
+            // moves or resizes. The bar floats above it and expands over the page instead of
+            // pushing it. That is what makes the animation cheap: the page (a full tree of
+            // child windows, each one costly to move or relayout) is untouched, so a frame is
+            // just the bar repainting itself.
+            //
+            // Form padding reserves the collapsed bar's column for the docked page; the bar is
+            // undocked, so it ignores that padding and can grow across it.
+            Padding = new Padding(CollapsedWidth, 0, 0, 0);
+            sidebar.Dock = DockStyle.None;
+            sidebar.Location = Point.Empty;
+            sidebar.Height = ClientSize.Height;
+            sidebar.BringToFront();
+            Resize += (s, e) =>
+            {
+                sidebar.Height = ClientSize.Height;
+                DropFrozen();   // the page relaid out; the snapshot no longer matches
+            };
+
             // Restore sidebar collapsed state (instant, no animation).
             collapsed = config.SidebarCollapsed;
             targetWidth = collapsed ? CollapsedWidth : ExpandedWidth;
@@ -120,6 +142,8 @@ namespace RLHub2
                 if (IsHandleCreated)
                     BeginInvoke(new Action(OnThemeChanged));
             };
+
+            FormClosed += (s, e) => DropFrozen();
 
             ApplyNavTexts();
             NavigateKey(startPage ?? config.LastPage);
@@ -251,6 +275,7 @@ namespace RLHub2
 
         private void SwitchPage(UserControl page)
         {
+            DropFrozen();
             _pageAnim.Stop();
             panelContent.Controls.Clear();
             currentPage?.Dispose();
@@ -289,6 +314,48 @@ namespace RLHub2
             _animPage.Top = top - Math.Max(2, (int)(top * 0.20f)); // ease-out glide
         }
 
+        // ===== PAGE FREEZING =====
+
+        // Painting a page costs ~34 ms: the cards are semi-transparent, and WinForms renders a
+        // transparent child by having its parent repaint that child's whole background — nine
+        // containers deep, that adds up, and no amount of caching in ArenaControl avoids it.
+        // It is the price of the look and it is fine when it happens once.
+        //
+        // It is not fine 25 times during an animation, which is what happened: each frame the
+        // bar uncovered a few more pixels of the page and the whole thing repainted. So the page
+        // is photographed once, hidden, and the photo shown in its place for the length of the
+        // animation — uncovering a picture is one blit. The live page comes back at the end.
+        private void FreezePage()
+        {
+            if (panelContent.Width < 2 || panelContent.Height < 2) return;
+
+            // Reuse the buffer, but always re-shoot it: the page moves on its own (the season
+            // countdown ticks, a sync lands) and a stale picture would flash old numbers.
+            if (_frozen == null || _frozen.Size != panelContent.Size)
+            {
+                _frozen?.Dispose();
+                _frozen = new Bitmap(panelContent.Width, panelContent.Height);
+            }
+            panelContent.DrawToBitmap(_frozen, new Rectangle(Point.Empty, panelContent.Size));
+            panelContent.Visible = false;
+        }
+
+        private void ThawPage() => panelContent.Visible = true;
+
+        // Anything that changes what the page looks like makes the snapshot a lie.
+        private void DropFrozen()
+        {
+            _frozen?.Dispose();
+            _frozen = null;
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            base.OnPaintBackground(e);
+            if (_frozen != null && !panelContent.Visible)
+                e.Graphics.DrawImageUnscaled(_frozen, panelContent.Left, panelContent.Top);
+        }
+
         // ===== SIDEBAR COLLAPSE ANIMATION =====
 
         // Drives the sidebar to expanded/collapsed WITHOUT touching the saved preference,
@@ -309,17 +376,7 @@ namespace RLHub2
             foreach (Control c in navPanel.Controls)
                 c.Width = Math.Max(10, targetWidth - c.Margin.Horizontal);
 
-            // Undock the content and give it its FINAL width up front, so the page lays out and
-            // repaints once instead of once per frame. A docked page would be resized by every
-            // frame of the slide, and repainting a full page costs ~100 ms — that was the whole
-            // reason the animation crawled. From here each frame only moves the panel sideways.
-            if (ClientSize.Width > targetWidth)
-            {
-                panelContent.Dock = DockStyle.None;
-                panelContent.Bounds = new Rectangle(
-                    sidebar.Width, 0, ClientSize.Width - targetWidth, ClientSize.Height);
-            }
-
+            FreezePage();
             animTimer.Start();
         }
 
@@ -332,8 +389,8 @@ namespace RLHub2
         }
 
         // ===== HOVER PEEK =====
-        // The sidebar stays docked, so expanding it pushes the page across rather than
-        // covering it — nothing on the page is ever hidden behind the menu.
+        // Hovering the collapsed bar floats it open over the page and moving away retracts it.
+        // The page never reflows, so peeking costs nothing.
         private void HoverPeekTick()
         {
             if (!collapsed) { _peeking = false; return; }
@@ -364,7 +421,7 @@ namespace RLHub2
                 _animating = false;
                 navPanel.AutoScroll = true;
                 ResizeNav();
-                panelContent.Dock = DockStyle.Fill;   // hand the content back to the layout engine
+                ThawPage();
                 return;
             }
 
@@ -372,12 +429,7 @@ namespace RLHub2
             if (step == 0)
                 step = Math.Sign(diff) * 2;
 
-            sidebar.Width += step;
-            // Content keeps its final width and only slides. Pin its left to max(bar, target):
-            // when collapsing, that's the shrinking bar, so the page follows it left; when
-            // expanding, it's the final width, so the page sits still and the bar grows up to
-            // it — no strip of background ever shows between the two.
-            panelContent.Left = Math.Max(sidebar.Width, targetWidth);
+            sidebar.Width += step;   // the page is frozen and in place; only the bar moves
         }
 
         private static void EnableDoubleBuffer(Control c)
