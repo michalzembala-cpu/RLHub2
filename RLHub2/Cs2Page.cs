@@ -18,13 +18,29 @@ namespace RLHub2
     public partial class Cs2Page : Controls.ArenaControl
     {
         private readonly Cs2SessionStore _store = new();
+        private readonly SettingsStore _settings = new();
         private readonly Cs2GsiClient _client = Cs2GsiClient.Instance;
         private List<Cs2Match> _session = new();
+
+        // "" = every mode. GSI reports the mode per match, so the filter is just a view over
+        // what we already store — no data is thrown away by choosing one.
+        private static readonly string[] ModeKeys = { "", "premier", "competitive", "casual" };
+        private string _mode = "";
 
         public Cs2Page()
         {
             InitializeComponent();
             ApplyLanguage();
+
+            _mode = _settings.LoadCs2ModeFilter();
+            int idx = Array.IndexOf(ModeKeys, _mode);
+            segMode.SetSelectedSilent(idx < 0 ? 0 : idx);
+            segMode.SelectedIndexChanged += (s, e) =>
+            {
+                _mode = ModeKeys[Math.Clamp(segMode.SelectedIndex, 0, ModeKeys.Length - 1)];
+                _settings.SaveCs2ModeFilter(_mode);
+                RefreshStats();
+            };
 
             recentPanel.Paint += DrawRecent;
             recentPanel.Resize += (s, e) => recentPanel.Invalidate();
@@ -58,6 +74,12 @@ namespace RLHub2
             tileKills.Title = Localization.IsPolish ? "ZABÓJSTWA/MECZ" : "KILLS/GAME";
             tileDeaths.Title = Localization.IsPolish ? "ŚMIERCI/MECZ" : "DEATHS/GAME";
             tileMvp.Title = "MVP";
+
+            segMode.SetOptions(new[]
+            {
+                Localization.IsPolish ? "Wszystkie" : "All",
+                "Premier", "Competitive", "Casual",
+            });
         }
 
         private void OnConnectionChanged(bool connected) => UpdateStatus();
@@ -105,6 +127,7 @@ namespace RLHub2
         {
             _session = _store.Load()
                 .Where(m => m.Time >= _client.StartedAt)
+                .Where(m => _mode.Length == 0 || string.Equals(m.Mode, _mode, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(m => m.Time)
                 .ToList();
 
@@ -156,8 +179,16 @@ namespace RLHub2
                 using var ef = new Font("Segoe UI", 11f);
                 using var eb = new SolidBrush(Theme.TextMuted);
                 using var esf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(Localization.IsPolish ? "Brak meczów w tej sesji" : "No matches this session",
-                    ef, eb, new RectangleF(0, 0, W, H), esf);
+
+                // "No matches" while a filter is on would read as "nothing was tracked" — say
+                // which it is.
+                bool filtered = _mode.Length > 0;
+                string msg = filtered
+                    ? (Localization.IsPolish
+                        ? $"Brak meczów w tej sesji w trybie {Cap(_mode)}"
+                        : $"No {Cap(_mode)} matches this session")
+                    : (Localization.IsPolish ? "Brak meczów w tej sesji" : "No matches this session");
+                g.DrawString(msg, ef, eb, new RectangleF(0, 0, W, H), esf);
                 return;
             }
 
@@ -206,6 +237,9 @@ namespace RLHub2
                 if (y + rowH > H) break;
             }
         }
+
+        private static string Cap(string s)
+            => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
 
         // "de_dust2" -> "Dust2"
         private static string PrettyMap(string map)

@@ -31,6 +31,9 @@ namespace RLHub2.Services
         public string ActiveGame { get; set; } = "rl";
         public bool AskGameOnStart { get; set; } = true;
 
+        // Which CS2 mode the tracker counts: "" = all, or premier/competitive/casual.
+        public string Cs2ModeFilter { get; set; } = "";
+
         // Send local .replay files to the Recycle Bin once they are safely on ballchasing
         // and older than this many days. 0 = never delete.
         public int DeleteReplaysAfterDays { get; set; } = 0;
@@ -206,6 +209,15 @@ namespace RLHub2.Services
         {
             var cfg = Load();
             cfg.ActiveAccount = name ?? "";
+            Save(cfg);
+        }
+
+        public string LoadCs2ModeFilter() => Load().Cs2ModeFilter ?? "";
+
+        public void SaveCs2ModeFilter(string mode)
+        {
+            var cfg = Load();
+            cfg.Cs2ModeFilter = mode ?? "";
             Save(cfg);
         }
 

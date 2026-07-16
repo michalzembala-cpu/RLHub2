@@ -10,6 +10,7 @@ namespace RLHub2
         private TableLayoutPanel rootLayout;
         private Label lblTitle;
         private Label lblStatus;
+        private SegmentedControl segMode;
 
         private TableLayoutPanel tilesRow;
         private StatTile tileRecord;
@@ -33,6 +34,7 @@ namespace RLHub2
             rootLayout = new TableLayoutPanel();
             lblTitle = new Label();
             lblStatus = new Label();
+            segMode = new SegmentedControl();
             tilesRow = new TableLayoutPanel();
             tileRecord = new StatTile();
             tileWinRate = new StatTile();
@@ -61,10 +63,11 @@ namespace RLHub2
             rootLayout.BackColor = pageColor;
             rootLayout.Padding = new Padding(20);
             rootLayout.ColumnCount = 1;
-            rootLayout.RowCount = 6;
+            rootLayout.RowCount = 7;
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 46f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30f));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 88f));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30f));
@@ -81,6 +84,12 @@ namespace RLHub2
             lblStatus.ForeColor = Theme.TextSecondary;
             lblStatus.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             lblStatus.TextAlign = ContentAlignment.MiddleLeft;
+
+            // Casual K/D and Premier K/D are not the same statistic; averaging them together
+            // tells you nothing. Left-anchored so it keeps its size on a wide page.
+            segMode.Anchor = AnchorStyles.Left;
+            segMode.Size = new Size(460, 40);
+            segMode.Margin = new Padding(0, 4, 0, 6);
 
             ConfigureTilesRow(tilesRow, 4);
             SetupTile(tileRecord, "W – L", purple);
@@ -132,10 +141,11 @@ namespace RLHub2
 
             rootLayout.Controls.Add(lblTitle, 0, 0);
             rootLayout.Controls.Add(lblStatus, 0, 1);
-            rootLayout.Controls.Add(tilesRow, 0, 2);
-            rootLayout.Controls.Add(avgRow, 0, 3);
-            rootLayout.Controls.Add(recentBar, 0, 4);
-            rootLayout.Controls.Add(recentPanel, 0, 5);
+            rootLayout.Controls.Add(segMode, 0, 2);
+            rootLayout.Controls.Add(tilesRow, 0, 3);
+            rootLayout.Controls.Add(avgRow, 0, 4);
+            rootLayout.Controls.Add(recentBar, 0, 5);
+            rootLayout.Controls.Add(recentPanel, 0, 6);
 
             this.Controls.Add(rootLayout);
 
