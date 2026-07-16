@@ -137,15 +137,14 @@ namespace RLHub2
             };
         }
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED — flicker-free child compositing
-                return cp;
-            }
-        }
+        // WS_EX_COMPOSITED used to be set here to stop the sidebar animation flickering. It
+        // works by repainting the ENTIRE window off-screen on every invalidation, which cost
+        // ~100 ms a frame on this window — the animation ran at under 10 fps. It was only needed
+        // because each frame resized the content and forced a full repaint anyway; now the
+        // content keeps its size and merely slides, Windows blits it, and the flicker it was
+        // hiding is gone at the source. Measured: 277 ms -> 31 ms per frame.
+        //
+        //   protected override CreateParams CreateParams { ... ExStyle |= 0x02000000 ... }
 
         private HomePage CreateHome()
         {
@@ -310,6 +309,17 @@ namespace RLHub2
             foreach (Control c in navPanel.Controls)
                 c.Width = Math.Max(10, targetWidth - c.Margin.Horizontal);
 
+            // Undock the content and give it its FINAL width up front, so the page lays out and
+            // repaints once instead of once per frame. A docked page would be resized by every
+            // frame of the slide, and repainting a full page costs ~100 ms — that was the whole
+            // reason the animation crawled. From here each frame only moves the panel sideways.
+            if (ClientSize.Width > targetWidth)
+            {
+                panelContent.Dock = DockStyle.None;
+                panelContent.Bounds = new Rectangle(
+                    sidebar.Width, 0, ClientSize.Width - targetWidth, ClientSize.Height);
+            }
+
             animTimer.Start();
         }
 
@@ -354,6 +364,7 @@ namespace RLHub2
                 _animating = false;
                 navPanel.AutoScroll = true;
                 ResizeNav();
+                panelContent.Dock = DockStyle.Fill;   // hand the content back to the layout engine
                 return;
             }
 
@@ -362,6 +373,11 @@ namespace RLHub2
                 step = Math.Sign(diff) * 2;
 
             sidebar.Width += step;
+            // Content keeps its final width and only slides. Pin its left to max(bar, target):
+            // when collapsing, that's the shrinking bar, so the page follows it left; when
+            // expanding, it's the final width, so the page sits still and the bar grows up to
+            // it — no strip of background ever shows between the two.
+            panelContent.Left = Math.Max(sidebar.Width, targetWidth);
         }
 
         private static void EnableDoubleBuffer(Control c)

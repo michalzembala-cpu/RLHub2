@@ -13,24 +13,15 @@ namespace RLHub2.Controls
         // Override in a page to pick which arena shows behind it.
         protected virtual string ArenaFile => "stadion1.jpg";
 
-        // Cached, pre-dimmed arena bitmap. During a resize we draw this stretched (cheap)
-        // and rebuild the crisp version once the size settles — keeps resize animations smooth.
+        // The arena, scaled and dimmed once per size. Rebuilt only when the size actually
+        // changes; every paint after that is a plain blit.
         private Bitmap? _bgCache;
-        private readonly System.Windows.Forms.Timer _rebuildTimer;
 
         public ArenaControl()
         {
             DoubleBuffered = true;
             SetStyle(ControlStyles.ResizeRedraw, true);
             Theme.ThemeChanged += OnThemeChanged;
-
-            _rebuildTimer = new System.Windows.Forms.Timer { Interval = 60 };
-            _rebuildTimer.Tick += (s, e) =>
-            {
-                _rebuildTimer.Stop();
-                if (_bgCache == null || _bgCache.Width != Width || _bgCache.Height != Height)
-                    RebuildCache();
-            };
         }
 
         private void OnThemeChanged()
@@ -42,6 +33,8 @@ namespace RLHub2.Controls
             Invalidate(true);
         }
 
+        // No Invalidate() here: this is called from inside OnPaintBackground, and asking for
+        // another paint from within a paint would loop.
         private void RebuildCache()
         {
             if (Width < 2 || Height < 2) return;
@@ -51,29 +44,26 @@ namespace RLHub2.Controls
             var old = _bgCache;
             _bgCache = bmp;
             old?.Dispose();
-            Invalidate();
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             if (Width < 2 || Height < 2) return;
-            var g = e.Graphics;
 
-            if (_bgCache == null) RebuildCache();
+            // This runs once per TRANSPARENT CHILD, not once per frame: WinForms implements
+            // transparency by having the parent repaint the child's slice of background. With a
+            // handful of transparent layout panels on a page that is many calls per frame, so
+            // scaling the whole arena here (~16 ms a go) cost hundreds of ms per frame and the
+            // animations crawled. Scale once into a cache, then blit only the strip asked for.
+            if (_bgCache == null || _bgCache.Width != Width || _bgCache.Height != Height)
+                RebuildCache();
             if (_bgCache == null) return;
 
-            if (_bgCache.Width == Width && _bgCache.Height == Height)
-            {
-                g.DrawImageUnscaled(_bgCache, 0, 0);
-            }
-            else
-            {
-                // in-between frame during a resize: stretch the cached bitmap (cheap),
-                // and debounce a crisp rebuild for when the size stops changing
-                g.DrawImage(_bgCache, new Rectangle(0, 0, Width, Height));
-                _rebuildTimer.Stop();
-                _rebuildTimer.Start();
-            }
+            var clip = Rectangle.Round(e.Graphics.VisibleClipBounds);
+            clip.Intersect(new Rectangle(0, 0, _bgCache.Width, _bgCache.Height));
+            if (clip.Width <= 0 || clip.Height <= 0) return;
+
+            e.Graphics.DrawImage(_bgCache, clip, clip, GraphicsUnit.Pixel);
         }
 
         protected override void OnLoad(EventArgs e)
@@ -103,8 +93,6 @@ namespace RLHub2.Controls
             if (disposing)
             {
                 Theme.ThemeChanged -= OnThemeChanged;
-                _rebuildTimer?.Stop();
-                _rebuildTimer?.Dispose();
                 _bgCache?.Dispose();
             }
             base.Dispose(disposing);
