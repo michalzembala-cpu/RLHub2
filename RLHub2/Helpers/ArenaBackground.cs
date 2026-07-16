@@ -31,7 +31,21 @@ namespace RLHub2.Helpers
         public static void Paint(Graphics g, int width, int height, Image? img, bool isDark)
         {
             g.Clear(Theme.PageBg);
-            if (img == null || width < 2 || height < 2) return;
+            if (width < 2 || height < 2) return;
+
+            // No photo for this page (CS2 has no art we may ship — its maps live inside Valve's
+            // VPK archives). Flat graphite reads as unfinished, so lift one corner slightly:
+            // enough to give the glass cards something to sit on, not enough to notice.
+            if (img == null)
+            {
+                using var glow = new System.Drawing.Drawing2D.LinearGradientBrush(
+                    new Rectangle(0, 0, width, height),
+                    Theme.Mix(Theme.PageBg, Theme.Accent, isDark ? 0.10f : 0.06f),
+                    Theme.PageBg,
+                    45f);
+                g.FillRectangle(glow, 0, 0, width, height);
+                return;
+            }
 
             // "cover" fit — fill the whole control, cropping overflow
             float ir = img.Width / (float)img.Height;

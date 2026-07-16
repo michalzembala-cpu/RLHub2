@@ -43,6 +43,7 @@ namespace RLHub2
                 ? AppLanguage.English : AppLanguage.Polish);
             Theme.Initialize(config.Theme?.ToLowerInvariant() == "light"
                 ? AppTheme.Light : AppTheme.Dark);
+            Theme.InitializeGame(Games.Active);
             Theme.InitializeAccent(_store.LoadAccent());
 
             InitializeComponent();
@@ -129,12 +130,14 @@ namespace RLHub2
                     BeginInvoke(new Action(OnLanguageChanged));
             };
 
-            // switching game swaps the whole nav and lands on that game's home page
+            // switching game swaps the palette, the nav, and the page under it
             Games.ActiveChanged += () =>
             {
                 if (IsHandleCreated)
                     BeginInvoke(new Action(() =>
                     {
+                        Theme.InitializeAccent(_store.LoadAccent());   // each game has its own
+                        Theme.SetGame(Games.Active);                   // raises ThemeChanged
                         ApplyGame();
                         ResizeNav();
                         NavigateKey(Games.HomePage(Games.Active));
@@ -264,7 +267,10 @@ namespace RLHub2
             btnTournaments.Visible = rl;
             btnNews.Visible = rl;
             btnSeasons.Visible = rl;
-            lblSecSocial.Visible = rl;
+
+            // Go through the shared helper: setting lblSecSocial directly here would re-show a
+            // section header that the collapsed sidebar had hidden.
+            SetSectionHeadersVisible(!collapsed);
 
             btnCs2.Visible = !rl;
             btnCs2Ai.Visible = !rl;

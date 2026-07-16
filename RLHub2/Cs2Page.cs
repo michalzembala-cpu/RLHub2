@@ -17,6 +17,9 @@ namespace RLHub2
     // rather than pretending to track a rating.
     public partial class Cs2Page : Controls.ArenaControl
     {
+        // No arena here — a Rocket League stadium behind a CS2 scoreboard is just wrong.
+        protected override string ArenaFile => "";
+
         private readonly Cs2SessionStore _store = new();
         private readonly SettingsStore _settings = new();
         private readonly Cs2GsiClient _client = Cs2GsiClient.Instance;
@@ -30,6 +33,7 @@ namespace RLHub2
         public Cs2Page()
         {
             InitializeComponent();
+            ApplyAccents();
             ApplyLanguage();
 
             _mode = _settings.LoadCs2ModeFilter();
@@ -60,6 +64,24 @@ namespace RLHub2
                 UpdateStatus();
                 RefreshStats();
             };
+        }
+
+        // The Designer's tile colors are Rocket League's palette (purple/blue/green). On CS2's
+        // graphite they read as random, so the tiles follow this game's accent instead — with
+        // green kept for the two tiles where it means "good", not "category".
+        private void ApplyAccents()
+        {
+            var accent = Theme.Accent;
+            var soft = Theme.AccentSoft;
+            var good = Color.FromArgb(46, 204, 113);
+
+            tileRecord.Accent = accent;
+            tileWinRate.Accent = soft;
+            tileKd.Accent = good;
+            tileMatches.Accent = accent;
+            tileKills.Accent = soft;
+            tileDeaths.Accent = accent;
+            tileMvp.Accent = good;
         }
 
         private void ApplyLanguage()

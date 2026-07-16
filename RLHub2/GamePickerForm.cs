@@ -121,7 +121,8 @@ namespace RLHub2
 
             LayoutTiles(titleY + ts.Height + ss.Height + 34);
 
-            var active = Games.Active;
+            // Highlight what's hovered, not what's stored — this screen is about choosing.
+            var active = _hover >= 0 ? _games[_hover] : Games.Active;
             for (int i = 0; i < _games.Count; i++)
                 DrawGame(g, _hits[i], _games[i], i == _hover, _games[i] == active);
 

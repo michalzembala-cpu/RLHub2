@@ -16,7 +16,8 @@ namespace RLHub2.Services
         public string LastPage { get; set; } = "home";
         public bool SidebarCollapsed { get; set; } = false;
         public string Theme { get; set; } = "dark"; // "dark" or "light"
-        public string Accent { get; set; } = "#783CFF"; // hex accent color
+        public string Accent { get; set; } = "#783CFF"; // hex accent color (Rocket League)
+        public string AccentCs2 { get; set; } = "#DE8228"; // CS2 gets its own — orange by default
         public string TrackedNick { get; set; } = ""; // legacy single nick (migrated to Accounts)
         public string BallchasingKey { get; set; } = ""; // ballchasing.com API key
         public bool BallchasingAutoUpload { get; set; } = true; // auto-upload local replays
@@ -266,22 +267,29 @@ namespace RLHub2.Services
             Save(cfg);
         }
 
+        // The accent belongs to the game, not the app: purple reads as Rocket League, orange as
+        // CS2. Both are still the user's to change — the picker just writes to whichever game
+        // is on screen.
         public Color LoadAccent()
         {
+            var cfg = Load();
+            bool cs2 = cfg.ActiveGame == "cs2";
             try
             {
-                var hex = Load().Accent;
+                var hex = cs2 ? cfg.AccentCs2 : cfg.Accent;
                 if (!string.IsNullOrWhiteSpace(hex))
                     return ColorTranslator.FromHtml(hex);
             }
             catch { }
-            return Color.FromArgb(120, 60, 255);
+            return cs2 ? Color.FromArgb(222, 130, 40) : Color.FromArgb(120, 60, 255);
         }
 
         public void SaveAccent(Color c)
         {
             var cfg = Load();
-            cfg.Accent = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+            var hex = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+            if (cfg.ActiveGame == "cs2") cfg.AccentCs2 = hex;
+            else cfg.Accent = hex;
             Save(cfg);
         }
     }

@@ -11,6 +11,8 @@ namespace RLHub2
     // our own data — nothing is fetched, nothing is guessed.
     public class Cs2AiPage : Controls.ArenaControl
     {
+        protected override string ArenaFile => "";
+
         private readonly SettingsStore _settings = new();
         private Cs2Report _report = new();
 

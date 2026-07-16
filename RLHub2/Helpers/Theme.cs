@@ -15,6 +15,27 @@ namespace RLHub2.Helpers
 
         public static void Initialize(AppTheme mode) => Mode = mode;
 
+        // ===== PER-GAME PALETTE =====
+        // Each game has its own look: Rocket League is navy, CS2 graphite. Held as a field and
+        // set explicitly rather than read from Games.Active — these properties are hit many
+        // times per paint, and a settings lookup behind each one would be a syscall per pixel-ish.
+        private static GameId _game = GameId.RocketLeague;
+
+        public static void SetGame(GameId g)
+        {
+            if (_game == g) return;
+            _game = g;
+            ThemeChanged?.Invoke();
+        }
+
+        public static void InitializeGame(GameId g) => _game = g;
+
+        private static bool Cs2 => _game == GameId.Cs2;
+
+        // Dark-mode color that differs per game: (rocket league) vs (cs2).
+        private static Color G(int r, int g, int b, int cr, int cg, int cb)
+            => Cs2 ? Color.FromArgb(cr, cg, cb) : Color.FromArgb(r, g, b);
+
         public static void SetTheme(AppTheme mode)
         {
             if (Mode == mode) return;
@@ -48,26 +69,31 @@ namespace RLHub2.Helpers
         private static Color D(int r, int g, int b, int lr, int lg, int lb)
             => IsDark ? Color.FromArgb(r, g, b) : Color.FromArgb(lr, lg, lb);
 
+        // Same, but the dark value differs per game.
+        private static Color DG(int r, int g, int b, int cr, int cg, int cb, int lr, int lg, int lb)
+            => IsDark ? G(r, g, b, cr, cg, cb) : Color.FromArgb(lr, lg, lb);
+
         // Accent (configurable) stays the same in both modes; AccentSoft is a lighter tint.
         public static Color Accent => _accent;
         public static Color AccentSoft => Mix(_accent, Color.White, 0.3f);
 
-        public static Color PageBg      => D(12, 12, 26,   238, 240, 247);
-        public static Color Sidebar     => D(18, 18, 38,   228, 231, 240);
-        public static Color Surface     => D(18, 18, 38,   255, 255, 255);
-        public static Color SurfaceAlt  => D(28, 28, 56,   236, 238, 245);
-        // Card bodies are semi-transparent so the arena backdrop shows through them.
-        public static Color CardTop     => Color.FromArgb(IsDark ? 188 : 222, D(26, 26, 52,   255, 255, 255));
-        public static Color CardBottom  => Color.FromArgb(IsDark ? 188 : 222, D(16, 16, 34,   238, 240, 247));
+        // CS2 is graphite (#121212 and its neighbours); Rocket League stays navy.
+        public static Color PageBg      => DG(12, 12, 26,   18, 18, 18,    238, 240, 247);
+        public static Color Sidebar     => DG(18, 18, 38,   24, 24, 24,    228, 231, 240);
+        public static Color Surface     => DG(18, 18, 38,   26, 26, 26,    255, 255, 255);
+        public static Color SurfaceAlt  => DG(28, 28, 56,   38, 38, 38,    236, 238, 245);
+        // Card bodies are semi-transparent so the backdrop shows through them.
+        public static Color CardTop     => Color.FromArgb(IsDark ? 188 : 222, DG(26, 26, 52,   34, 34, 34,   255, 255, 255));
+        public static Color CardBottom  => Color.FromArgb(IsDark ? 188 : 222, DG(16, 16, 34,   22, 22, 22,   238, 240, 247));
 
         public static Color TextPrimary   => D(255, 255, 255,  24, 26, 42);
-        public static Color TextSecondary => D(170, 185, 220,  78, 86, 110);
-        public static Color TextMuted      => D(140, 160, 200,  120, 130, 155);
+        public static Color TextSecondary => DG(170, 185, 220, 186, 186, 190,  78, 86, 110);
+        public static Color TextMuted      => DG(140, 160, 200, 145, 145, 150,  120, 130, 155);
 
-        public static Color GridHeaderBg => D(26, 26, 52,   224, 227, 236);
-        public static Color GridRowBg    => D(18, 18, 38,   255, 255, 255);
-        public static Color GridAltBg    => D(22, 22, 44,   244, 246, 250);
-        public static Color GridLines    => D(40, 40, 72,   210, 214, 224);
+        public static Color GridHeaderBg => DG(26, 26, 52,   34, 34, 34,   224, 227, 236);
+        public static Color GridRowBg    => DG(18, 18, 38,   24, 24, 24,   255, 255, 255);
+        public static Color GridAltBg    => DG(22, 22, 44,   30, 30, 30,   244, 246, 250);
+        public static Color GridLines    => DG(40, 40, 72,   56, 56, 56,   210, 214, 224);
 
         // Tints a base color toward the accent. Preserves the base color's alpha
         // so translucent card colors stay translucent after tinting.
