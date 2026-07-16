@@ -50,8 +50,8 @@ namespace RLHub2
 
             navButtons = new[]
             {
-                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnProfile, btnRecords,
-                btnNews, btnTournaments, btnSeasons, btnSettings
+                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnCs2Ai, btnProfile,
+                btnRecords, btnNews, btnTournaments, btnSeasons, btnSettings
             };
 
             ApplyThemeColors();
@@ -73,6 +73,7 @@ namespace RLHub2
             btnCoach.Click += (s, e) => NavigateKey("coach");
             btnSession.Click += (s, e) => NavigateKey("session");
             btnCs2.Click += (s, e) => NavigateKey("cs2");
+            btnCs2Ai.Click += (s, e) => NavigateKey("cs2ai");
             btnRecords.Click += (s, e) => NavigateKey("records");
             btnNews.Click += (s, e) => NavigateKey("news");
             btnProfile.Click += (s, e) => NavigateKey("profile");
@@ -211,6 +212,7 @@ namespace RLHub2
                 case "coach": Navigate("coach", btnCoach, () => new CoachPage()); break;
                 case "session": Navigate("session", btnSession, () => new SessionPage()); break;
                 case "cs2": Navigate("cs2", btnCs2, () => new Cs2Page()); break;
+                case "cs2ai": Navigate("cs2ai", btnCs2Ai, () => new Cs2AiPage()); break;
                 case "records": Navigate("records", btnRecords, () => new RecordsPage()); break;
                 case "news": Navigate("news", btnNews, () => new NewsPage()); break;
                 case "profile": Navigate("profile", btnProfile, () => new ProfilePage()); break;
@@ -265,6 +267,7 @@ namespace RLHub2
             lblSecSocial.Visible = rl;
 
             btnCs2.Visible = !rl;
+            btnCs2Ai.Visible = !rl;
 
             lblLogo.Text = rl ? "RL HUB" : "CS2 HUB";
         }
@@ -273,8 +276,9 @@ namespace RLHub2
         // would show a page whose nav item isn't even there.
         private bool BelongsToActiveGame(string key)
         {
-            bool cs2Page = key == "cs2";
-            return cs2Page == (Games.Active == GameId.Cs2) || key == "settings";
+            if (key == "settings") return true;
+            bool cs2Page = key.StartsWith("cs2");
+            return cs2Page == (Games.Active == GameId.Cs2);
         }
 
         private void ApplyThemeColors()
@@ -317,6 +321,7 @@ namespace RLHub2
             btnCoach.Text = Localization.T("nav_coach");
             btnSession.Text = Localization.T("nav_session");
             btnCs2.Text = "CS2";
+            btnCs2Ai.Text = "AI Insights";
             btnRecords.Text = Localization.T("nav_records");
             btnNews.Text = Localization.T("nav_news");
             btnProfile.Text = Localization.T("nav_profile");

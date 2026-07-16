@@ -26,6 +26,19 @@ namespace RLHub2.Models
         public int RoundsWon { get; set; }
         public int RoundsLost { get; set; }
 
+        // GSI reports damage and headshot kills per ROUND and resets them each round, so these
+        // are accumulated round by round while the match runs. Without that there is no ADR and
+        // no headshot percentage — the two numbers CS2 is actually judged on.
+        public int Damage { get; set; }
+        public int HeadshotKills { get; set; }
+
+        public int Rounds => RoundsWon + RoundsLost;
+
         public float Kd => Deaths == 0 ? Kills : Kills / (float)Deaths;
+
+        // Average damage per round.
+        public float Adr => Rounds == 0 ? 0 : Damage / (float)Rounds;
+
+        public float HeadshotPct => Kills == 0 ? 0 : 100f * HeadshotKills / Kills;
     }
 }

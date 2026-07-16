@@ -53,6 +53,13 @@ namespace RLHub2.Services
         private string _lastPhase = "";
         private string _loggedKey = "";
 
+        // Damage and headshots arrive per round and reset when the next one starts, so the
+        // running totals are banked as each round turns over. _roundDmg/_roundHs hold the
+        // latest values for the round in progress; they only count once the round is done.
+        private int _matchDmg, _matchHs;
+        private int _roundDmg, _roundHs;
+        private int _lastRound = -1;
+
         private Cs2GsiClient() { }
 
         public void Start()
@@ -176,6 +183,8 @@ namespace RLHub2.Services
             root.TryGetProperty("player", out var player);
             string team = player.ValueKind == JsonValueKind.Object ? Str(player, "team") ?? "" : "";
 
+            TrackRound(map, player);
+
             int ct = map.TryGetProperty("team_ct", out var tct) ? Int(tct, "score") : 0;
             int t = map.TryGetProperty("team_t", out var tt) ? Int(tt, "score") : 0;
 
@@ -195,6 +204,33 @@ namespace RLHub2.Services
                 }
             }
             _lastPhase = phase;
+        }
+
+        // Bank the finished round's damage/headshots when the round number moves on.
+        // Taking the last value seen rather than a sum: the round figures are running totals
+        // for that round, so adding every packet would multiply them by the packet rate.
+        private void TrackRound(JsonElement map, JsonElement player)
+        {
+            int round = Int(map, "round");
+
+            if (round != _lastRound)
+            {
+                if (_lastRound >= 0)
+                {
+                    _matchDmg += _roundDmg;
+                    _matchHs += _roundHs;
+                }
+                _roundDmg = 0;
+                _roundHs = 0;
+                _lastRound = round;
+            }
+
+            if (player.ValueKind == JsonValueKind.Object &&
+                player.TryGetProperty("state", out var st))
+            {
+                _roundDmg = Math.Max(_roundDmg, Int(st, "round_totaldmg"));
+                _roundHs = Math.Max(_roundHs, Int(st, "round_killhs"));
+            }
         }
 
         private void LogMatch(JsonElement player, bool ctSide, int ct, int t)
@@ -219,10 +255,21 @@ namespace RLHub2.Services
                 Assists = Int(stats, "assists"),
                 Mvps = Int(stats, "mvps"),
                 Score = Int(stats, "score"),
+
+                // the last round never turns over, so bank it here
+                Damage = _matchDmg + _roundDmg,
+                HeadshotKills = _matchHs + _roundHs,
             };
 
             _store.Append(m);
+            ResetMatchTotals();
             Post(() => MatchLogged?.Invoke(m));
+        }
+
+        private void ResetMatchTotals()
+        {
+            _matchDmg = _matchHs = _roundDmg = _roundHs = 0;
+            _lastRound = -1;
         }
 
         private static string? Str(JsonElement e, string name)
