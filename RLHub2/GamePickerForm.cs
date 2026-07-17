@@ -74,7 +74,7 @@ namespace RLHub2
             var src = ArenaBackground.Load("gamepicker_bg.png") ?? ArenaBackground.Load("stadion1.jpg");
             if (src == null) return null;
 
-            const int small = 90;
+            const int small = 200;
             int h = Math.Max(1, small * src.Height / src.Width);
             var tiny = new Bitmap(small, h);
             using (var g = Graphics.FromImage(tiny))
