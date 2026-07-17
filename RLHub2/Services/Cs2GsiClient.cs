@@ -244,6 +244,7 @@ namespace RLHub2.Services
             {
                 Time = DateTime.Now,
                 SteamId = Str(player, "steamid") ?? "",
+                Name = Str(player, "name") ?? "",
                 Map = CurrentMap,
                 Mode = CurrentMode,
                 Won = mine > opp,

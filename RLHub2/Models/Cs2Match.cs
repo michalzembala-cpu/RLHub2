@@ -10,6 +10,7 @@ namespace RLHub2.Models
     {
         public DateTime Time { get; set; }
         public string SteamId { get; set; } = "";   // which Steam account played it
+        public string Name { get; set; } = "";       // in-game name, straight from GSI
 
         public string Map { get; set; } = "";       // de_dust2, de_mirage, ...
         public string Mode { get; set; } = "";      // premier, competitive, casual, ...

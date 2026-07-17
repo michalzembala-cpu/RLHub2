@@ -17,7 +17,7 @@ namespace RLHub2.Services
         public bool SidebarCollapsed { get; set; } = false;
         public string Theme { get; set; } = "dark"; // "dark" or "light"
         public string Accent { get; set; } = "#783CFF"; // hex accent color (Rocket League)
-        public string AccentCs2 { get; set; } = "#DE8228"; // CS2 gets its own — orange by default
+        public string AccentCs2 { get; set; } = "#FF9D2E"; // CS2 gets its own — orange by default
         public string TrackedNick { get; set; } = ""; // legacy single nick (migrated to Accounts)
         public string BallchasingKey { get; set; } = ""; // ballchasing.com API key
         public bool BallchasingAutoUpload { get; set; } = true; // auto-upload local replays

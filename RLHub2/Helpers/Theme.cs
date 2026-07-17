@@ -77,23 +77,26 @@ namespace RLHub2.Helpers
         public static Color Accent => _accent;
         public static Color AccentSoft => Mix(_accent, Color.White, 0.3f);
 
-        // CS2 is graphite (#121212 and its neighbours); Rocket League stays navy.
-        public static Color PageBg      => DG(12, 12, 26,   18, 18, 18,    238, 240, 247);
-        public static Color Sidebar     => DG(18, 18, 38,   24, 24, 24,    228, 231, 240);
-        public static Color Surface     => DG(18, 18, 38,   26, 26, 26,    255, 255, 255);
-        public static Color SurfaceAlt  => DG(28, 28, 56,   38, 38, 38,    236, 238, 245);
+        // CS2 is graphite (page #0F1115, cards #171B22); Rocket League stays navy.
+        public static Color PageBg      => DG(12, 12, 26,   15, 17, 21,    238, 240, 247);
+        public static Color Sidebar     => DG(18, 18, 38,   19, 22, 28,    228, 231, 240);
+        public static Color Surface     => DG(18, 18, 38,   23, 27, 34,    255, 255, 255);
+        public static Color SurfaceAlt  => DG(28, 28, 56,   30, 35, 44,    236, 238, 245);
         // Card bodies are semi-transparent so the backdrop shows through them.
-        public static Color CardTop     => Color.FromArgb(IsDark ? 188 : 222, DG(26, 26, 52,   34, 34, 34,   255, 255, 255));
-        public static Color CardBottom  => Color.FromArgb(IsDark ? 188 : 222, DG(16, 16, 34,   22, 22, 22,   238, 240, 247));
+        public static Color CardTop     => Color.FromArgb(IsDark ? 188 : 222, DG(26, 26, 52,   26, 31, 39,   255, 255, 255));
+        public static Color CardBottom  => Color.FromArgb(IsDark ? 188 : 222, DG(16, 16, 34,   18, 21, 27,   238, 240, 247));
 
         public static Color TextPrimary   => D(255, 255, 255,  24, 26, 42);
-        public static Color TextSecondary => DG(170, 185, 220, 186, 186, 190,  78, 86, 110);
-        public static Color TextMuted      => DG(140, 160, 200, 145, 145, 150,  120, 130, 155);
+        public static Color TextSecondary => DG(170, 185, 220, 176, 182, 194,  78, 86, 110);
+        public static Color TextMuted      => DG(140, 160, 200, 130, 138, 152,  120, 130, 155);
 
-        public static Color GridHeaderBg => DG(26, 26, 52,   34, 34, 34,   224, 227, 236);
-        public static Color GridRowBg    => DG(18, 18, 38,   24, 24, 24,   255, 255, 255);
-        public static Color GridAltBg    => DG(22, 22, 44,   30, 30, 30,   244, 246, 250);
-        public static Color GridLines    => DG(40, 40, 72,   56, 56, 56,   210, 214, 224);
+        public static Color GridHeaderBg => DG(26, 26, 52,   26, 31, 39,   224, 227, 236);
+        public static Color GridRowBg    => DG(18, 18, 38,   23, 27, 34,   255, 255, 255);
+        public static Color GridAltBg    => DG(22, 22, 44,   28, 33, 42,   244, 246, 250);
+        public static Color GridLines    => DG(40, 40, 72,   44, 50, 60,   210, 214, 224);
+
+        // Valve's blue, for the second accent the CS2 pages use alongside orange.
+        public static Color Cs2Blue => Color.FromArgb(88, 164, 232);
 
         // Tints a base color toward the accent. Preserves the base color's alpha
         // so translucent card colors stay translucent after tinting.
