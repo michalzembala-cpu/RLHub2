@@ -136,26 +136,44 @@ namespace RLHub2
 
         private static void DrawGame(Graphics g, Rectangle r, GameId game, bool hover, bool active)
         {
-            var c = Games.Accent(game);
-            using (var grad = new LinearGradientBrush(r, ControlPaint.Light(c, 0.1f), ControlPaint.Dark(c, 0.45f), 60f))
-            using (var path = Round(r, 16))
-                g.FillPath(grad, path);
+            using var path = Round(r, 16);
+            var img = ArenaBackground.Load(Games.TileImage(game));
 
-            // Short name big in the middle — no logos to ship, and initials would be useless
-            // when both games' art is missing.
-            using (var f = new Font("Segoe UI", 46f, FontStyle.Bold))
-            using (var b = new SolidBrush(Color.FromArgb(240, 255, 255, 255)))
+            if (img != null)
             {
+                // The cover art fills the rounded tile (cover-fit, clipped to the corners).
+                var old = g.Clip;
+                g.SetClip(path);
+                float ir = img.Width / (float)img.Height, tr = r.Width / (float)r.Height;
+                Rectangle dst = ir > tr
+                    ? new Rectangle(r.X - (int)((r.Height * ir - r.Width) / 2), r.Y, (int)(r.Height * ir), r.Height)
+                    : new Rectangle(r.X, r.Y - (int)((r.Width / ir - r.Height) / 2), r.Width, (int)(r.Width / ir));
+                g.DrawImage(img, dst);
+                g.Clip = old;
+            }
+            else
+            {
+                // No art — fall back to a flat accent tile with the short name.
+                var c = Games.Accent(game);
+                using var grad = new LinearGradientBrush(r, ControlPaint.Light(c, 0.1f), ControlPaint.Dark(c, 0.45f), 60f);
+                g.FillPath(grad, path);
+                using var f = new Font("Segoe UI", 46f, FontStyle.Bold);
+                using var b = new SolidBrush(Color.FromArgb(240, 255, 255, 255));
                 var sz = g.MeasureString(Games.ShortName(game), f);
                 g.DrawString(Games.ShortName(game), f, b,
                     r.X + (r.Width - sz.Width) / 2, r.Y + (r.Height - sz.Height) / 2);
             }
 
+            // Dim the tile that isn't the focus so the highlighted one reads as selected.
+            if (!hover && !active)
+                using (var dim = new SolidBrush(Color.FromArgb(110, 8, 10, 16)))
+                    g.FillPath(dim, path);
+
             if (hover || active)
             {
                 using var pen = new Pen(hover ? Color.White : Color.FromArgb(150, 255, 255, 255), 3f);
-                using var path = Round(Rectangle.Inflate(r, 3, 3), 18);
-                g.DrawPath(pen, path);
+                using var ring = Round(Rectangle.Inflate(r, 3, 3), 18);
+                g.DrawPath(pen, ring);
             }
 
             bool lit = hover || active;

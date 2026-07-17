@@ -49,5 +49,8 @@ namespace RLHub2.Helpers
         // Only Rocket League tracks named accounts; CS2 identity comes from whoever is
         // signed into Steam, so there is nothing to pick.
         public static bool HasProfiles(GameId g) => g == GameId.RocketLeague;
+
+        // Cover art for the game-picker tile (in Resources). Falls back to a drawn tile if absent.
+        public static string TileImage(GameId g) => g == GameId.Cs2 ? "game_cs2.jpg" : "game_rl.jpg";
     }
 }
