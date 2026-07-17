@@ -51,8 +51,8 @@ namespace RLHub2
 
             navButtons = new[]
             {
-                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnCs2Ai, btnProfile,
-                btnRecords, btnNews, btnTournaments, btnSeasons, btnSettings
+                btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnCs2Ai, btnCrosshair,
+                btnProfile, btnRecords, btnNews, btnTournaments, btnSeasons, btnSettings
             };
 
             ApplyThemeColors();
@@ -75,6 +75,7 @@ namespace RLHub2
             btnSession.Click += (s, e) => NavigateKey("session");
             btnCs2.Click += (s, e) => NavigateKey("cs2");
             btnCs2Ai.Click += (s, e) => NavigateKey("cs2ai");
+            btnCrosshair.Click += (s, e) => NavigateKey("cs2xhair");
             btnRecords.Click += (s, e) => NavigateKey("records");
             btnNews.Click += (s, e) => NavigateKey("news");
             btnProfile.Click += (s, e) => NavigateKey("profile");
@@ -216,6 +217,7 @@ namespace RLHub2
                 case "session": Navigate("session", btnSession, () => new SessionPage()); break;
                 case "cs2": Navigate("cs2", btnCs2, () => new Cs2Page()); break;
                 case "cs2ai": Navigate("cs2ai", btnCs2Ai, () => new Cs2AiPage()); break;
+                case "cs2xhair": Navigate("cs2xhair", btnCrosshair, () => new Cs2CrosshairPage()); break;
                 case "records": Navigate("records", btnRecords, () => new RecordsPage()); break;
                 case "news": Navigate("news", btnNews, () => new NewsPage()); break;
                 case "profile": Navigate("profile", btnProfile, () => new ProfilePage()); break;
@@ -274,6 +276,7 @@ namespace RLHub2
 
             btnCs2.Visible = !rl;
             btnCs2Ai.Visible = !rl;
+            btnCrosshair.Visible = !rl;
 
             lblLogo.Text = rl ? "RL HUB" : "CS2 HUB";
         }
@@ -328,6 +331,7 @@ namespace RLHub2
             btnSession.Text = Localization.T("nav_session");
             btnCs2.Text = "CS2";
             btnCs2Ai.Text = "AI Insights";
+            btnCrosshair.Text = Localization.IsPolish ? "Celowniki" : "Crosshairs";
             btnRecords.Text = Localization.T("nav_records");
             btnNews.Text = Localization.T("nav_news");
             btnProfile.Text = Localization.T("nav_profile");
