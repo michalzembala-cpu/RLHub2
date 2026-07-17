@@ -498,6 +498,13 @@ namespace RLHub2
             protected override void OnPaint(PaintEventArgs e)
             {
                 var g = e.Graphics;
+
+                // CS2 art behind the glass, fixed to the viewport (drawn before the scroll
+                // transform) so it stays put while the dashboard scrolls over it — same subtle
+                // backdrop role the arena plays on the Rocket League pages.
+                ArenaBackground.Paint(g, ClientSize.Width, ClientSize.Height,
+                    ArenaBackground.Load("cs2_bg.png"), Theme.IsDark);
+
                 g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
                 _render(g, ClientSize.Width);
             }

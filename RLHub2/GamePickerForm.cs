@@ -65,22 +65,12 @@ namespace RLHub2
             Region = new Region(path);
         }
 
-        // Same trick as the profile picker: a heavily downscaled image blown back up is a blur.
+        // This screen has purpose-made RL+CS art, so it's shown as-is (cover-fit + dim) rather
+        // than blurred like the profile picker's stadium.
         private Image? Blurred()
         {
             if (_blurred != null) return _blurred;
-            var src = ArenaBackground.Load("stadion1.jpg");
-            if (src == null) return null;
-
-            const int small = 40;
-            int h = Math.Max(1, small * src.Height / src.Width);
-            using var tiny = new Bitmap(small, h);
-            using (var g = Graphics.FromImage(tiny))
-            {
-                g.InterpolationMode = InterpolationMode.HighQualityBilinear;
-                g.DrawImage(src, 0, 0, small, h);
-            }
-            _blurred = new Bitmap(tiny, tiny.Width * 4, tiny.Height * 4);
+            _blurred = ArenaBackground.Load("gamepicker_bg.png") ?? ArenaBackground.Load("stadion1.jpg");
             return _blurred;
         }
 
@@ -102,7 +92,7 @@ namespace RLHub2
                     : new Rectangle(0, (Height - (int)(Width / ir)) / 2, Width, (int)(Width / ir));
                 g.DrawImage(bg, dst);
             }
-            using (var dim = new SolidBrush(Color.FromArgb(185, 8, 10, 20)))
+            using (var dim = new SolidBrush(Color.FromArgb(150, 6, 8, 14)))
                 g.FillRectangle(dim, 0, 0, Width, Height);
 
             using var titleFont = new Font("Segoe UI", 26f, FontStyle.Bold);
@@ -210,10 +200,7 @@ namespace RLHub2
             Close();
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) _blurred?.Dispose();
-            base.Dispose(disposing);
-        }
+        // _blurred is a shared, cached image owned by ArenaBackground — must not be disposed here.
+        protected override void Dispose(bool disposing) => base.Dispose(disposing);
     }
 }
