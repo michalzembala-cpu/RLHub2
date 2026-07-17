@@ -65,12 +65,24 @@ namespace RLHub2
             Region = new Region(path);
         }
 
-        // This screen has purpose-made RL+CS art, so it's shown as-is (cover-fit + dim) rather
-        // than blurred like the profile picker's stadium.
+        // Soften the backdrop so the tiles are the focus: shrink it hard, then let the cover-fit
+        // upscale in OnPaint blur it back out. Small enough to lose the sharp edges, not so small
+        // the RL/CS split turns to mush.
         private Image? Blurred()
         {
             if (_blurred != null) return _blurred;
-            _blurred = ArenaBackground.Load("gamepicker_bg.png") ?? ArenaBackground.Load("stadion1.jpg");
+            var src = ArenaBackground.Load("gamepicker_bg.png") ?? ArenaBackground.Load("stadion1.jpg");
+            if (src == null) return null;
+
+            const int small = 90;
+            int h = Math.Max(1, small * src.Height / src.Width);
+            var tiny = new Bitmap(small, h);
+            using (var g = Graphics.FromImage(tiny))
+            {
+                g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                g.DrawImage(src, 0, 0, small, h);
+            }
+            _blurred = tiny;   // owned by this form (see Dispose)
             return _blurred;
         }
 
@@ -218,7 +230,10 @@ namespace RLHub2
             Close();
         }
 
-        // _blurred is a shared, cached image owned by ArenaBackground — must not be disposed here.
-        protected override void Dispose(bool disposing) => base.Dispose(disposing);
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _blurred?.Dispose();   // form-owned downscaled copy
+            base.Dispose(disposing);
+        }
     }
 }
