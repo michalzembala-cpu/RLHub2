@@ -21,7 +21,6 @@ namespace RLHub2
     public partial class Cs2Page : UserControl
     {
         private const int MaxStatMatches = 30;
-        private const int RecentRows = 8;
 
         private readonly Cs2SessionStore _store = new();
         private readonly Cs2RatingStore _rating = new();
@@ -172,7 +171,7 @@ namespace RLHub2
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            int pad = 24, gap = 16;
+            int pad = 16, gap = 12;
             int x = pad, y = pad, cw = W - pad * 2;
 
             y = DrawHero(g, x, y, cw); y += gap + 2;
@@ -184,14 +183,13 @@ namespace RLHub2
             }
 
             y = DrawStatGrid(g, x, y, cw, gap); y += gap + 2;
-            y = DrawLastMatch(g, x, y, cw); y += gap + 2;
-            y = DrawRecent(g, x, y, cw);
+            y = DrawLastMatch(g, x, y, cw);
             return y + pad;
         }
 
         private int DrawHero(Graphics g, int x, int y, int W)
         {
-            int h = 190;
+            int h = 186;
             var rect = new Rectangle(x, y, W, h);
             _heroHit = rect;
             Glass(g, rect, Theme.Accent, 20);
@@ -271,7 +269,7 @@ namespace RLHub2
 
             int cols = 3;
             int cw = (W - gap * (cols - 1)) / cols;
-            int ch = 92;
+            int ch = 82;
             for (int i = 0; i < cells.Length; i++)
             {
                 int r = i / cols, c = i % cols;
@@ -284,7 +282,7 @@ namespace RLHub2
 
         private int DrawLastMatch(Graphics g, int x, int y, int W)
         {
-            int h = 116;
+            int h = 104;
             var rect = new Rectangle(x, y, W, h);
             var m = _matches.Last();
             var col = m.Draw ? Color.FromArgb(170, 170, 180) : m.Won ? Color.FromArgb(46, 204, 113) : Color.FromArgb(230, 80, 90);
@@ -318,63 +316,6 @@ namespace RLHub2
             return y + h;
         }
 
-        private int DrawRecent(Graphics g, int x, int y, int W)
-        {
-            using var head = new Font("Segoe UI", 12f, FontStyle.Bold);
-            using var hb = new SolidBrush(Theme.AccentSoft);
-            g.DrawString(Localization.IsPolish ? "OSTATNIE MECZE" : "RECENT MATCHES", head, hb, x + 2, y);
-            y += 30;
-
-            using var resFont = new Font("Segoe UI", 11f, FontStyle.Bold);
-            using var mapFont = new Font("Segoe UI", 11f, FontStyle.Bold);
-            using var statFont = new Font("Segoe UI", 10f);
-            using var timeFont = new Font("Segoe UI", 9f);
-            var win = Color.FromArgb(46, 204, 113);
-            var loss = Color.FromArgb(230, 80, 90);
-            var draw = Color.FromArgb(170, 170, 190);
-
-            int rowH = 52;
-            foreach (var m in Enumerable.Reverse(_matches).Take(RecentRows))
-            {
-                var rect = new Rectangle(x, y, W, rowH - 8);
-                using (var p = Rounded(rect, 12))
-                using (var bg = new LinearGradientBrush(rect, Theme.CardTop, Theme.CardBottom, 90f))
-                    g.FillPath(bg, p);
-
-                var col = m.Draw ? draw : m.Won ? win : loss;
-                string tag = m.Draw ? "D" : m.Won ? "W" : "L";
-                var badge = new Rectangle(rect.X + 10, rect.Y + 8, 40, rect.Height - 16);
-                using (var bp = Rounded(badge, 8))
-                {
-                    using var bb = new SolidBrush(Color.FromArgb(40, col));
-                    g.FillPath(bb, bp);
-                    using var bpen = new Pen(col, 1.4f);
-                    g.DrawPath(bpen, bp);
-                }
-                using (var tb = new SolidBrush(col))
-                {
-                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(tag, resFont, tb, badge, sf);
-                }
-
-                using (var tp = new SolidBrush(Theme.TextPrimary))
-                    g.DrawString($"{PrettyMap(m.Map)}", mapFont, tp, badge.Right + 14, rect.Y + 6);
-                using (var tm = new SolidBrush(Theme.TextSecondary))
-                    g.DrawString($"{m.RoundsWon}:{m.RoundsLost}   •   K {m.Kills}  D {m.Deaths}  A {m.Assists}   •   ADR {(m.Rounds > 0 ? m.Adr.ToString("0") : "—")}   •   MVP {m.Mvps}",
-                        statFont, tm, badge.Right + 14, rect.Y + 24);
-
-                using (var tmb = new SolidBrush(Theme.TextMuted))
-                {
-                    string t = m.Time.ToString("HH:mm");
-                    var sz = g.MeasureString(t, timeFont);
-                    g.DrawString(t, timeFont, tmb, rect.Right - sz.Width - 12, rect.Y + 8);
-                }
-
-                y += rowH;
-            }
-            return y;
-        }
-
         private void DrawEmpty(Graphics g, int x, int y, int W)
         {
             var rect = new Rectangle(x, y, W, 110);
@@ -397,16 +338,16 @@ namespace RLHub2
                 g.FillRectangle(stripe, rect.X + 1, rect.Y + 12, 4, rect.Height - 24);
 
             using var labelFont = new Font("Segoe UI", 8.5f, FontStyle.Bold);
-            using var valueFont = new Font("Segoe UI", 24f, FontStyle.Bold);
+            using var valueFont = new Font("Segoe UI", 21f, FontStyle.Bold);
             using var subFont = new Font("Segoe UI", 8.5f);
             using var lb = new SolidBrush(Theme.TextMuted);
             using var vb = new SolidBrush(Theme.TextPrimary);
             using var sb = new SolidBrush(Theme.TextSecondary);
 
-            g.DrawString(label, labelFont, lb, rect.X + 16, rect.Y + 14);
-            g.DrawString(value, valueFont, vb, rect.X + 14, rect.Y + 32);
+            g.DrawString(label, labelFont, lb, rect.X + 16, rect.Y + 12);
+            g.DrawString(value, valueFont, vb, rect.X + 14, rect.Y + 30);
             if (!string.IsNullOrEmpty(sub))
-                g.DrawString(sub, subFont, sb, rect.X + 16, rect.Bottom - 22);
+                g.DrawString(sub, subFont, sb, rect.X + 16, rect.Bottom - 20);
         }
 
         // ===== aggregate =====
