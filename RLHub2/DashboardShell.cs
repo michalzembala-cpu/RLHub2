@@ -52,7 +52,8 @@ namespace RLHub2
             navButtons = new[]
             {
                 btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnCs2Ai, btnCrosshair,
-                btnMaps, btnProfile, btnRecords, btnNews, btnTournaments, btnSeasons, btnSettings
+                btnMaps, btnPractice, btnProfile, btnRecords, btnNews, btnTournaments, btnSeasons,
+                btnSettings
             };
 
             ApplyThemeColors();
@@ -77,6 +78,7 @@ namespace RLHub2
             btnCs2Ai.Click += (s, e) => NavigateKey("cs2ai");
             btnCrosshair.Click += (s, e) => NavigateKey("cs2xhair");
             btnMaps.Click += (s, e) => NavigateKey("cs2maps");
+            btnPractice.Click += (s, e) => NavigateKey("cs2prac");
             btnRecords.Click += (s, e) => NavigateKey("records");
             btnNews.Click += (s, e) => NavigateKey("news");
             btnProfile.Click += (s, e) => NavigateKey("profile");
@@ -220,6 +222,7 @@ namespace RLHub2
                 case "cs2ai": Navigate("cs2ai", btnCs2Ai, () => new Cs2AiPage()); break;
                 case "cs2xhair": Navigate("cs2xhair", btnCrosshair, () => new Cs2CrosshairPage()); break;
                 case "cs2maps": Navigate("cs2maps", btnMaps, () => new Cs2MapsPage()); break;
+                case "cs2prac": Navigate("cs2prac", btnPractice, () => new Cs2PracticePage()); break;
                 case "records": Navigate("records", btnRecords, () => new RecordsPage()); break;
                 case "news": Navigate("news", btnNews, () => new NewsPage()); break;
                 case "profile": Navigate("profile", btnProfile, () => new ProfilePage()); break;
@@ -280,6 +283,7 @@ namespace RLHub2
             btnCs2Ai.Visible = !rl;
             btnCrosshair.Visible = !rl;
             btnMaps.Visible = !rl;
+            btnPractice.Visible = !rl;
 
             lblLogo.Text = rl ? "RL HUB" : "CS2 HUB";
         }
@@ -336,6 +340,7 @@ namespace RLHub2
             btnCs2Ai.Text = "AI Insights";
             btnCrosshair.Text = Localization.IsPolish ? "Celowniki" : "Crosshairs";
             btnMaps.Text = Localization.IsPolish ? "Mapy" : "Maps";
+            btnPractice.Text = Localization.IsPolish ? "Trening" : "Practice";
             btnRecords.Text = Localization.T("nav_records");
             btnNews.Text = Localization.T("nav_news");
             btnProfile.Text = Localization.T("nav_profile");
