@@ -33,6 +33,13 @@ namespace RLHub2
             txtKey.Text = _store.LoadTrackerKey();
             txtBcKey.Text = _store.LoadBallchasingKey();
 
+            // updates
+            txtUpdRepo.Text = _store.LoadUpdateRepo();
+            chkAutoUpd.Checked = _store.LoadAutoCheckUpdates();
+            chkAutoUpd.CheckedChanged += (s, e) => _store.SaveAutoCheckUpdates(chkAutoUpd.Checked);
+            btnCheckUpd.Click += async (s, e) => await CheckUpdates();
+            btnInstallUpd.Click += async (s, e) => await InstallUpdate();
+
             // game switcher — opens the same Big-Picture-style picker as launch
             UpdateGameButton();
             btnGame.Click += (s, e) =>
@@ -98,6 +105,100 @@ namespace RLHub2
                 _store.SaveDeleteReplaysAfterDays(chkDeleteOld.Checked ? 7 : 0);
         }
 
+        private UpdateInfo? _pending;
+
+        private async Task CheckUpdates()
+        {
+            _store.SaveUpdateRepo(txtUpdRepo.Text);
+            btnCheckUpd.Enabled = false;
+            btnInstallUpd.Visible = false;
+            Status(Localization.IsPolish ? "Sprawdzam…" : "Checking…", Theme.TextMuted);
+
+            var info = await new UpdateService().CheckAsync(txtUpdRepo.Text);
+            btnCheckUpd.Enabled = true;
+
+            // Each failure means something different to the user, so none of them collapse
+            // into a generic "error".
+            if (!info.Ok)
+            {
+                Status(info.Error switch
+                {
+                    "not-configured" => Localization.IsPolish
+                        ? "Podaj repozytorium w formacie uzytkownik/repo"
+                        : "Enter a repository as owner/name",
+                    "no-release" => Localization.IsPolish
+                        ? "To repozytorium nie ma jeszcze żadnego wydania"
+                        : "That repository has no releases yet",
+                    "bad-tag" => Localization.IsPolish
+                        ? "Tag wydania nie wygląda jak wersja (np. v1.2.0)"
+                        : "The release tag isn't a version (e.g. v1.2.0)",
+                    _ => (Localization.IsPolish ? "Błąd: " : "Error: ") + info.Error,
+                }, Color.FromArgb(230, 90, 90));
+                return;
+            }
+
+            if (!info.Available)
+            {
+                Status(Localization.IsPolish
+                    ? $"Masz najnowszą wersję ({UpdateService.CurrentVersionText})"
+                    : $"You're up to date ({UpdateService.CurrentVersionText})", Color.FromArgb(46, 204, 113));
+                return;
+            }
+
+            if (string.IsNullOrEmpty(info.DownloadUrl))
+            {
+                Status(Localization.IsPolish
+                    ? $"Jest wersja {info.Version}, ale wydanie nie ma pliku do pobrania"
+                    : $"Version {info.Version} exists but the release has no downloadable file",
+                    Color.FromArgb(222, 130, 40));
+                return;
+            }
+
+            _pending = info;
+            Status(Localization.IsPolish
+                ? $"Dostępna wersja {info.Version} (masz {UpdateService.CurrentVersionText})"
+                : $"Version {info.Version} available (you have {UpdateService.CurrentVersionText})",
+                Color.FromArgb(46, 204, 113));
+            btnInstallUpd.Text = Localization.IsPolish ? $"POBIERZ {info.Version}" : $"DOWNLOAD {info.Version}";
+            btnInstallUpd.Visible = true;
+        }
+
+        private async Task InstallUpdate()
+        {
+            if (_pending == null) return;
+            btnInstallUpd.Enabled = false;
+
+            var progress = new Progress<int>(p => Status(
+                (Localization.IsPolish ? "Pobieram… " : "Downloading… ") + p + "%", Theme.TextSecondary));
+
+            var path = await new UpdateService().DownloadAsync(_pending, progress);
+            if (path == null)
+            {
+                btnInstallUpd.Enabled = true;
+                Status(Localization.IsPolish ? "Pobieranie nie powiodło się" : "Download failed",
+                    Color.FromArgb(230, 90, 90));
+                return;
+            }
+
+            Status(Localization.IsPolish ? "Instaluję — aplikacja się zrestartuje…" : "Installing — the app will restart…",
+                Theme.TextSecondary);
+
+            if (UpdateService.ApplyAndRestart(path))
+                Application.Exit();     // the swap can only happen once this process is gone
+            else
+            {
+                btnInstallUpd.Enabled = true;
+                Status(Localization.IsPolish ? "Nie udało się uruchomić instalacji" : "Couldn't start the install",
+                    Color.FromArgb(230, 90, 90));
+            }
+        }
+
+        private void Status(string text, Color color)
+        {
+            lblUpdStatus.Text = text;
+            lblUpdStatus.ForeColor = color;
+        }
+
         private void UpdateGameButton()
         {
             if (IsDisposed) return;
@@ -142,6 +243,9 @@ namespace RLHub2
                     chkAskProfile.MaximumSize = new Size(w - 40, 0);
                     chkAskGame.MaximumSize = new Size(w - 40, 0);
                     lblGameHint.MaximumSize = new Size(w - 40, 0);
+                    lblUpdHint.MaximumSize = new Size(w - 40, 0);
+                    lblUpdStatus.MaximumSize = new Size(w - 40, 0);
+                    chkAutoUpd.MaximumSize = new Size(w - 40, 0);
 
                     flow.PerformLayout();
                     if (!flow.HorizontalScroll.Visible) break;
@@ -200,6 +304,14 @@ namespace RLHub2
             chkAskGame.Text = Localization.IsPolish
                 ? "Pytaj o grę przy starcie aplikacji"
                 : "Ask which game to use on startup";
+            lblUpd.Text = Localization.IsPolish ? "AKTUALIZACJE" : "UPDATES";
+            lblUpdHint.Text = Localization.IsPolish
+                ? $"Masz wersję {UpdateService.CurrentVersionText}. Podaj repozytorium GitHub z wydaniami."
+                : $"You have version {UpdateService.CurrentVersionText}. Point this at a GitHub repo with releases.";
+            btnCheckUpd.Text = Localization.IsPolish ? "SPRAWDŹ" : "CHECK";
+            chkAutoUpd.Text = Localization.IsPolish
+                ? "Sprawdzaj aktualizacje przy starcie"
+                : "Check for updates on startup";
             lblBc.Text = Localization.IsPolish ? "KLUCZ API BALLCHASING" : "BALLCHASING API KEY";
             lblBcHint.Text = Localization.IsPolish
                 ? "Darmowy klucz na ballchasing.com/upload → Settings. Daje prawdziwe mecze, rangi i automatyczne MMR."

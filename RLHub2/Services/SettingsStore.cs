@@ -35,6 +35,10 @@ namespace RLHub2.Services
         // Which CS2 mode the tracker counts: "" = all, or premier/competitive/casual.
         public string Cs2ModeFilter { get; set; } = "";
 
+        // GitHub repository the updater checks, as "owner/name". Empty = updates off.
+        public string UpdateRepo { get; set; } = "";
+        public bool AutoCheckUpdates { get; set; } = true;
+
         // Send local .replay files to the Recycle Bin once they are safely on ballchasing
         // and older than this many days. 0 = never delete.
         public int DeleteReplaysAfterDays { get; set; } = 0;
@@ -210,6 +214,24 @@ namespace RLHub2.Services
         {
             var cfg = Load();
             cfg.ActiveAccount = name ?? "";
+            Save(cfg);
+        }
+
+        public string LoadUpdateRepo() => Load().UpdateRepo ?? "";
+
+        public void SaveUpdateRepo(string repo)
+        {
+            var cfg = Load();
+            cfg.UpdateRepo = (repo ?? "").Trim();
+            Save(cfg);
+        }
+
+        public bool LoadAutoCheckUpdates() => Load().AutoCheckUpdates;
+
+        public void SaveAutoCheckUpdates(bool on)
+        {
+            var cfg = Load();
+            cfg.AutoCheckUpdates = on;
             Save(cfg);
         }
 

@@ -16,6 +16,15 @@ namespace RLHub2
         private Button btnGame;
         private CheckBox chkAskGame;
 
+        private Panel updPanel;
+        private Label lblUpd;
+        private Label lblUpdHint;
+        private TextBox txtUpdRepo;
+        private Button btnCheckUpd;
+        private Button btnInstallUpd;
+        private Label lblUpdStatus;
+        private CheckBox chkAutoUpd;
+
         private Panel langPanel;
         private Label lblLanguage;
         private Label lblLanguageHint;
@@ -57,6 +66,14 @@ namespace RLHub2
             lblGameHint = new Label();
             btnGame = new Button();
             chkAskGame = new CheckBox();
+            updPanel = new Panel();
+            lblUpd = new Label();
+            lblUpdHint = new Label();
+            txtUpdRepo = new TextBox();
+            btnCheckUpd = new Button();
+            btnInstallUpd = new Button();
+            lblUpdStatus = new Label();
+            chkAutoUpd = new CheckBox();
             langPanel = new Panel();
             lblLanguage = new Label();
             lblLanguageHint = new Label();
@@ -135,6 +152,40 @@ namespace RLHub2
             chkAskGame.Cursor = Cursors.Hand;
 
             gamePanel.Controls.AddRange(new Control[] { lblGame, lblGameHint, btnGame, chkAskGame });
+
+            // ===== UPDATES =====
+            Card(updPanel, panelColor, 236);
+            SectionTitle(lblUpd, "UPDATES");
+            Hint(lblUpdHint, "Checks GitHub releases for a newer build");
+
+            Input(txtUpdRepo, inputBg);
+            txtUpdRepo.Location = new Point(20, 96);
+            txtUpdRepo.Size = new Size(CardW - 20 - 130 - 10, 26);
+            txtUpdRepo.PlaceholderText = "uzytkownik/repozytorium";
+            txtUpdRepo.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            AccentButton(btnCheckUpd, "CHECK", 110);
+            btnCheckUpd.Location = new Point(CardW - 130, 95);
+            btnCheckUpd.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            lblUpdStatus.Text = "";
+            lblUpdStatus.AutoSize = true;
+            lblUpdStatus.ForeColor = Theme.TextSecondary;
+            lblUpdStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblUpdStatus.Location = new Point(20, 134);
+
+            AccentButton(btnInstallUpd, "INSTALL", 160);
+            btnInstallUpd.Location = new Point(20, 158);
+            btnInstallUpd.Visible = false;
+
+            chkAutoUpd.Location = new Point(20, 200);
+            chkAutoUpd.AutoSize = true;
+            chkAutoUpd.ForeColor = Theme.TextSecondary;
+            chkAutoUpd.Font = new Font("Segoe UI", 9.5F);
+            chkAutoUpd.Cursor = Cursors.Hand;
+
+            updPanel.Controls.AddRange(new Control[]
+                { lblUpd, lblUpdHint, txtUpdRepo, btnCheckUpd, lblUpdStatus, btnInstallUpd, chkAutoUpd });
 
             // ===== LANGUAGE =====
             Card(langPanel, panelColor, 134);
@@ -232,7 +283,7 @@ namespace RLHub2
 
             bcPanel.Controls.AddRange(new Control[] { lblBc, lblBcHint, txtBcKey, btnTestBc, lblBcStatus, chkDeleteOld });
 
-            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, langPanel, themePanel, accentPanel, keyPanel, bcPanel });
+            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, updPanel, langPanel, themePanel, accentPanel, keyPanel, bcPanel });
             this.Controls.Add(flow);
 
             ResumeLayout(false);

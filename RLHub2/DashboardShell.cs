@@ -184,6 +184,11 @@ namespace RLHub2
                 if (Cs2Install.IsInstalled && !Cs2Install.IsConfigured)
                     Cs2Install.WriteConfig(Cs2GsiClient.Port);
                 Cs2GsiClient.Instance.Start();
+
+                // Update check runs in the background and stays silent unless there is actually
+                // something newer — a popup saying "you're up to date" on every launch is noise.
+                if (_store.LoadAutoCheckUpdates() && _store.LoadUpdateRepo().Length > 0)
+                    _ = CheckUpdatesQuietly();
                 _ = System.Threading.Tasks.Task.Run(async () =>
                 {
                     try { await new BallchasingSync().SyncAsync(); } catch { }
@@ -515,6 +520,22 @@ namespace RLHub2
                 step = Math.Sign(diff) * 2;
 
             sidebar.Width += step;   // the page is frozen and in place; only the bar moves
+        }
+
+        private async System.Threading.Tasks.Task CheckUpdatesQuietly()
+        {
+            try
+            {
+                var info = await new UpdateService().CheckAsync(_store.LoadUpdateRepo());
+                if (!info.Ok || !info.Available || IsDisposed) return;
+
+                BeginInvoke(new Action(() => Toast.Show(this,
+                    Localization.IsPolish
+                        ? $"Dostępna wersja {info.Version} — zobacz Ustawienia"
+                        : $"Version {info.Version} available — see Settings",
+                    ToastKind.Info, 6000)));
+            }
+            catch { /* a failed update check must never bother the user at launch */ }
         }
 
         private static void EnableDoubleBuffer(Control c)
