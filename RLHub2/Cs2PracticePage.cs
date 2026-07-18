@@ -129,14 +129,21 @@ namespace RLHub2
             };
         }
 
-        private readonly FlowLayoutPanel _flow;
+        private readonly List<Section> _sections = Build();
+
+        private Label _title = null!, _hint = null!;
+        private FlowLayoutPanel _tiles = null!;   // category grid (first level)
+        private Panel _detail = null!;            // one category's commands (second level)
+        private FlowLayoutPanel _rows = null!;
+        private Label _detailTitle = null!;
+        private Section? _current;
 
         public Cs2PracticePage()
         {
             BackColor = Theme.PageBg;
             Dock = DockStyle.Fill;
 
-            var title = new Label
+            _title = new Label
             {
                 Text = Localization.IsPolish ? "TRENING" : "PRACTICE",
                 Dock = DockStyle.Top,
@@ -145,11 +152,8 @@ namespace RLHub2
                 ForeColor = Theme.TextPrimary,
                 Font = new Font("Segoe UI", 22F, FontStyle.Bold),
             };
-            var hint = new Label
+            _hint = new Label
             {
-                Text = Localization.IsPolish
-                    ? "Działa tylko na własnym serwerze (sv_cheats). Kliknij komendę, by ją skopiować, potem wklej w konsoli (~)."
-                    : "Only works on your own server (sv_cheats). Click a command to copy it, then paste into the console (~).",
                 Dock = DockStyle.Top,
                 Height = 26,
                 Padding = new Padding(24, 0, 0, 0),
@@ -157,38 +161,133 @@ namespace RLHub2
                 Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
             };
 
-            _flow = new FlowLayoutPanel
+            // ===== level 1: category tiles =====
+            _tiles = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Padding(20, 6, 20, 20),
+                Padding = new Padding(20, 8, 20, 20),
+                AutoScroll = true,
+                BackColor = Theme.PageBg,
+            };
+            foreach (var sec in _sections)
+            {
+                var s = sec;
+                var tile = new SectionTile(s.Name, s.Hint, s.Commands.Count);
+                tile.Click += (o, e) => ShowSection(s);
+                _tiles.Controls.Add(tile);
+            }
+
+            // ===== level 2: the chosen category's commands =====
+            _rows = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(20, 8, 20, 20),
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 AutoScroll = true,
                 BackColor = Theme.PageBg,
             };
+            _rows.Resize += (s, e) => FitRows();
 
-            foreach (var sec in Build())
+            var bar = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Theme.PageBg };
+            var back = new Button
             {
-                _flow.Controls.Add(new SectionHeader(sec.Name, sec.Hint,
-                    string.Join("\n", sec.Commands.Select(c => c.Text))));
-                foreach (var c in sec.Commands)
-                    _flow.Controls.Add(new CommandRow(c.Text, c.Desc));
-            }
+                Text = Localization.IsPolish ? "←  WSTECZ" : "←  BACK",
+                Size = new Size(112, 28),
+                Location = new Point(20, 8),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Transparent,
+                ForeColor = Theme.TextSecondary,
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+            };
+            back.FlatAppearance.BorderSize = 1;
+            back.FlatAppearance.BorderColor = Color.FromArgb(90, Theme.Accent);
+            back.Click += (s, e) => ShowTiles();
 
-            _flow.Resize += (s, e) => FitRows();
-            Controls.Add(_flow);
-            Controls.Add(hint);
-            Controls.Add(title);
-            Load += (s, e) => FitRows();
+            _detailTitle = new Label
+            {
+                AutoSize = true,
+                Location = new Point(146, 12),
+                ForeColor = Theme.AccentSoft,
+                Font = new Font("Segoe UI", 13F, FontStyle.Bold),
+            };
+
+            var copyAll = new Button
+            {
+                Text = Localization.IsPolish ? "KOPIUJ CAŁOŚĆ" : "COPY ALL",
+                Size = new Size(130, 28),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Transparent,
+                ForeColor = Theme.TextSecondary,
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+            };
+            copyAll.FlatAppearance.BorderSize = 1;
+            copyAll.FlatAppearance.BorderColor = Color.FromArgb(90, Theme.Accent);
+            copyAll.Click += (s, e) =>
+            {
+                if (_current == null) return;
+                CopyToClipboard(this, string.Join("\n", _current.Commands.Select(c => c.Text)), _current.Name);
+            };
+            bar.Resize += (s, e) => copyAll.Location = new Point(bar.Width - copyAll.Width - 20, 8);
+
+            bar.Controls.Add(back);
+            bar.Controls.Add(_detailTitle);
+            bar.Controls.Add(copyAll);
+
+            _detail = new Panel { Dock = DockStyle.Fill, BackColor = Theme.PageBg, Visible = false };
+            _detail.Controls.Add(_rows);
+            _detail.Controls.Add(bar);
+
+            Controls.Add(_detail);
+            Controls.Add(_tiles);
+            Controls.Add(_hint);
+            Controls.Add(_title);
+
+            ShowTiles();
+        }
+
+        private void ShowTiles()
+        {
+            _current = null;
+            _detail.Visible = false;
+            _tiles.Visible = true;
+            _title.Text = Localization.IsPolish ? "TRENING" : "PRACTICE";
+            _hint.Text = Localization.IsPolish
+                ? "Działa tylko na własnym serwerze (sv_cheats). Wybierz kategorię."
+                : "Only works on your own server (sv_cheats). Pick a category.";
+        }
+
+        private void ShowSection(Section sec)
+        {
+            _current = sec;
+            _detailTitle.Text = sec.Name;
+
+            _rows.SuspendLayout();
+            foreach (Control c in _rows.Controls) c.Dispose();
+            _rows.Controls.Clear();
+            foreach (var c in sec.Commands)
+                _rows.Controls.Add(new CommandRow(c.Text, c.Desc));
+            _rows.ResumeLayout();
+            FitRows();
+
+            _tiles.Visible = false;
+            _detail.Visible = true;
+            _title.Text = Localization.IsPolish ? "TRENING" : "PRACTICE";
+            _hint.Text = Localization.IsPolish
+                ? "Kliknij komendę, by ją skopiować, potem wklej w konsoli (~)."
+                : "Click a command to copy it, then paste into the console (~).";
         }
 
         // Rows span the page; the scrollbar appearing changes the usable width, so this runs
         // on every resize rather than being set once.
         private void FitRows()
         {
-            int w = _flow.ClientSize.Width - _flow.Padding.Horizontal;
+            int w = _rows.ClientSize.Width - _rows.Padding.Horizontal;
             if (w < 200) return;
-            foreach (Control c in _flow.Controls)
+            foreach (Control c in _rows.Controls)
                 c.Width = w;
         }
 
@@ -206,47 +305,72 @@ namespace RLHub2
             }
         }
 
-        // ===== section header =====
-        private sealed class SectionHeader : Panel
+        // ===== category tile (first level) =====
+        private sealed class SectionTile : Panel
         {
             private readonly string _name, _hint;
+            private readonly int _count;
+            private bool _hover;
 
-            public SectionHeader(string name, string hint, string allCommands)
+            public SectionTile(string name, string hint, int count)
             {
-                _name = name; _hint = hint;
-                Height = 52;
-                Margin = new Padding(0, 14, 0, 6);
+                _name = name; _hint = hint; _count = count;
+                Size = new Size(300, 124);
+                Margin = new Padding(0, 0, 16, 16);
                 DoubleBuffered = true;
                 BackColor = Color.Transparent;
+                Cursor = Cursors.Hand;
 
-                var all = new Button
-                {
-                    Text = Localization.IsPolish ? "KOPIUJ CAŁOŚĆ" : "COPY ALL",
-                    Size = new Size(130, 26),
-                    Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                    FlatStyle = FlatStyle.Flat,
-                    BackColor = Color.Transparent,
-                    ForeColor = Theme.TextSecondary,
-                    Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
-                    Cursor = Cursors.Hand,
-                };
-                all.FlatAppearance.BorderSize = 1;
-                all.FlatAppearance.BorderColor = Color.FromArgb(90, Theme.Accent);
-                all.Click += (s, e) => CopyToClipboard(this, allCommands, name);
-                Controls.Add(all);
-                Resize += (s, e) => all.Location = new Point(Width - all.Width - 2, 14);
+                MouseEnter += (s, e) => { _hover = true; Invalidate(); };
+                MouseLeave += (s, e) => { _hover = false; Invalidate(); };
             }
 
             protected override void OnPaint(PaintEventArgs e)
             {
                 var g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-                using var nameFont = new Font("Segoe UI", 13f, FontStyle.Bold);
-                using var hintFont = new Font("Segoe UI", 8.5f);
-                using var nb = new SolidBrush(Theme.AccentSoft);
+
+                var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                using (var p = Round(rect, 16))
+                {
+                    using var bg = new LinearGradientBrush(rect, Theme.CardTop, Theme.CardBottom, 90f);
+                    g.FillPath(bg, p);
+                    using var pen = new Pen(Color.FromArgb(_hover ? 150 : 60, Theme.Accent), _hover ? 2f : 1f);
+                    g.DrawPath(pen, p);
+                }
+
+                using var nameFont = new Font("Segoe UI", 15f, FontStyle.Bold);
+                using var hintFont = new Font("Segoe UI", 9f);
+                using var cntFont = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+                using var chevFont = new Font("Segoe UI", 16f, FontStyle.Bold);
+                using var nb = new SolidBrush(Theme.TextPrimary);
                 using var hb = new SolidBrush(Theme.TextMuted);
-                g.DrawString(_name, nameFont, nb, 2, 12);
-                g.DrawString(_hint, hintFont, hb, 3, 34);
+                using var ab = new SolidBrush(Theme.Accent);
+
+                g.DrawString(_name, nameFont, nb, 18, 20);
+                g.DrawString(_hint, hintFont, hb, 19, 50);
+                g.DrawString($"{_count} {(Localization.IsPolish ? "komend" : "commands")}", cntFont, ab, 19, 88);
+                g.DrawString("›", chevFont, hb, Width - 32, Height / 2 - 18);
+            }
+
+            // The tile is the button — clicking the label area must count as clicking it.
+            protected override void OnMouseClick(MouseEventArgs e)
+            {
+                base.OnMouseClick(e);
+                OnClick(e);
+            }
+
+            private static GraphicsPath Round(Rectangle r, int radius)
+            {
+                int d = radius * 2;
+                var p = new GraphicsPath();
+                p.AddArc(r.X, r.Y, d, d, 180, 90);
+                p.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+                p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+                p.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+                p.CloseAllFigures();
+                return p;
             }
         }
 
