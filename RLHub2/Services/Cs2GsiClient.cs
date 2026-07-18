@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -169,6 +170,19 @@ namespace RLHub2.Services
 
         private void Handle(string json)
         {
+            // Keep the most recent packet on disk. CS2's exact field names are the only way to
+            // tell why a value (round_totaldmg, so far always 0) never arrives, and guessing at
+            // them from documentation has already produced wrong data once.
+            try
+            {
+                File.WriteAllText(
+                    Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "RLHub2", "gsi_last.json"),
+                    json);
+            }
+            catch { /* diagnostics must never break the feed */ }
+
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
@@ -213,7 +227,11 @@ namespace RLHub2.Services
         {
             int round = Int(map, "round");
 
-            if (round != _lastRound)
+            // Bank only when the round genuinely ADVANCES. Banking on any change double-counted:
+            // the round number also moves backwards (new match, warmup ending), and each such
+            // bounce banked the same round again — which is how headshots ended up exceeding
+            // kills in stored matches.
+            if (round > _lastRound)
             {
                 if (_lastRound >= 0)
                 {
@@ -222,6 +240,12 @@ namespace RLHub2.Services
                 }
                 _roundDmg = 0;
                 _roundHs = 0;
+                _lastRound = round;
+            }
+            else if (round < _lastRound)
+            {
+                // went backwards: a fresh match started, so nothing carries over
+                ResetMatchTotals();
                 _lastRound = round;
             }
 
@@ -259,7 +283,10 @@ namespace RLHub2.Services
 
                 // the last round never turns over, so bank it here
                 Damage = _matchDmg + _roundDmg,
-                HeadshotKills = _matchHs + _roundHs,
+
+                // A headshot is a kill, so this can never exceed kills. Clamping keeps one bad
+                // packet sequence from producing an impossible HS% instead of trusting the sum.
+                HeadshotKills = Math.Min(_matchHs + _roundHs, Int(stats, "kills")),
             };
 
             _store.Append(m);

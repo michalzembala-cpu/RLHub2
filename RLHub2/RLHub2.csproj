@@ -9,9 +9,13 @@
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <!-- The updater compares this against the latest GitHub release tag, so bump it per release. -->
     <Version>1.0.0</Version>
-    <!-- Single-file publish settings (only apply during 'dotnet publish'). -->
-    <PublishSingleFile>true</PublishSingleFile>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- Deliberately NOT PublishSingleFile: it silently drops the larger Content files
+         (cs2_bg.png, gamepicker_bg.png, overlay_bg.png never reached the publish folder), and
+         the app loads those from Resources\ next to the exe, so a single-file build shipped
+         without its backdrops. The installer packages the folder anyway, so single-file buys
+         nothing here. -->
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,8 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\*.png" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Resources\*.jpg" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Only ship what the app actually loads. Working files dropped into Resources (the
+         ChatGPT-named originals, downloaded candidates) would otherwise bloat the installer,
+         and their spaces/em-dashes broke the copy during publish. -->
+    <Content Include="Resources\*.png" Exclude="Resources\ChatGPT*.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Resources\*.jpg" Exclude="Resources\images*.jpg;Resources\Mirage_*.jpg" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
