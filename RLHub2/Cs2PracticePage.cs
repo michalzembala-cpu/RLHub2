@@ -71,19 +71,100 @@ namespace RLHub2
                         new("sv_rethrow_last_grenade",                pl ? "powtarza ostatni rzut z tego samego miejsca" : "rethrows your last grenade"),
                         new("ammo_grenade_limit_total 5",             pl ? "pozwala nieść 5 granatów naraz" : "carry 5 grenades at once"),
                         new("sv_infinite_ammo 1",                     pl ? "nieskończone granaty i amunicja" : "infinite grenades and ammo"),
+                        new("give weapon_smokegrenade",               pl ? "daje smoke" : "gives a smoke"),
+                        new("give weapon_flashbang",                  pl ? "daje flasha" : "gives a flashbang"),
+                        new("give weapon_molotov",                    pl ? "daje molotova" : "gives a molotov"),
                     },
                 },
                 new()
                 {
                     Name = pl ? "Aim / strzelanie" : "Aim",
-                    Hint = pl ? "podgląd trafień i broń pod ręką" : "impacts and instant weapons",
+                    Hint = pl ? "podgląd trafień i rozrzutu" : "impacts and spread",
                     Commands = new()
                     {
                         new("sv_showimpacts 1",      pl ? "pokazuje, gdzie trafiają pociski" : "shows where bullets land"),
-                        new("sv_showimpacts_time 8", pl ? "jak długo widać trafienia" : "how long impacts stay"),
+                        new("sv_showimpacts_time 8", pl ? "jak długo widać ślady trafień" : "how long impacts stay"),
                         new("mp_free_armor 2",       pl ? "darmowa kamizelka i hełm" : "free armour and helmet"),
-                        new("give weapon_ak47",      pl ? "daje AK-47" : "gives an AK-47"),
-                        new("give weapon_awp",       pl ? "daje AWP" : "gives an AWP"),
+                        new("sv_infinite_ammo 1",    pl ? "nieskończona amunicja (bez przeładowania)" : "infinite ammo, no reloading"),
+                        new("sv_infinite_ammo 2",    pl ? "nieskończony magazynek (z przeładowaniem)" : "infinite reserve, still reloads"),
+                    },
+                },
+                new()
+                {
+                    Name = pl ? "Bronie" : "Weapons",
+                    Hint = pl ? "daje broń prosto do ręki" : "spawn a weapon in your hands",
+                    Commands = new()
+                    {
+                        new("give weapon_ak47",           "AK-47"),
+                        new("give weapon_m4a1_silencer",  "M4A1-S"),
+                        new("give weapon_awp",            "AWP"),
+                        new("give weapon_ssg08",          pl ? "Scout" : "Scout"),
+                        new("give weapon_deagle",         "Desert Eagle"),
+                        new("give weapon_usp_silencer",   "USP-S"),
+                        new("give weapon_hegrenade",      pl ? "granat HE" : "HE grenade"),
+                        new("give weapon_c4",             pl ? "bomba C4" : "the C4"),
+                    },
+                },
+                new()
+                {
+                    Name = pl ? "Zasady rundy" : "Round rules",
+                    Hint = pl ? "runda bez końca, respawn, 1v1" : "endless rounds, respawns, 1v1",
+                    Commands = new()
+                    {
+                        new("mp_ignore_round_win_conditions 1", pl ? "runda się nie kończy mimo eliminacji" : "round never ends"),
+                        new("mp_respawn_on_death_t 1",          pl ? "terroryści odradzają się po śmierci" : "T respawn on death"),
+                        new("mp_respawn_on_death_ct 1",         pl ? "antyterroryści odradzają się po śmierci" : "CT respawn on death"),
+                        new("mp_teammates_are_enemies 1",       pl ? "koledzy z drużyny są wrogami — 1v1" : "teammates become enemies - 1v1"),
+                        new("mp_solid_teammates 0",             pl ? "można przenikać przez kolegów" : "walk through teammates"),
+                        new("mp_death_drop_gun 0",              pl ? "bronie nie wypadają po śmierci" : "no dropped weapons on death"),
+                    },
+                },
+                new()
+                {
+                    Name = pl ? "Widok" : "View",
+                    Hint = pl ? "kamera i czysty ekran" : "camera and a clean screen",
+                    Commands = new()
+                    {
+                        new("thirdperson",                 pl ? "widok z trzeciej osoby" : "third-person camera"),
+                        new("firstperson",                 pl ? "powrót do pierwszej osoby" : "back to first person"),
+                        new("r_drawviewmodel 0",           pl ? "ukrywa model broni" : "hides the weapon model"),
+                        new("cl_draw_only_deathnotices 1", pl ? "czysty ekran bez HUD — do nagrywania" : "clean screen, no HUD"),
+                        new("cl_showfps 1",                pl ? "licznik FPS" : "FPS counter"),
+                    },
+                },
+                new()
+                {
+                    Name = pl ? "Pozycja" : "Position",
+                    Hint = pl ? "zapisz i wróć w to samo miejsce" : "save and return to a spot",
+                    Commands = new()
+                    {
+                        new("getpos",                pl ? "wypisuje Twoją pozycję — zapisz ją sobie do lineupu" : "prints your position - save it for a lineup"),
+                        new("bind \"p\" \"getpos\"", pl ? "P — wypisz pozycję jednym klawiszem" : "P - print position"),
+                        new("cl_showpos 1",          pl ? "pokazuje pozycję i prędkość na ekranie" : "shows position and speed on screen"),
+                    },
+                },
+                new()
+                {
+                    Name = pl ? "Demo" : "Demo",
+                    Hint = pl ? "nagraj i obejrzyj swoją grę" : "record and review your play",
+                    Commands = new()
+                    {
+                        new("record trening",   pl ? "zaczyna nagrywanie do pliku trening.dem" : "starts recording to trening.dem"),
+                        new("stop",             pl ? "kończy nagrywanie" : "stops recording"),
+                        new("playdemo trening", pl ? "odtwarza nagrane demo" : "plays the recorded demo"),
+                        new("demoui",           pl ? "panel sterowania demem (pauza, przewijanie)" : "demo control panel"),
+                    },
+                },
+                new()
+                {
+                    Name = pl ? "Fizyka" : "Physics",
+                    Hint = pl ? "spowolnienie i grawitacja" : "slow motion and gravity",
+                    Commands = new()
+                    {
+                        new("host_timescale 0.4", pl ? "spowolnienie — do analizy rzutów" : "slow motion, for studying throws"),
+                        new("host_timescale 1",   pl ? "powrót do normalnej prędkości" : "back to normal speed"),
+                        new("sv_gravity 200",     pl ? "niska grawitacja" : "low gravity"),
+                        new("sv_gravity 800",     pl ? "domyślna grawitacja" : "default gravity"),
                     },
                 },
                 new()
@@ -119,11 +200,13 @@ namespace RLHub2
                     Commands = new()
                     {
                         new("bind \"n\" \"noclip\"",                   pl ? "N — przenikanie" : "N - noclip"),
-                        new("bind \"h\" \"sv_rethrow_last_grenade\"",  pl ? "H — powtórz rzut" : "H - rethrow grenade"),
+                        new("bind \"h\" \"sv_rethrow_last_grenade\"",  pl ? "H — powtórz ostatni rzut" : "H - rethrow grenade"),
                         new("bind \"j\" \"give weapon_flashbang\"",    pl ? "J — flash" : "J - flashbang"),
                         new("bind \"k\" \"give weapon_smokegrenade\"", pl ? "K — smoke" : "K - smoke"),
                         new("bind \"l\" \"give weapon_molotov\"",      pl ? "L — molotov" : "L - molotov"),
                         new("bind \"o\" \"mp_restartgame 1\"",         pl ? "O — restart rundy" : "O - restart round"),
+                        new("bind \"v\" \"noclip; god\"",              pl ? "V — przenikanie i nieśmiertelność naraz" : "V - noclip and god at once"),
+                        new("bind \"b\" \"bot_place\"",                pl ? "B — postaw bota tam, gdzie patrzysz" : "B - place a bot where you look"),
                     },
                 },
             };
