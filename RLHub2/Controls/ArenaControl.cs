@@ -11,7 +11,7 @@ namespace RLHub2.Controls
     public class ArenaControl : UserControl
     {
         // Override in a page to pick which arena shows behind it.
-        protected virtual string ArenaFile => "stadion1.jpg";
+        protected virtual string ArenaFile => "rl_bg.png";
 
         // The arena, scaled and dimmed once per size. Rebuilt only when the size actually
         // changes; every paint after that is a plain blit.

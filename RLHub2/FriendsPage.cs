@@ -9,7 +9,7 @@ namespace RLHub2
 {
     public partial class FriendsPage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadin3.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         private readonly FriendStore _store = new();
         private readonly ProfileServiceTracker _service = new();

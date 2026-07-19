@@ -11,7 +11,7 @@ namespace RLHub2
 {
     public partial class ProfilePage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadion1.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         // tracker.gg fallback (used only when no ballchasing key is set)
         private readonly IProfileService _service = new ProfileServiceTracker();

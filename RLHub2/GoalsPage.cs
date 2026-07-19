@@ -10,7 +10,7 @@ namespace RLHub2
 {
     public partial class GoalsPage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadion2.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         private readonly GoalStore _store = new();
         private List<Goal> _goals = new();

@@ -9,7 +9,7 @@ namespace RLHub2
 {
     public partial class GaragePage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadion2.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         private readonly GarageStore _store = new();
         private List<CarPreset> _presets = new();

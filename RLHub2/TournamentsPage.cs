@@ -13,7 +13,7 @@ namespace RLHub2
 {
     public partial class TournamentsPage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadin3.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         private readonly TournamentService _service = new();
         private List<TournamentEvent> _all = new();

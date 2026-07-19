@@ -13,7 +13,7 @@ namespace RLHub2
 {
     public partial class HomePage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadion1.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         private readonly NewsService _newsService = new();
         private readonly MmrStore _mmr = new();

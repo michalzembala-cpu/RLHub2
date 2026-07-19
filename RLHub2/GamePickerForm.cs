@@ -71,7 +71,7 @@ namespace RLHub2
         private Image? Blurred()
         {
             if (_blurred != null) return _blurred;
-            var src = ArenaBackground.Load("gamepicker_bg.png") ?? ArenaBackground.Load("stadion1.jpg");
+            var src = ArenaBackground.Load("gamepicker_bg.png") ?? ArenaBackground.Load("rl_bg.png");
             if (src == null) return null;
 
             const int small = 200;

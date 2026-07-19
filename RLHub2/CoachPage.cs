@@ -11,7 +11,7 @@ namespace RLHub2
 {
     public partial class CoachPage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadion1.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         private readonly SettingsStore _settings = new();
 

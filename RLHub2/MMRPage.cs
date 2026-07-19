@@ -12,7 +12,7 @@ namespace RLHub2
 {
     public partial class MMRPage : Controls.ArenaControl
     {
-        protected override string ArenaFile => "stadion1.jpg";
+        protected override string ArenaFile => "rl_bg.png";
 
         private readonly MmrStore _store = new();
         private List<MmrEntry> _entries = new();
