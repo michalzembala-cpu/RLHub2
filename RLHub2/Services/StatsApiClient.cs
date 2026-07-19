@@ -47,6 +47,10 @@ namespace RLHub2.Services
         // Latest per-match snapshot, rebuilt from UpdateState events.
         private readonly Dictionary<string, PlayerStat> _players = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _checkedNames = new(StringComparer.OrdinalIgnoreCase);
+
+        // Biggest side seen this match, per team. Tracked as a peak rather than read at the end
+        // because players leave: a 3v3 whose opponents rage-quit would otherwise look like 3v1.
+        private readonly Dictionary<int, int> _peakTeamSize = new();
         private string _lastMatchGuid = "";
         private string _loggedMatchGuid = "";
 
@@ -104,6 +108,7 @@ namespace RLHub2.Services
                 SetConnected(false);
                 _players.Clear();
                 _checkedNames.Clear();
+                _peakTeamSize.Clear();
                 if (_running) Sleep(3000);
             }
         }
@@ -202,6 +207,7 @@ namespace RLHub2.Services
             {
                 _players.Clear();
                 _checkedNames.Clear();
+                _peakTeamSize.Clear();
                 _lastMatchGuid = GetString(data, "match_guid", "MatchGuid", "matchGuid") ?? _lastMatchGuid;
                 return;
             }
@@ -246,6 +252,21 @@ namespace RLHub2.Services
 
                 NoteAccount(name);
             }
+
+            // update the peak size of each side
+            foreach (var grp in _players.Values.GroupBy(p => p.Team))
+            {
+                _peakTeamSize.TryGetValue(grp.Key, out int prev);
+                if (grp.Count() > prev) _peakTeamSize[grp.Key] = grp.Count();
+            }
+        }
+
+        // Players per side -> playlist. Anything other than 1/2/3 (private lobbies, chaos)
+        // stays blank rather than being forced into a mode it isn't.
+        private string DetectedMode()
+        {
+            int size = _peakTeamSize.Count == 0 ? 0 : _peakTeamSize.Values.Max();
+            return size switch { 1 => "1v1", 2 => "2v2", 3 => "3v3", _ => "" };
         }
 
         // The account you are actually playing on right now, recognised from the players in
@@ -298,6 +319,7 @@ namespace RLHub2.Services
             {
                 Time = DateTime.Now,
                 Account = acc?.Name ?? "",
+                Mode = DetectedMode(),
                 Won = mine > opp,
                 Goals = me?.Goals ?? 0,
                 Saves = me?.Saves ?? 0,
@@ -313,10 +335,11 @@ namespace RLHub2.Services
 
             // Move the MMR curve with the result — this is the only live source left, so the
             // chart and overlay are fed from here rather than from a rank nobody reports.
-            try { MmrTracker.Record(match.Account, match.Won, match.Time); } catch { }
+            try { MmrTracker.Record(match.Account, match.Won, match.Time, match.Mode); } catch { }
 
             _players.Clear();
             _checkedNames.Clear();
+                _peakTeamSize.Clear();
 
             Post(() => MatchLogged?.Invoke(match));
         }
