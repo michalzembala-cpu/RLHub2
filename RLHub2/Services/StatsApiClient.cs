@@ -325,11 +325,18 @@ namespace RLHub2.Services
         // genuinely indistinguishable here.
         private string DetectedMode()
         {
+            // The arena is proof, so it outranks the manual override: if you left the switch on
+            // Rumble and then queued Hoops, the arena is right and the switch is stale.
             string arena = _lastArena.ToLowerInvariant();
             if (arena.Contains("hoops")) return "Hoops";
             if (arena.Contains("dropshot") || arena.Contains("shattershot")) return "Dropshot";
             if (arena.Contains("snowday") || arena.Contains("hockey")) return "Snow Day";
             if (arena.Contains("rumble")) return "Rumble";
+
+            // Standard arena: nothing in the feed separates Rumble from plain Soccar, so an
+            // explicit choice is the only thing better than a guess.
+            string forced = new SettingsStore().LoadRlModeOverride();
+            if (forced.Length > 0) return forced;
 
             int size = _peakTeamSize.Count == 0 ? 0 : _peakTeamSize.Values.Max();
             return size switch { 1 => "1v1", 2 => "2v2", 3 => "3v3", _ => "" };

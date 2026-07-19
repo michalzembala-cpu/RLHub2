@@ -17,6 +17,7 @@ namespace RLHub2
         private readonly SessionStore _store = new();
         private readonly StatsApiClient _client = StatsApiClient.Instance;
         private List<SessionMatch> _session = new();
+        private Button btnMode = null!;
 
         public SessionPage()
         {
@@ -25,6 +26,23 @@ namespace RLHub2
 
             recentPanel.Paint += DrawRecent;
             recentPanel.Resize += (s, e) => recentPanel.Invalidate();
+            recentPanel.MouseClick += RecentClicked;
+
+            btnMode = new Button
+            {
+                Size = new Size(150, 26),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Transparent,
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+            };
+            btnMode.FlatAppearance.BorderSize = 1;
+            btnMode.FlatAppearance.BorderColor = Color.FromArgb(90, 90, 120);
+            btnMode.Click += (s, e) => ShowOverrideMenu();
+            recentBar.Controls.Add(btnMode);
+            recentBar.Resize += (s, e) =>
+                btnMode.Location = new Point(btnOverlay.Left - btnMode.Width - 8, 2);
+            UpdateModeButton();
             btnReset.Click += (s, e) => ResetSession();
             btnOverlay.Click += (s, e) => OverlayWindow.Toggle();
 
@@ -158,6 +176,7 @@ namespace RLHub2
             var loss = Color.FromArgb(230, 80, 90);
 
             int pad = 18, rowH = 44, y = 14;
+            _rows.Clear();
             // newest first
             foreach (var m in Enumerable.Reverse(_session).Take((H - 20) / rowH))
             {
@@ -185,6 +204,13 @@ namespace RLHub2
                     g.DrawString($"G {m.Goals}   S {m.Saves}   A {m.Assists}   •   {m.Score} pts",
                         statFont, mb, badge.Right + 12, rowRect.Y + 22);
 
+                // playlist, right of the score — clicking the row corrects it
+                using (var pb = new SolidBrush(Theme.AccentSoft))
+                {
+                    string mode = string.IsNullOrEmpty(m.Mode) ? "—" : m.Mode;
+                    g.DrawString(mode, statFont, pb, badge.Right + 120, rowRect.Y + 4);
+                }
+
                 // time (right aligned)
                 using (var tmb = new SolidBrush(Theme.TextMuted))
                 {
@@ -193,9 +219,84 @@ namespace RLHub2
                     g.DrawString(t, timeFont, tmb, rowRect.Right - sz.Width, rowRect.Y + 10);
                 }
 
+                _rows.Add((rowRect, m));
                 y += rowH;
                 if (y + rowH > H) break;
             }
+        }
+
+        // Playlists you can pick by hand. Everything except Rumble is detected automatically —
+        // Rumble is here because nothing in the feed identifies it.
+        private static readonly string[] PickableModes =
+            { "1v1", "2v2", "3v3", "Rumble", "Hoops", "Dropshot", "Snow Day" };
+
+        private readonly List<(Rectangle Rect, SessionMatch Match)> _rows = new();
+
+        // Click a match to correct the playlist it was filed under; the MMR point moves with it.
+        private void RecentClicked(object? sender, MouseEventArgs e)
+        {
+            var hit = _rows.FirstOrDefault(r => r.Rect.Contains(e.Location));
+            if (hit.Match == null) return;
+
+            var menu = new ContextMenuStrip();
+            foreach (var mode in PickableModes)
+            {
+                var item = new ToolStripMenuItem(mode) { Checked = hit.Match.Mode == mode };
+                item.Click += (s, _) => Retag(hit.Match, mode);
+                menu.Items.Add(item);
+            }
+            menu.Show(recentPanel, e.Location);
+        }
+
+        private void Retag(SessionMatch match, string newMode)
+        {
+            string oldMode = match.Mode;
+            if (oldMode == newMode) return;
+
+            var all = _store.Load();
+            var stored = all.FirstOrDefault(m => Math.Abs((m.Time - match.Time).TotalSeconds) < 2
+                                                 && m.Account == match.Account);
+            if (stored == null) return;
+
+            stored.Mode = newMode;
+            _store.Save(all);
+            MmrTracker.Retag(match.Account, match.Time, oldMode, newMode);
+
+            RefreshStats();
+            Toast.Show(this,
+                Localization.IsPolish ? $"Zmieniono tryb na {newMode}" : $"Mode changed to {newMode}",
+                ToastKind.Success);
+        }
+
+        // Forces the playlist for matches the feed can't identify, until switched back.
+        private void ShowOverrideMenu()
+        {
+            var store = new SettingsStore();
+            string current = store.LoadRlModeOverride();
+
+            var menu = new ContextMenuStrip();
+            var auto = new ToolStripMenuItem(Localization.IsPolish ? "Automatycznie" : "Automatic")
+            { Checked = current.Length == 0 };
+            auto.Click += (s, _) => { store.SaveRlModeOverride(""); UpdateModeButton(); };
+            menu.Items.Add(auto);
+            menu.Items.Add(new ToolStripSeparator());
+
+            foreach (var mode in new[] { "Rumble", "Hoops", "Dropshot", "Snow Day" })
+            {
+                var item = new ToolStripMenuItem(mode) { Checked = current == mode };
+                item.Click += (s, _) => { store.SaveRlModeOverride(mode); UpdateModeButton(); };
+                menu.Items.Add(item);
+            }
+            menu.Show(btnMode, new Point(0, btnMode.Height));
+        }
+
+        private void UpdateModeButton()
+        {
+            string m = new SettingsStore().LoadRlModeOverride();
+            btnMode.Text = m.Length == 0
+                ? (Localization.IsPolish ? "TRYB: AUTO" : "MODE: AUTO")
+                : "TRYB: " + m.ToUpperInvariant();
+            btnMode.ForeColor = m.Length == 0 ? Theme.TextSecondary : Theme.Accent;
         }
 
         private static GraphicsPath RoundRect(Rectangle r, int radius)

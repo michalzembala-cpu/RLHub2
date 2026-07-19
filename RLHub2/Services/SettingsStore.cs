@@ -35,6 +35,10 @@ namespace RLHub2.Services
         // Which CS2 mode the tracker counts: "" = all, or premier/competitive/casual.
         public string Cs2ModeFilter { get; set; } = "";
 
+        // Forces the playlist for Rocket League matches the feed can't identify (Rumble runs on
+        // the standard arenas and is invisible to it). "" = trust automatic detection.
+        public string RlModeOverride { get; set; } = "";
+
         // GitHub repository the updater checks, as "owner/name". Empty = updates off.
         public string UpdateRepo { get; set; } = "";
         public bool AutoCheckUpdates { get; set; } = true;
@@ -232,6 +236,15 @@ namespace RLHub2.Services
         {
             var cfg = Load();
             cfg.AutoCheckUpdates = on;
+            Save(cfg);
+        }
+
+        public string LoadRlModeOverride() => Load().RlModeOverride ?? "";
+
+        public void SaveRlModeOverride(string mode)
+        {
+            var cfg = Load();
+            cfg.RlModeOverride = mode ?? "";
             Save(cfg);
         }
 
