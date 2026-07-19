@@ -51,6 +51,9 @@ namespace RLHub2.Services
         // Biggest side seen this match, per team. Tracked as a peak rather than read at the end
         // because players leave: a 3v3 whose opponents rage-quit would otherwise look like 3v1.
         private readonly Dictionary<int, int> _peakTeamSize = new();
+
+        // Arena of the match in progress, e.g. "hoopsStreet_p". See DetectedMode.
+        private string _lastArena = "";
         private string _lastMatchGuid = "";
         private string _loggedMatchGuid = "";
 
@@ -109,6 +112,7 @@ namespace RLHub2.Services
                 _players.Clear();
                 _checkedNames.Clear();
                 _peakTeamSize.Clear();
+                _lastArena = "";
                 if (_running) Sleep(3000);
             }
         }
@@ -222,6 +226,7 @@ namespace RLHub2.Services
                 _players.Clear();
                 _checkedNames.Clear();
                 _peakTeamSize.Clear();
+                _lastArena = "";
                 _lastMatchGuid = GetString(data, "match_guid", "MatchGuid", "matchGuid") ?? _lastMatchGuid;
                 return;
             }
@@ -244,6 +249,14 @@ namespace RLHub2.Services
         {
             string guid = GetString(data, "match_guid", "MatchGuid", "matchGuid") ?? "";
             if (guid.Length > 0) _lastMatchGuid = guid;
+
+            // Game.Arena names the map ("hoopsStreet_p", "Stadium_P", ...) — the only thing in
+            // the feed that separates Hoops/Dropshot/Snow Day from standard playlists.
+            if (TryGetProp(data, out var game, "game", "Game"))
+            {
+                string arena = GetString(game, "Arena", "arena") ?? "";
+                if (arena.Length > 0) _lastArena = arena;
+            }
 
             if (!TryGetProp(data, out var players, "players", "Players")) return;
             if (players.ValueKind != JsonValueKind.Array) return;
@@ -275,10 +288,21 @@ namespace RLHub2.Services
             }
         }
 
-        // Players per side -> playlist. Anything other than 1/2/3 (private lobbies, chaos)
-        // stays blank rather than being forced into a mode it isn't.
+        // Playlist, worked out from the arena first and the team size second.
+        //
+        // Team size alone mislabels the extra modes: Hoops is 2v2 and Dropshot/Snow Day are
+        // 3v3, so their results landed in the standard curves. The feed does name the arena
+        // (Game.Arena, e.g. "hoopsStreet_p"), and those modes have their own maps — so the
+        // arena settles it. Rumble is the exception: it runs on the standard arenas and is
+        // genuinely indistinguishable here.
         private string DetectedMode()
         {
+            string arena = _lastArena.ToLowerInvariant();
+            if (arena.Contains("hoops")) return "Hoops";
+            if (arena.Contains("dropshot") || arena.Contains("shattershot")) return "Dropshot";
+            if (arena.Contains("snowday") || arena.Contains("hockey")) return "Snow Day";
+            if (arena.Contains("rumble")) return "Rumble";
+
             int size = _peakTeamSize.Count == 0 ? 0 : _peakTeamSize.Values.Max();
             return size switch { 1 => "1v1", 2 => "2v2", 3 => "3v3", _ => "" };
         }
@@ -354,6 +378,7 @@ namespace RLHub2.Services
             _players.Clear();
             _checkedNames.Clear();
                 _peakTeamSize.Clear();
+                _lastArena = "";
 
             Post(() => MatchLogged?.Invoke(match));
         }
