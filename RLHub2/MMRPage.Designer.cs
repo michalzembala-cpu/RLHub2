@@ -176,16 +176,16 @@ namespace RLHub2
             card1v1.BackColor = Color.Transparent;
             card1v1.CornerRadius = 18;
             card1v1.Icon = null;
-            card1v1.Location = new Point(3, 3);
+            card1v1.Dock = DockStyle.Fill;
+            card1v1.Margin = new Padding(8);
             card1v1.Name = "card1v1";
-            card1v1.Size = new Size(193, 92);
             card1v1.Subtitle = "";
-            card1v1.SubtitleFontSize = 9F;
+            card1v1.SubtitleFontSize = 11F;
             card1v1.TabIndex = 0;
             card1v1.Title = "TITLE";
-            card1v1.TitleFontSize = 9.5F;
+            card1v1.TitleFontSize = 13F;
             card1v1.Value = "--";
-            card1v1.ValueFontSize = 18F;
+            card1v1.ValueFontSize = 40F;
             // 
             // card2v2
             // 
@@ -193,16 +193,16 @@ namespace RLHub2
             card2v2.BackColor = Color.Transparent;
             card2v2.CornerRadius = 18;
             card2v2.Icon = null;
-            card2v2.Location = new Point(202, 3);
+            card2v2.Dock = DockStyle.Fill;
+            card2v2.Margin = new Padding(8);
             card2v2.Name = "card2v2";
-            card2v2.Size = new Size(192, 92);
             card2v2.Subtitle = "";
-            card2v2.SubtitleFontSize = 9F;
+            card2v2.SubtitleFontSize = 11F;
             card2v2.TabIndex = 1;
             card2v2.Title = "TITLE";
-            card2v2.TitleFontSize = 9.5F;
+            card2v2.TitleFontSize = 13F;
             card2v2.Value = "--";
-            card2v2.ValueFontSize = 18F;
+            card2v2.ValueFontSize = 40F;
             // 
             // card3v3
             // 
@@ -210,16 +210,16 @@ namespace RLHub2
             card3v3.BackColor = Color.Transparent;
             card3v3.CornerRadius = 18;
             card3v3.Icon = null;
-            card3v3.Location = new Point(400, 3);
+            card3v3.Dock = DockStyle.Fill;
+            card3v3.Margin = new Padding(8);
             card3v3.Name = "card3v3";
-            card3v3.Size = new Size(194, 92);
             card3v3.Subtitle = "";
-            card3v3.SubtitleFontSize = 9F;
+            card3v3.SubtitleFontSize = 11F;
             card3v3.TabIndex = 2;
             card3v3.Title = "TITLE";
-            card3v3.TitleFontSize = 9.5F;
+            card3v3.TitleFontSize = 13F;
             card3v3.Value = "--";
-            card3v3.ValueFontSize = 18F;
+            card3v3.ValueFontSize = 40F;
             // 
             // dataPanel
             // 
@@ -242,7 +242,7 @@ namespace RLHub2
             btnFetch.ForeColor = Color.White;
             btnFetch.Location = new Point(3, 3);
             btnFetch.Name = "btnFetch";
-            btnFetch.Size = new Size(150, 23);
+            btnFetch.Size = new Size(170, 34);
             btnFetch.TabIndex = 0;
             btnFetch.UseVisualStyleBackColor = false;
             // 
@@ -250,21 +250,21 @@ namespace RLHub2
             // 
             btnExport.Location = new Point(159, 3);
             btnExport.Name = "btnExport";
-            btnExport.Size = new Size(75, 23);
+            btnExport.Size = new Size(120, 34);
             btnExport.TabIndex = 1;
             // 
             // btnImport
             // 
             btnImport.Location = new Point(240, 3);
             btnImport.Name = "btnImport";
-            btnImport.Size = new Size(75, 23);
+            btnImport.Size = new Size(120, 34);
             btnImport.TabIndex = 2;
             // 
             // btnFolder
             // 
             btnFolder.Location = new Point(321, 3);
             btnFolder.Name = "btnFolder";
-            btnFolder.Size = new Size(75, 23);
+            btnFolder.Size = new Size(120, 34);
             btnFolder.TabIndex = 3;
             // 
             // detailView

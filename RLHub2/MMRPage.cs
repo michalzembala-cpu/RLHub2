@@ -36,6 +36,11 @@ namespace RLHub2
             btnImport.Click += (s, e) => ImportData();
             btnFolder.Click += (s, e) => OpenFolder();
 
+            // The Designer pinned these at fixed points sized for smaller buttons; lay them out
+            // in a row instead so they can't overlap once they grow.
+            LayoutDataButtons();
+            dataPanel.Resize += (s, e) => LayoutDataButtons();
+
             btnBack.Click += (s, e) => ShowSelection();
 
             btnWeek.Click += (s, e) => SetRange("WEEK");
@@ -86,6 +91,12 @@ namespace RLHub2
             btnImport.Text = Localization.T("mmr_import");
             btnFolder.Text = Localization.T("mmr_folder");
 
+            // The Designer leaves a "TITLE" placeholder on these, so nothing ever said which
+            // card was which playlist.
+            card1v1.Title = "1V1";
+            card2v2.Title = "2V2";
+            card3v3.Title = "3V3";
+
             lblFormTitle.Text = _editing != null
                 ? Localization.T("mmr_edit_title")
                 : Localization.T("mmr_add_title");
@@ -101,6 +112,18 @@ namespace RLHub2
 
             chart.EmptyTitle = Localization.T("mmr_empty");
             chart.EmptySub = Localization.T("mmr_empty_sub");
+        }
+
+        private void LayoutDataButtons()
+        {
+            const int gap = 10;
+            int y = Math.Max(4, (dataPanel.Height - btnFetch.Height) / 2);
+            int x = 0;
+            foreach (var b in new[] { btnFetch, btnExport, btnImport, btnFolder })
+            {
+                b.Location = new Point(x, y);
+                x += b.Width + gap;
+            }
         }
 
         private static void ApplyRoundedRegion(Control c, int radius)
