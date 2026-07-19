@@ -310,6 +310,11 @@ namespace RLHub2.Services
 
             _loggedMatchGuid = _lastMatchGuid;
             _store.Append(match);
+
+            // Move the MMR curve with the result — this is the only live source left, so the
+            // chart and overlay are fed from here rather than from a rank nobody reports.
+            try { MmrTracker.Record(match.Account, match.Won, match.Time); } catch { }
+
             _players.Clear();
             _checkedNames.Clear();
 
