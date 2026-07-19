@@ -184,19 +184,7 @@ namespace RLHub2.Services
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // Keep the last packet of EACH event type. Overwriting one file per packet only ever
-            // left MatchDestroyed — the final, near-empty event — while the interesting fields
-            // (players, and whatever names the arena or playlist) live in the others.
-            try
-            {
-                string ev0 = GetString(root, "Event", "event") ?? "unknown";
-                var dir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "RLHub2", "rl_packets");
-                Directory.CreateDirectory(dir);
-                File.WriteAllText(Path.Combine(dir, ev0 + ".json"), json);
-            }
-            catch { /* diagnostics must never break the feed */ }
+            DumpPacket(root, json);
 
             string ev = GetString(root, "Event", "event") ?? "";
             if (ev.Length == 0) return;
@@ -243,6 +231,46 @@ namespace RLHub2.Services
                 FinishMatch();
                 return;
             }
+        }
+
+        // Diagnostics: keep the last packet of each event type, in a folder per match.
+        //
+        // A single shared folder can't answer "what does Rumble send that a normal match
+        // doesn't" — the next match overwrites the one you wanted to compare against, and
+        // Rumble shares its arena with standard playlists so the arena can't key it either.
+        // The match GUID can. Old folders are pruned so this can't grow forever.
+        private void DumpPacket(JsonElement root, string json)
+        {
+            try
+            {
+                string ev = GetString(root, "Event", "event") ?? "unknown";
+
+                string guid = _lastMatchGuid;
+                if (guid.Length == 0) guid = "unknown";
+                foreach (var c in Path.GetInvalidFileNameChars()) guid = guid.Replace(c, '_');
+
+                var baseDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "RLHub2", "rl_packets");
+                var dir = Path.Combine(baseDir, guid);
+                Directory.CreateDirectory(dir);
+                File.WriteAllText(Path.Combine(dir, ev + ".json"), json);
+
+                PruneDumps(baseDir, keep: 8);
+            }
+            catch { /* diagnostics must never break the feed */ }
+        }
+
+        private static void PruneDumps(string baseDir, int keep)
+        {
+            try
+            {
+                var dirs = new DirectoryInfo(baseDir).GetDirectories()
+                    .OrderByDescending(d => d.LastWriteTimeUtc)
+                    .Skip(keep);
+                foreach (var d in dirs) d.Delete(true);
+            }
+            catch { }
         }
 
         private void UpdateFromState(JsonElement data)
