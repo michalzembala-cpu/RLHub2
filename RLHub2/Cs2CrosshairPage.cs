@@ -2,60 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Text;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using RLHub2.Helpers;
+using RLHub2.Models;
+using RLHub2.Services;
 
 namespace RLHub2
 {
-    // A library of crosshairs to copy into CS2. Each is copied as a block of console commands
-    // (cl_crosshair*), which is exact and I can render an accurate preview from — unlike the
-    // CSGO-xxxxx share code, whose encoder I can't verify against a real client, so I don't
-    // ship possibly-wrong codes.
+    // A library of crosshairs to copy into CS2, plus your own.
+    //
+    // Each is copied as ONE line of semicolon-separated cl_crosshair* commands: the CS2 console
+    // is a single-line input, so a pasted multi-line block only ever runs its first line. That's
+    // why the earlier multi-line copy looked like it did nothing.
+    //
+    // Still no CSGO-xxxxx share codes — I can't verify that encoder against a real client, and a
+    // wrong code is worse than no code. The commands are exact and I can preview them honestly.
     //
     // The pro presets use those players' publicly shared settings; nudge them to taste.
     public class Cs2CrosshairPage : UserControl
     {
-        private sealed class Xhair
-        {
-            public string Name = "";
-            public string Author = "";
-            public int Style = 4;      // 4 = classic static (what almost every pro uses)
-            public float Size = 2;
-            public float Thickness = 1;
-            public int Gap = -3;
-            public bool Dot;
-            public bool T;
-            public int Outline;         // 0 = off, else outline thickness
-            public int R = 0, G = 255, B = 0;
-            public int Alpha = 255;
-
-            public string Commands()
-            {
-                var sb = new StringBuilder();
-                sb.AppendLine($"cl_crosshairstyle {Style}");
-                sb.AppendLine($"cl_crosshairsize {Size.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-                sb.AppendLine($"cl_crosshairthickness {Thickness.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-                sb.AppendLine($"cl_crosshairgap {Gap}");
-                sb.AppendLine($"cl_crosshairdot {(Dot ? 1 : 0)}");
-                sb.AppendLine($"cl_crosshair_t {(T ? 1 : 0)}");
-                sb.AppendLine($"cl_crosshair_drawoutline {(Outline > 0 ? 1 : 0)}");
-                sb.AppendLine($"cl_crosshair_outlinethickness {Math.Max(0, Outline)}");
-                sb.AppendLine("cl_crosshaircolor 5");
-                sb.AppendLine($"cl_crosshaircolor_r {R}");
-                sb.AppendLine($"cl_crosshaircolor_g {G}");
-                sb.AppendLine($"cl_crosshaircolor_b {B}");
-                sb.AppendLine($"cl_crosshairalpha {Alpha}");
-                sb.Append("cl_crosshairusealpha 1");
-                return sb.ToString();
-            }
-
-            // The preview already shows dot / T / outline, so the line stays short and never clips.
-            public string Summary()
-                => $"size {Size:0.#}  •  gap {Gap}  •  thick {Thickness:0.#}";
-        }
-
-        private static readonly Xhair[] Library =
+        private static readonly CrosshairDef[] Presets =
         {
             new() { Name = "s1mple",  Author = "Oleksandr Kostyljev", Size = 2, Thickness = 0, Gap = -3, Outline = 1, R = 0,   G = 255, B = 0 },
             new() { Name = "ZywOo",   Author = "Mathieu Herbaut",     Size = 2, Thickness = 1, Gap = -2, Outline = 1, R = 0,   G = 255, B = 255 },
@@ -68,6 +36,7 @@ namespace RLHub2
             new() { Name = "Klasyk",  Author = "duży, biały",         Size = 5, Thickness = 1, Gap = 1,  Outline = 1, R = 255, G = 255, B = 255 },
         };
 
+        private readonly CrosshairStore _store = new();
         private readonly FlowLayoutPanel _flow;
 
         public Cs2CrosshairPage()
@@ -75,9 +44,11 @@ namespace RLHub2
             BackColor = Theme.PageBg;
             Dock = DockStyle.Fill;
 
+            bool pl = Localization.IsPolish;
+
             var title = new Label
             {
-                Text = Localization.IsPolish ? "CELOWNIKI" : "CROSSHAIRS",
+                Text = pl ? "CELOWNIKI" : "CROSSHAIRS",
                 Dock = DockStyle.Top,
                 Height = 44,
                 Padding = new Padding(24, 8, 0, 0),
@@ -86,9 +57,9 @@ namespace RLHub2
             };
             var hint = new Label
             {
-                Text = Localization.IsPolish
-                    ? "Kliknij KOPIUJ, wklej w konsoli CS2 (~) i naciśnij Enter"
-                    : "Click COPY, paste into the CS2 console (~) and hit Enter",
+                Text = pl
+                    ? "KOPIUJ wkleja się jedną linią do konsoli CS2 (~) — albo .CFG i w konsoli: exec crosshair"
+                    : "COPY pastes as one line into the CS2 console (~) — or .CFG, then: exec crosshair",
                 Dock = DockStyle.Top,
                 Height = 26,
                 Padding = new Padding(24, 0, 0, 0),
@@ -103,90 +74,259 @@ namespace RLHub2
                 AutoScroll = true,
                 BackColor = Theme.PageBg,
             };
-            foreach (var x in Library)
-                _flow.Controls.Add(new CrosshairCard(x.Name, x.Author, x.Summary(), x.Commands(), Render(x)));
 
             Controls.Add(_flow);
             Controls.Add(hint);
             Controls.Add(title);
+
+            Rebuild();
         }
 
-        // Render the crosshair to a small bitmap for the card. Not CS2's exact geometry — a
-        // faithful-enough preview so you can tell them apart at a glance.
-        private static Bitmap Render(Xhair x)
+        // ---------- library ----------
+
+        private void Rebuild()
         {
-            int box = 96;
-            var bmp = new Bitmap(box, box);
-            using var g = Graphics.FromImage(bmp);
-            g.SmoothingMode = SmoothingMode.None;
-            g.Clear(Color.FromArgb(14, 16, 20));
+            _flow.SuspendLayout();
+            foreach (Control c in _flow.Controls.Cast<Control>().ToList()) c.Dispose();
+            _flow.Controls.Clear();
 
-            int cx = box / 2, cy = box / 2;
-            int len = Math.Clamp((int)Math.Round(x.Size * 5), 4, 40);
-            int thk = Math.Clamp((int)Math.Round(x.Thickness * 3) + 1, 2, 7);
-            int gap = Math.Clamp((int)Math.Round((x.Gap + 4) * 2.5), 0, 34);
-            var col = Color.FromArgb(x.Alpha, x.R, x.G, x.B);
+            _flow.Controls.Add(new AddCard(AddNew));
 
-            void Bar(int rx, int ry, int rw, int rh)
+            // The user's own first — they're the ones being worked on.
+            var mine = _store.Load();
+            for (int i = 0; i < mine.Count; i++)
             {
-                if (x.Outline > 0)
-                    using (var ob = new SolidBrush(Color.FromArgb(230, 0, 0, 0)))
-                        g.FillRectangle(ob, rx - 1, ry - 1, rw + 2, rh + 2);
-                using var b = new SolidBrush(col);
-                g.FillRectangle(b, rx, ry, rw, rh);
+                int index = i;   // capture: the store edits by position
+                _flow.Controls.Add(new CrosshairCard(mine[i],
+                    onEdit: () => EditExisting(index),
+                    onDelete: () => DeleteExisting(index)));
             }
 
-            Bar(cx - gap - len, cy - thk / 2, len, thk);           // left
-            Bar(cx + gap, cy - thk / 2, len, thk);                 // right
-            Bar(cx - thk / 2, cy + gap, thk, len);                 // bottom
-            if (!x.T) Bar(cx - thk / 2, cy - gap - len, thk, len); // top
-            if (x.Dot) Bar(cx - thk / 2, cy - thk / 2, thk, thk);  // center dot
+            foreach (var p in Presets)
+                _flow.Controls.Add(new CrosshairCard(p, null, null));
 
-            return bmp;
+            _flow.ResumeLayout();
         }
 
-        // ===== one crosshair card =====
+        private void AddNew()
+        {
+            using var dlg = new Cs2CrosshairDialog();
+            if (dlg.ShowDialog(FindForm()) != DialogResult.OK) return;
+            _store.Add(dlg.Result);
+            Rebuild();
+        }
+
+        private void EditExisting(int index)
+        {
+            var mine = _store.Load();
+            if (index < 0 || index >= mine.Count) return;
+
+            using var dlg = new Cs2CrosshairDialog(mine[index]);
+            if (dlg.ShowDialog(FindForm()) != DialogResult.OK) return;
+            _store.Replace(index, dlg.Result);
+            Rebuild();
+        }
+
+        private void DeleteExisting(int index)
+        {
+            var mine = _store.Load();
+            if (index < 0 || index >= mine.Count) return;
+
+            bool pl = Localization.IsPolish;
+            var ok = MessageBox.Show(FindForm()!,
+                pl ? $"Usunąć celownik „{mine[index].Name}”?" : $"Delete the crosshair \"{mine[index].Name}\"?",
+                pl ? "Usuwanie" : "Delete",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (ok != DialogResult.Yes) return;
+
+            _store.RemoveAt(index);
+            Rebuild();
+        }
+
+        // ---------- "add your own" tile ----------
+
+        private sealed class AddCard : Panel
+        {
+            private readonly Action _onClick;
+            private bool _hot;
+
+            public AddCard(Action onClick)
+            {
+                _onClick = onClick;
+                Size = new Size(330, 160);
+                Margin = new Padding(0, 0, 16, 16);
+                DoubleBuffered = true;
+                BackColor = Color.Transparent;
+                Cursor = Cursors.Hand;
+
+                Click += (s, e) => _onClick();
+                MouseEnter += (s, e) => { _hot = true; Invalidate(); };
+                MouseLeave += (s, e) => { _hot = false; Invalidate(); };
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                var g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+                var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                using (var p = Round(rect, 16))
+                {
+                    using var bg = new SolidBrush(Color.FromArgb(_hot ? 40 : 24, Theme.Accent));
+                    g.FillPath(bg, p);
+                    using var pen = new Pen(Color.FromArgb(_hot ? 180 : 90, Theme.Accent), 1.6f)
+                    { DashStyle = DashStyle.Dash };
+                    g.DrawPath(pen, p);
+                }
+
+                using var center = new StringFormat
+                {
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center,
+                };
+                using (var pf = new Font("Segoe UI", 34F, FontStyle.Bold))
+                using (var pb = new SolidBrush(Theme.Accent))
+                    g.DrawString("+", pf, pb, new RectangleF(0, 24, Width, 60), center);
+                using (var tf = new Font("Segoe UI", 11F, FontStyle.Bold))
+                using (var tb = new SolidBrush(Theme.TextPrimary))
+                    g.DrawString(Localization.IsPolish ? "WŁASNY CELOWNIK" : "YOUR OWN CROSSHAIR",
+                                 tf, tb, new RectangleF(0, 86, Width, 24), center);
+                using (var sf = new Font("Segoe UI", 8.5F))
+                using (var sb = new SolidBrush(Theme.TextMuted))
+                    g.DrawString(Localization.IsPolish ? "ustaw ręcznie albo wklej ze schowka" : "set it by hand or paste from clipboard",
+                                 sf, sb, new RectangleF(0, 110, Width, 22), center);
+            }
+
+            private static GraphicsPath Round(Rectangle r, int radius)
+            {
+                int d = radius * 2;
+                var p = new GraphicsPath();
+                p.AddArc(r.X, r.Y, d, d, 180, 90);
+                p.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+                p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+                p.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+                p.CloseAllFigures();
+                return p;
+            }
+        }
+
+        // ---------- one crosshair card ----------
+
         private sealed class CrosshairCard : Panel
         {
             private readonly Bitmap _preview;
-            private readonly string _name, _author, _summary, _commands;
+            private readonly CrosshairDef _def;
 
-            public CrosshairCard(string name, string author, string summary, string commands, Bitmap preview)
+            public CrosshairCard(CrosshairDef def, Action? onEdit, Action? onDelete)
             {
-                _name = name; _author = author; _summary = summary; _commands = commands; _preview = preview;
-                Size = new Size(330, 128);
+                _def = def;
+                _preview = CrosshairRenderer.Render(def);
+
+                Size = new Size(330, 160);
                 Margin = new Padding(0, 0, 16, 16);
                 DoubleBuffered = true;
                 BackColor = Color.Transparent;
 
-                var copy = new Button
+                bool pl = Localization.IsPolish;
+
+                // Button row along the bottom, right-aligned.
+                int bx = Width - 16;
+                var copy = Flat(pl ? "KOPIUJ" : "COPY", 96, Theme.Accent, Color.Black);
+                bx -= 96; copy.Location = new Point(bx, Height - 30 - 16);
+                copy.Click += (s, e) => CopyCommands();
+                Controls.Add(copy);
+
+                var cfg = Flat(".CFG", 70, Theme.Surface, Theme.TextPrimary);
+                bx -= 8 + 70; cfg.Location = new Point(bx, Height - 30 - 16);
+                cfg.Click += (s, e) => WriteCfg();
+                Controls.Add(cfg);
+
+                if (onEdit != null)
                 {
-                    Text = Localization.IsPolish ? "KOPIUJ" : "COPY",
-                    Size = new Size(96, 30),
-                    Location = new Point(Width - 96 - 16, Height - 30 - 16),
+                    var edit = Flat(pl ? "EDYTUJ" : "EDIT", 84, Theme.Surface, Theme.TextPrimary);
+                    bx -= 8 + 84; edit.Location = new Point(bx, Height - 30 - 16);
+                    edit.Click += (s, e) => onEdit();
+                    Controls.Add(edit);
+                }
+
+                if (onDelete != null)
+                {
+                    var del = new Button
+                    {
+                        Text = "✕",
+                        Size = new Size(26, 26),
+                        Location = new Point(Width - 26 - 12, 12),
+                        FlatStyle = FlatStyle.Flat,
+                        BackColor = Theme.Surface,
+                        ForeColor = Theme.TextMuted,
+                        Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                        Cursor = Cursors.Hand,
+                    };
+                    del.FlatAppearance.BorderSize = 0;
+                    del.Click += (s, e) => onDelete();
+                    Controls.Add(del);
+                }
+            }
+
+            private static Button Flat(string text, int w, Color back, Color fore)
+            {
+                var b = new Button
+                {
+                    Text = text,
+                    Size = new Size(w, 30),
                     FlatStyle = FlatStyle.Flat,
-                    BackColor = Theme.Accent,
-                    ForeColor = Color.Black,
+                    BackColor = back,
+                    ForeColor = fore,
                     Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                     Cursor = Cursors.Hand,
                 };
-                copy.FlatAppearance.BorderSize = 0;
-                copy.Click += (s, e) => CopyCommands();
-                Controls.Add(copy);
+                b.FlatAppearance.BorderSize = 0;
+                return b;
             }
 
             private void CopyCommands()
             {
+                bool pl = Localization.IsPolish;
                 try
                 {
-                    Clipboard.SetText(_commands);
+                    Clipboard.SetText(_def.Commands());
                     Toast.Show(FindForm() is Control c ? c : this,
-                        Localization.IsPolish ? $"Skopiowano celownik: {_name}" : $"Copied {_name}'s crosshair",
+                        pl ? $"Skopiowano: {_def.Name} — wklej w konsoli i Enter"
+                           : $"Copied {_def.Name} — paste into the console and hit Enter",
                         ToastKind.Success);
                 }
                 catch
                 {
-                    Toast.Show(this, Localization.IsPolish ? "Nie udało się skopiować" : "Copy failed", ToastKind.Info);
+                    Toast.Show(this, pl ? "Nie udało się skopiować" : "Copy failed", ToastKind.Info);
+                }
+            }
+
+            // The guaranteed route: a .cfg in CS2's own cfg folder, run with `exec crosshair`.
+            // No console line-length or paste behaviour to worry about.
+            private void WriteCfg()
+            {
+                bool pl = Localization.IsPolish;
+                var host = FindForm() is Control c ? c : this;
+
+                var csgo = Cs2Install.CsgoDir();
+                if (csgo == null)
+                {
+                    Toast.Show(host, pl ? "Nie znaleziono instalacji CS2" : "CS2 install not found", ToastKind.Info);
+                    return;
+                }
+
+                try
+                {
+                    var dir = Path.Combine(csgo, "cfg");
+                    Directory.CreateDirectory(dir);
+                    File.WriteAllText(Path.Combine(dir, "crosshair.cfg"), _def.ConfigFile());
+                    Toast.Show(host, pl ? "Zapisano — w konsoli: exec crosshair"
+                                        : "Saved — in the console: exec crosshair", ToastKind.Success);
+                }
+                catch (Exception ex)
+                {
+                    Toast.Show(host, (pl ? "Zapis nieudany: " : "Save failed: ") + ex.Message, ToastKind.Info);
                 }
             }
 
@@ -205,13 +345,10 @@ namespace RLHub2
                     g.DrawPath(pen, p);
                 }
 
-                // preview box
                 var pv = new Rectangle(16, 16, 96, 96);
                 using (var pp = Round(pv, 10))
-                {
-                    using var pb = new SolidBrush(Color.FromArgb(14, 16, 20));
+                using (var pb = new SolidBrush(CrosshairRenderer.Backdrop))
                     g.FillPath(pb, pp);
-                }
                 g.DrawImage(_preview, pv);
 
                 using var nameFont = new Font("Segoe UI", 13f, FontStyle.Bold);
@@ -221,10 +358,14 @@ namespace RLHub2
                 using var tm = new SolidBrush(Theme.TextMuted);
                 using var ts = new SolidBrush(Theme.TextSecondary);
 
+                // Leave room for the ✕ so a long name never runs under it.
                 int tx = pv.Right + 16;
-                g.DrawString(_name, nameFont, tp, tx, 18);
-                g.DrawString(_author, authFont, tm, tx, 44);
-                g.DrawString(_summary, sumFont, ts, tx, 64);
+                int tw = Width - tx - (_def.Custom ? 48 : 16);
+                using var clip = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+
+                g.DrawString(_def.Name, nameFont, tp, new RectangleF(tx, 18, tw, 24), clip);
+                g.DrawString(_def.Author, authFont, tm, new RectangleF(tx, 44, tw, 18), clip);
+                g.DrawString(_def.Summary(), sumFont, ts, new RectangleF(tx, 64, tw, 18), clip);
             }
 
             protected override void Dispose(bool disposing)

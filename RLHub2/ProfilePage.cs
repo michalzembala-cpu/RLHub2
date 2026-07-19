@@ -187,7 +187,9 @@ namespace RLHub2
 
             seasonsGrid.Rows.Clear();
             foreach (var s in p.SeasonHistory)
-                seasonsGrid.Rows.Add(s.Season, s.PeakRank, s.PeakMmr.ToString("N0"));
+                // Ballchasing no longer returns ranks, so most matches carry no MMR at all.
+                // A dash says that; "0" reads like a real score.
+                seasonsGrid.Rows.Add(s.Season, s.PeakRank, s.PeakMmr > 0 ? s.PeakMmr.ToString("N0") : "—");
 
             lblPrompt.Visible = false;
             contentLayout.Visible = true;
@@ -196,16 +198,22 @@ namespace RLHub2
         private static void SetRankCard(Controls.StatTile card, Profile p, string mode)
         {
             var rank = p.Ranks.FirstOrDefault(r => r.Mode == mode);
-            if (rank == null)
+
+            // A placeholder rank with no name and no MMR is "we have nothing for this playlist",
+            // not a result — printing "MMR 0" made an empty card look like a real score.
+            bool empty = rank == null
+                         || (string.IsNullOrWhiteSpace(rank.RankName) && rank.Mmr <= 0);
+
+            if (empty)
             {
-                card.Value = "—";
+                card.Value = Localization.IsPolish ? "Brak danych" : "No data";
                 card.Subtitle = "";
                 card.Icon = null;
                 return;
             }
 
-            card.Value = rank.RankName;
-            card.Subtitle = $"MMR {rank.Mmr:N0}";
+            card.Value = string.IsNullOrWhiteSpace(rank!.RankName) ? "—" : rank.RankName;
+            card.Subtitle = rank.Mmr > 0 ? $"MMR {rank.Mmr:N0}" : "";
             card.Icon = RankIcons.GetForRankName(rank.RankName);
         }
     }
