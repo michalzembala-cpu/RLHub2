@@ -38,6 +38,7 @@ namespace RLHub2
 
             // The Designer pinned these at fixed points sized for smaller buttons; lay them out
             // in a row instead so they can't overlap once they grow.
+            StyleDataButtons();
             LayoutDataButtons();
             dataPanel.Resize += (s, e) => LayoutDataButtons();
 
@@ -112,6 +113,39 @@ namespace RLHub2
 
             chart.EmptyTitle = Localization.T("mmr_empty");
             chart.EmptySub = Localization.T("mmr_empty_sub");
+        }
+
+        // The Designer left these as default WinForms buttons — white plates with dark text,
+        // which read as a system dialog dropped onto the dark glass. Match the rest of the app:
+        // the primary action carries the accent, the rest are outlined and quiet.
+        private void StyleDataButtons()
+        {
+            btnFetch.FlatStyle = FlatStyle.Flat;
+            btnFetch.FlatAppearance.BorderSize = 0;
+            btnFetch.BackColor = Theme.Accent;
+            btnFetch.ForeColor = Color.White;
+            btnFetch.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnFetch.Cursor = Cursors.Hand;
+
+            foreach (var b in new[] { btnExport, btnImport, btnFolder })
+            {
+                b.FlatStyle = FlatStyle.Flat;
+                // No border: a 1px outline plus a rounded region clips its own corners and
+                // leaves a broken frame. A filled plate reads cleanly once rounded.
+                b.FlatAppearance.BorderSize = 0;
+                b.FlatAppearance.MouseOverBackColor = Theme.Mix(Theme.SurfaceAlt, Theme.Accent, 0.25f);
+                b.BackColor = Theme.SurfaceAlt;
+                b.ForeColor = Theme.TextSecondary;
+                b.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+                b.Cursor = Cursors.Hand;
+            }
+
+            // Rounded like the cards above them, rather than square system buttons.
+            foreach (var b in new[] { btnFetch, btnExport, btnImport, btnFolder })
+            {
+                ApplyRoundedRegion(b, 8);
+                b.SizeChanged += (s, e) => ApplyRoundedRegion(b, 8);
+            }
         }
 
         private void LayoutDataButtons()
