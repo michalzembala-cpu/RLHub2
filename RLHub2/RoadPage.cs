@@ -152,12 +152,15 @@ namespace RLHub2
                 // soft glow behind current tier
                 if (cur)
                     using (var glow = new SolidBrush(Color.FromArgb(60, accent)))
-                        g.FillEllipse(glow, RectangleF.Inflate(badge, 10, 10));
+                    using (var gp = RoundedSquare(RectangleF.Inflate(badge, 10, 10), 26))
+                        g.FillPath(glow, gp);
 
-                using (var bp = new GraphicsPath())
+                // Rounded square, not a circle: the wider emblems (Grand Champion, Supersonic
+                // Legend) have wings that a circular clip sliced off.
+                using (var bp = RoundedSquare(badge, 20))
                 {
-                    bp.AddEllipse(badge);
-                    using (var wb = new SolidBrush(Color.White)) g.FillPath(wb, bp);
+                    // No white disc behind the icon: the rank art carries its own dark
+                    // background, so the disc only framed each badge in a bright ring.
                     if (icon != null)
                     {
                         g.SetClip(bp);
@@ -184,6 +187,18 @@ namespace RLHub2
                 using (var mb = new SolidBrush(cur ? accent : Theme.TextMuted))
                     g.DrawString($"≥ {Tiers[i].Mmr}", mmrFont, mb, mmrRect, centerTop);
             }
+        }
+
+        private static GraphicsPath RoundedSquare(RectangleF r, float radius)
+        {
+            float d = radius * 2;
+            var p = new GraphicsPath();
+            p.AddArc(r.X, r.Y, d, d, 180, 90);
+            p.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+            p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+            p.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+            p.CloseAllFigures();
+            return p;
         }
     }
 }
