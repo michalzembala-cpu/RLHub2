@@ -18,8 +18,8 @@ namespace RLHub2.Controls
         private List<MmrEntry> _entries = new();
 
         public int CornerRadius { get; set; } = 18;
-        public int YMin { get; set; } = 500;
-        public int YMax { get; set; } = 900;
+        public int YMin { get; set; } = 0;
+        public int YMax { get; set; } = 2000;
         public Color Accent { get; set; } = Color.FromArgb(120, 60, 255);
         public string EmptyTitle { get; set; } = "No data yet";
         public string EmptySub { get; set; } = "Add your first MMR entry below";
@@ -98,12 +98,16 @@ namespace RLHub2.Controls
                 return plot.Bottom - (c - YMin) / (float)(YMax - YMin) * plot.Height;
             }
 
-            // Horizontal grid + Y labels (every 100).
+            // Horizontal grid + Y labels. The step follows the range — a fixed 100 would draw
+            // twenty-odd lines across a 0-2000 axis and bury the curve.
+            int span = Math.Max(1, YMax - YMin);
+            int gridStep = span <= 400 ? 50 : span <= 1000 ? 100 : span <= 2500 ? 250 : 500;
+
             using (var grid = new Pen(Theme.GridLines) { DashStyle = DashStyle.Dash })
             using (var axisFont = new Font("Segoe UI", 8.5f))
             using (var axisBrush = new SolidBrush(Theme.TextMuted))
             {
-                for (int v = YMin; v <= YMax; v += 100)
+                for (int v = YMin; v <= YMax; v += gridStep)
                 {
                     float yy = YOf(v);
                     g.DrawLine(grid, plot.Left, yy, plot.Right, yy);

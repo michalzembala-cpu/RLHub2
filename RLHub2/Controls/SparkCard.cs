@@ -67,8 +67,10 @@ namespace RLHub2.Controls
             if (_values.Length >= 2)
             {
                 var plot = new Rectangle(padX, Height - 56, Width - padX * 2, 42);
-                int min = _values.Min(), max = _values.Max();
-                if (min == max) { min -= 1; max += 1; }
+
+                // Same fixed scale as the full chart, so the sparkline and the MMR page agree
+                // rather than the sparkline silently zooming to whatever it happens to hold.
+                int min = 0, max = 2000;
                 float range = max - min;
                 int n = _values.Length;
 

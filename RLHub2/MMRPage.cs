@@ -156,11 +156,10 @@ namespace RLHub2
             SetRange("MONTH");
         }
 
+        // One scale for every playlist, so curves can be compared at a glance instead of each
+        // mode silently using its own zoom.
         private static (int Min, int Max) RangeForMode(string mode) => mode switch
         {
-            "1v1" => (500, 900),
-            "2v2" => (700, 1100),
-            "3v3" => (500, 900),
             _ => (0, 2000)
         };
 
