@@ -190,14 +190,13 @@ namespace RLHub2.Controls
 
             int padX = 22;
 
-            // Optional rank icon on a white chip at the left.
+            // Optional rank icon at the left. No white chip behind it — the rank art brings its
+            // own dark background, so the chip only ringed every icon in bright white.
             if (Icon != null)
             {
                 int bs = Math.Min(Height - 24, 56);
                 var badge = new Rectangle(16, (Height - bs) / 2, bs, bs);
                 using var bp = RoundedRect(badge, 12);
-                using (var wb = new SolidBrush(Color.White))
-                    g.FillPath(wb, bp);
                 g.SetClip(bp);
                 var inner = Rectangle.Inflate(badge, -6, -6);
                 float ar = Icon.Width / (float)Icon.Height;
