@@ -177,6 +177,20 @@ namespace RLHub2.Services
 
         private void HandleMessage(string json)
         {
+            // Keep the most recent packet on disk. Player counts can't tell Rumble or Hoops from
+            // plain 2v2/3v3, and the only way to know whether the feed names the arena or
+            // playlist is to look at what it actually sends — guessing field names from
+            // documentation has produced wrong data before.
+            try
+            {
+                File.WriteAllText(
+                    Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "RLHub2", "rl_last.json"),
+                    json);
+            }
+            catch { /* diagnostics must never break the feed */ }
+
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
