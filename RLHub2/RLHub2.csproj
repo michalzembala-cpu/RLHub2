@@ -14,8 +14,10 @@
          the app loads those from Resources\ next to the exe, so a single-file build shipped
          without its backdrops. The installer packages the folder anyway, so single-file buys
          nothing here. -->
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- RuntimeIdentifier is deliberately NOT set here: putting it in the project moves every
+         build into bin\Debug\net8.0-windows\win-x64\, so anything launching the familiar path
+         silently runs a stale exe. build-installer.ps1 passes the runtime and self-contained
+         flags at publish time instead, where they belong. -->
   </PropertyGroup>
 
   <ItemGroup>

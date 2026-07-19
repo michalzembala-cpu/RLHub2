@@ -55,7 +55,7 @@ Start-Sleep -Milliseconds 400
 
 Write-Host "Publikuję..." -ForegroundColor Cyan
 if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
-dotnet publish $csproj -c Release -o $publish | Out-Null
+dotnet publish $csproj -c Release -r win-x64 --self-contained true -o $publish | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish nie powiodlo sie" }
 
 # The app loads these from Resources\ next to the exe; without them it starts but has no
