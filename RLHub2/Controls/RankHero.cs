@@ -83,8 +83,11 @@ namespace RLHub2.Controls
 
         private static void DrawIconBadge(Graphics g, Rectangle badge, Image icon)
         {
+            // Dark plate, not white: the rank art has a dark background of its own, and the
+            // aspect-preserving fit below letterboxes it — on white those bars framed every
+            // icon in a bright border.
             using var path = Rounded(badge, 16);
-            using (var wb = new SolidBrush(Color.White))
+            using (var wb = new SolidBrush(Color.FromArgb(18, 20, 27)))
                 g.FillPath(wb, path);
 
             g.SetClip(path);
