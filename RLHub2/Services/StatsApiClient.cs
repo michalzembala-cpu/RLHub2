@@ -37,6 +37,11 @@ namespace RLHub2.Services
 
         public string? DetectedAccount { get; private set; }
 
+        // Mode of the match in progress ("2v2", "Hoops", …), empty when idle or in a menu.
+        // Same logic the logged match uses, so the overlay can show the rating for the playlist
+        // actually being played instead of being pinned to one.
+        public string CurrentMode => DetectedMode();
+
         public bool IsConnected => _connected;
 
         // When listening began — used to scope "this session".
@@ -56,6 +61,14 @@ namespace RLHub2.Services
         private string _lastArena = "";
         private string _lastMatchGuid = "";
         private string _loggedMatchGuid = "";
+
+        // Authoritative result, straight from the feed rather than inferred from goals.
+        //   Game.Teams[].Score gives the real per-team score even after players leave;
+        //   MatchEnded.WinnerTeamNum names the winner outright — the only thing that gets a
+        //   forfeit right, where summed player goals do not (the loser can be ahead on goals,
+        //   and quitters vanish from the Players array so their goals stop counting).
+        private readonly Dictionary<int, int> _teamScores = new();
+        private int? _winnerTeam;
 
         private StatsApiClient() { }
 
@@ -112,6 +125,8 @@ namespace RLHub2.Services
                 _players.Clear();
                 _checkedNames.Clear();
                 _peakTeamSize.Clear();
+                _teamScores.Clear();
+                _winnerTeam = null;
                 _lastArena = "";
                 if (_running) Sleep(3000);
             }
@@ -214,6 +229,8 @@ namespace RLHub2.Services
                 _players.Clear();
                 _checkedNames.Clear();
                 _peakTeamSize.Clear();
+                _teamScores.Clear();
+                _winnerTeam = null;
                 _lastArena = "";
                 _lastMatchGuid = GetString(data, "match_guid", "MatchGuid", "matchGuid") ?? _lastMatchGuid;
                 return;
@@ -228,6 +245,10 @@ namespace RLHub2.Services
             if (e.Contains("matchended") || e.Contains("match_ended") ||
                 e.Contains("podium") || e.Contains("finished"))
             {
+                // MatchEnded carries the winner outright; PodiumStart does not. Capture it here
+                // so a forfeit is scored by who actually won, not by whoever had more goals.
+                if (TryGetInt(data, out int wt, "WinnerTeamNum", "winner_team_num"))
+                    _winnerTeam = wt;
                 FinishMatch();
                 return;
             }
@@ -284,6 +305,13 @@ namespace RLHub2.Services
             {
                 string arena = GetString(game, "Arena", "arena") ?? "";
                 if (arena.Length > 0) _lastArena = arena;
+
+                // Real per-team score, which survives players leaving (unlike summed goals).
+                if (TryGetProp(game, out var teams, "Teams", "teams") && teams.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var t in teams.EnumerateArray())
+                        _teamScores[GetInt(t, "TeamNum", "team_num", "Team")] = GetInt(t, "Score", "score");
+                }
             }
 
             if (!TryGetProp(data, out var players, "players", "Players")) return;
@@ -384,16 +412,26 @@ namespace RLHub2.Services
             }
 
             int myTeam = me?.Team ?? 0;
-            int mine = teamGoals.TryGetValue(myTeam, out var mg) ? mg : 0;
+
+            // Real team score where the feed reports it (Game.Teams), summed goals only as a
+            // fallback. Goals under-count once a player leaves — they drop out of the array and
+            // take their goals with them.
+            var scoreSource = _teamScores.Count > 0 ? _teamScores : teamGoals;
+            int mine = scoreSource.TryGetValue(myTeam, out var ms) ? ms : 0;
             int opp = 0;
-            foreach (var kv in teamGoals) if (kv.Key != myTeam && kv.Value > opp) opp = kv.Value;
+            foreach (var kv in scoreSource) if (kv.Key != myTeam && kv.Value > opp) opp = kv.Value;
+
+            // Winner from MatchEnded is authoritative — the only source that gets a forfeit right
+            // (the forfeiting side can be ahead on goals). Fall back to the score when no winner
+            // was reported (e.g. logged off a bare PodiumStart).
+            bool won = _winnerTeam.HasValue ? _winnerTeam.Value == myTeam : mine > opp;
 
             var match = new SessionMatch
             {
                 Time = DateTime.Now,
                 Account = acc?.Name ?? "",
                 Mode = DetectedMode(),
-                Won = mine > opp,
+                Won = won,
                 Goals = me?.Goals ?? 0,
                 Saves = me?.Saves ?? 0,
                 Assists = me?.Assists ?? 0,
@@ -412,8 +450,10 @@ namespace RLHub2.Services
 
             _players.Clear();
             _checkedNames.Clear();
-                _peakTeamSize.Clear();
-                _lastArena = "";
+            _peakTeamSize.Clear();
+            _teamScores.Clear();
+            _winnerTeam = null;
+            _lastArena = "";
 
             Post(() => MatchLogged?.Invoke(match));
         }
@@ -454,6 +494,17 @@ namespace RLHub2.Services
             if (v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out int n)) return n;
             if (v.ValueKind == JsonValueKind.String && int.TryParse(v.GetString(), out int m)) return m;
             return 0;
+        }
+
+        // Like GetInt but tells presence apart from a real 0 — needed for WinnerTeamNum, where
+        // team 0 is a valid winner, not "no winner reported".
+        private static bool TryGetInt(JsonElement obj, out int value, params string[] names)
+        {
+            value = 0;
+            if (!TryGetProp(obj, out var v, names)) return false;
+            if (v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out value)) return true;
+            if (v.ValueKind == JsonValueKind.String && int.TryParse(v.GetString(), out value)) return true;
+            return false;
         }
 
         private sealed class PlayerStat

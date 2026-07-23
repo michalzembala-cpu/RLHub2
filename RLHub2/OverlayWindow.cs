@@ -52,15 +52,16 @@ namespace RLHub2
         private const float WinsX = 0.19f, LossX = 0.79f, MmrX = 0.5f, NumY = 0.52f;
         private const float SideH = 0.52f, MmrH = 0.64f;
         private const float StreakX = 0.575f, StreakY = 0.915f, StreakH = 0.11f;
+        // Small playlist tag in the gap between the baked "MMR" label and the number.
+        private const float ModeX = 0.5f, ModeY = 0.235f, ModeH = 0.075f;
 
         private static readonly Color Green = Color.FromArgb(60, 230, 110);
         private static readonly Color Red = Color.FromArgb(240, 60, 75);
         private static readonly Color Purple = Color.FromArgb(150, 90, 255);
         private static readonly Color Muted = Color.FromArgb(150, 160, 195);
 
-        // The overlay tracks one playlist — showing whichever match happened to be last mixed
-        // 2v2 and 3v3 into the same number, which are different ratings entirely.
-        private const string MmrMode = "2v2";
+        // Fallback when we have nothing else to go on (never played this session, no MMR typed).
+        private const string DefaultMode = "2v2";
         private static readonly TimeSpan StaleAfter = TimeSpan.FromDays(7);
 
         private readonly SessionStore _store = new();
@@ -72,6 +73,7 @@ namespace RLHub2
         private int _wins, _losses, _streak;
         private int _mmr;
         private bool _hasMmr, _mmrStale;
+        private string _mode = DefaultMode;
         private Image? _rankIcon;
 
         private bool _dragging;
@@ -166,13 +168,17 @@ namespace RLHub2
                 _streak = last ? c : -c;
             }
 
+            // Follow the playlist actually being played, not a hardcoded 2v2 — each mode has its
+            // own rating, so pinning it to 2v2 showed the wrong number in every other mode.
+            _mode = ActiveMode(account, session);
+
             // MMR comes from the MMR tab, not from ballchasing. Ballchasing stopped returning
             // player ranks (verified: no replay uploaded after ~April has rank data, not even
             // other people's), and rank was the only thing we could approximate MMR from — so
             // the ballchasing value would be frozen at whatever it was months ago. Entries typed
             // in by hand land in the same store, so whatever you enter shows up here.
             var points = _mmrStore.LoadFor(account)
-                .Where(e => e.Mode == MmrMode && e.Value > 0)
+                .Where(e => e.Mode == _mode && e.Value > 0)
                 .OrderBy(e => e.Timestamp).ToList();
 
             _hasMmr = points.Count > 0;
@@ -187,6 +193,28 @@ namespace RLHub2
                 _rankIcon = RankIcons.Get(RankMmr.TierName(_mmr));
             }
             else { _mmr = 0; _rankIcon = null; _mmrStale = false; }
+        }
+
+        // Which playlist the MMR is for, in priority order:
+        //   1. the match in progress right now (the game is feeding it live),
+        //   2. the last match of this session (just finished a game, back in the menu),
+        //   3. the playlist whose MMR you most recently touched (nothing played yet this run),
+        //   4. 2v2, so there is always something to show.
+        private string ActiveMode(string account, System.Collections.Generic.List<Models.SessionMatch> session)
+        {
+            string live = _client.CurrentMode;
+            if (live.Length > 0) return live;
+
+            for (int i = session.Count - 1; i >= 0; i--)
+                if (session[i].Mode.Length > 0) return session[i].Mode;
+
+            var last = _mmrStore.LoadFor(account)
+                .Where(e => e.Value > 0)
+                .OrderByDescending(e => e.Timestamp)
+                .FirstOrDefault();
+            if (last != null && last.Mode.Length > 0) return last.Mode;
+
+            return DefaultMode;
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -232,6 +260,7 @@ namespace RLHub2
             var mmrTop = _mmrStale ? Color.FromArgb(150, 155, 175) : Color.FromArgb(130, 160, 255);
             var mmrBottom = _mmrStale ? Color.FromArgb(95, 100, 120) : Color.FromArgb(175, 95, 255);
             DrawNumber(g, mmrText, MmrX, NumY, MmrH, mmrTop, mmrBottom, center, false);
+            DrawModeTag(g, ModeX, ModeY, Height * ModeH, center);
 
             DrawNumber(g, _losses.ToString(), LossX, NumY, SideH, Color.FromArgb(255, 130, 140), Red, center, false);
 
@@ -239,6 +268,25 @@ namespace RLHub2
             var streakColor = _streak > 0 ? Green : _streak < 0 ? Red : Color.FromArgb(200, 200, 220);
             DrawNumber(g, streakVal, StreakX, StreakY, StreakH, streakColor, streakColor, center, false);
         }
+
+        // Small "3V3" / "HOOPS" tag so it is always clear which playlist the MMR belongs to.
+        private void DrawModeTag(Graphics g, float cxF, float cyF, float px, StringFormat center)
+        {
+            string label = ModeLabel(_mode);
+            if (label.Length == 0) return;
+            using var font = new Font("Segoe UI", Math.Max(8f, px), FontStyle.Bold, GraphicsUnit.Pixel);
+            var color = _mmrStale ? Color.FromArgb(150, 150, 165) : Color.FromArgb(190, 175, 255);
+            using var br = new SolidBrush(color);
+            g.DrawString(label, font, br, Width * cxF, Height * cyF, center);
+        }
+
+        private static string ModeLabel(string mode) => mode switch
+        {
+            "1v1" => "1V1",
+            "2v2" => "2V2",
+            "3v3" => "3V3",
+            _ => mode.ToUpperInvariant(),
+        };
 
         private void DrawNumber(Graphics g, string text, float cxF, float cyF, float hF,
             Color top, Color bottom, StringFormat center, bool mask)
@@ -289,7 +337,8 @@ namespace RLHub2
 
             DrawGem(g, new RectangleF(Width / 2f - 20, 4, 40, 40));
 
-            DrawLabel(g, "M M R", labelFont, Color.FromArgb(190, 170, 255), new RectangleF(Width / 2f - 118, 48, 236, 20), center);
+            string mmrLabel = ModeLabel(_mode) is { Length: > 0 } m ? $"MMR · {m}" : "MMR";
+            DrawLabel(g, mmrLabel, labelFont, Color.FromArgb(190, 170, 255), new RectangleF(Width / 2f - 118, 48, 236, 20), center);
             string mmrText = _hasMmr ? _mmr.ToString() : "—";
             DrawBigNumber(g, mmrText, bigMid, new RectangleF(Width / 2f - 118, 66, 236, 96), Color.FromArgb(120, 150, 255), Color.FromArgb(170, 90, 255), center);
 
