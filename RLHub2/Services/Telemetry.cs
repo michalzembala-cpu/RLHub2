@@ -20,7 +20,7 @@ namespace RLHub2.Services
     {
         // Paste the Aptabase App Key here — it looks like "A-EU-1234567890" (the region is part of
         // the key). Leave empty to keep telemetry fully off for everyone, regardless of consent.
-        private const string AppKey = "";
+        private const string AppKey = "A-EU-8734560932";
 
         private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(10) };
         private static bool _enabled;
