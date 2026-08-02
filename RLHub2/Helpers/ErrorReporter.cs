@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,24 +31,57 @@ namespace RLHub2.Helpers
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
                 Handle(e.ExceptionObject as Exception, fatal: true);
 
-            // Faulted tasks nobody awaited: log only, never interrupt the user.
+            // Faulted tasks nobody awaited: log only, never interrupt the user — but not the
+            // background socket that fails every few seconds while the game is closed. That is
+            // expected, not a fault, and it buried the log (2504 identical stacks in one run).
             TaskScheduler.UnobservedTaskException += (s, e) =>
             {
-                Log(e.Exception);
+                if (!IsBenignNetwork(e.Exception)) Log(e.Exception);
                 e.SetObserved();
             };
         }
+
+        // A dropped/refused connection is normal when the game isn't running. Don't treat it as
+        // a crash worth recording.
+        private static bool IsBenignNetwork(Exception? ex) => ex switch
+        {
+            null => false,
+            AggregateException agg => agg.InnerExceptions.Count > 0 && agg.InnerExceptions.All(IsBenignNetwork),
+            System.Net.Sockets.SocketException => true,
+            IOException io => IsBenignNetwork(io.InnerException),
+            ObjectDisposedException => true,
+            _ => false,
+        };
+
+        private const long MaxLogBytes = 1_000_000;   // ~1 MB; past that, the tail is all that helps
 
         public static void Log(Exception? ex)
         {
             if (ex == null) return;
             try
             {
+                RollIfTooBig();
                 File.AppendAllText(LogPath,
                     $"===== {DateTime.Now:yyyy-MM-dd HH:mm:ss} ====={Environment.NewLine}" +
                     Describe(ex) + Environment.NewLine + Environment.NewLine);
             }
             catch { /* logging must never throw */ }
+        }
+
+        // Keep the log from growing without bound: once it crosses the cap, move it aside to
+        // errors.old.log (one generation) and start fresh, so the newest crashes are never lost
+        // behind megabytes of history.
+        private static void RollIfTooBig()
+        {
+            try
+            {
+                var fi = new FileInfo(LogPath);
+                if (!fi.Exists || fi.Length < MaxLogBytes) return;
+                var old = LogPath + ".old";
+                if (File.Exists(old)) File.Delete(old);
+                File.Move(LogPath, old);
+            }
+            catch { /* best effort */ }
         }
 
         public static void OpenLog()
@@ -82,7 +116,7 @@ namespace RLHub2.Helpers
             var sb = new StringBuilder();
             var ver = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "?";
 
-            sb.AppendLine($"RL Hub 2  v{ver}");
+            sb.AppendLine($"NexPlay  v{ver}");
             sb.AppendLine($"Time:  {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             sb.AppendLine($"OS:    {Environment.OSVersion}  ({(Environment.Is64BitProcess ? "x64" : "x86")})");
             sb.AppendLine($".NET:  {Environment.Version}");

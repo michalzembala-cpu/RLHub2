@@ -97,6 +97,13 @@ namespace RLHub2.Services
             Post(() => ConnectionChanged?.Invoke(v));
         }
 
+        // Swallow a task's eventual fault without logging it — for connect attempts we've already
+        // given up on, whose failure is expected and uninteresting.
+        private static void ObserveQuietly(System.Threading.Tasks.Task t) =>
+            t.ContinueWith(x => { _ = x.Exception; },
+                System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted |
+                System.Threading.Tasks.TaskContinuationOptions.ExecuteSynchronously);
+
         private void RunLoop()
         {
             while (_running)
@@ -104,14 +111,18 @@ namespace RLHub2.Services
                 try
                 {
                     using var client = new TcpClient();
-                    var ar = client.BeginConnect(Host, Port, null, null);
-                    if (!ar.AsyncWaitHandle.WaitOne(2000) || !client.Connected)
+                    var connect = client.ConnectAsync(Host, Port);
+
+                    // On timeout the connect task is still pending; disposing the client below
+                    // faults it, and an unobserved fault gets logged as a crash. Observe it so a
+                    // plain "the game isn't running" never reaches errors.log.
+                    if (!connect.Wait(2000) || !client.Connected)
                     {
+                        ObserveQuietly(connect);
                         SetConnected(false);
                         Sleep(3000);
                         continue;
                     }
-                    client.EndConnect(ar);
                     SetConnected(true);
 
                     using var stream = client.GetStream();
@@ -119,7 +130,9 @@ namespace RLHub2.Services
                 }
                 catch
                 {
-                    // fall through to reconnect
+                    // Connection refused (game closed), reset by peer, etc. — all expected; the
+                    // loop just reconnects. Wait() above already observed the fault, so nothing
+                    // leaks to the unobserved-task handler.
                 }
                 SetConnected(false);
                 _players.Clear();
