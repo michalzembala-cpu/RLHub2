@@ -66,6 +66,10 @@ namespace RLHub2.Helpers
                     Describe(ex) + Environment.NewLine + Environment.NewLine);
             }
             catch { /* logging must never throw */ }
+
+            // Only the exception TYPE goes to telemetry — never the message or stack, which can
+            // carry file paths or nicks. Opt-in and fire-and-forget; a no-op if not enabled.
+            try { Services.Telemetry.Track("error", new() { ["type"] = ex.GetType().Name }); } catch { }
         }
 
         // Keep the log from growing without bound: once it crosses the cap, move it aside to

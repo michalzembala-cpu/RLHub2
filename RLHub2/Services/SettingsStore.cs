@@ -24,6 +24,8 @@ namespace RLHub2.Services
         public List<Account> Accounts { get; set; } = new();
         public string ActiveAccount { get; set; } = "";
 
+        public string Telemetry { get; set; } = ""; // "", "yes", "no" — anonymous opt-in usage stats
+
         // Show the "Who's playing?" picker on launch (only ever asked when there is >1 account).
         public bool AskProfileOnStart { get; set; } = true;
 
@@ -128,6 +130,17 @@ namespace RLHub2.Services
             return Load().Language?.ToLowerInvariant() == "en"
                 ? AppLanguage.English
                 : AppLanguage.Polish;
+        }
+
+        // Telemetry consent: "" = never asked, "yes" = opted in, "no" = declined.
+        public string LoadTelemetryConsent() => Load().Telemetry ?? "";
+        public bool TelemetryEnabled => LoadTelemetryConsent() == "yes";
+        public bool TelemetryAsked => LoadTelemetryConsent().Length > 0;
+        public void SaveTelemetryConsent(bool on)
+        {
+            var cfg = Load();
+            cfg.Telemetry = on ? "yes" : "no";
+            Save(cfg);
         }
 
         public void SaveLanguage(AppLanguage lang)

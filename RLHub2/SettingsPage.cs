@@ -36,6 +36,16 @@ namespace RLHub2
             txtUpdRepo.Text = _store.LoadUpdateRepo();
             chkAutoUpd.Checked = _store.LoadAutoCheckUpdates();
             chkAutoUpd.CheckedChanged += (s, e) => _store.SaveAutoCheckUpdates(chkAutoUpd.Checked);
+
+            // Telemetry: hide the whole card when no key is compiled in, so there's never a toggle
+            // that does nothing. Flipping it takes effect immediately (re-inits the sender).
+            privPanel.Visible = Telemetry.IsAvailable;
+            chkTelemetry.Checked = _store.TelemetryEnabled;
+            chkTelemetry.CheckedChanged += (s, e) =>
+            {
+                _store.SaveTelemetryConsent(chkTelemetry.Checked);
+                Telemetry.Init();
+            };
             btnCheckUpd.Click += async (s, e) => await CheckUpdates();
             btnInstallUpd.Click += async (s, e) => await InstallUpdate();
 
@@ -251,6 +261,8 @@ namespace RLHub2
                     lblGameHint.MaximumSize = new Size(w - 40, 0);
                     lblUpdHint.MaximumSize = new Size(w - 40, 0);
                     lblUpdStatus.MaximumSize = new Size(w - 40, 0);
+                    lblPrivHint.MaximumSize = new Size(w - 40, 0);
+                    chkTelemetry.MaximumSize = new Size(w - 40, 0);
                     chkAutoUpd.MaximumSize = new Size(w - 40, 0);
 
                     flow.PerformLayout();
@@ -317,6 +329,13 @@ namespace RLHub2
             chkAutoUpd.Text = Localization.IsPolish
                 ? "Sprawdzaj aktualizacje przy starcie"
                 : "Check for updates on startup";
+            lblPriv.Text = Localization.IsPolish ? "STATYSTYKI" : "STATISTICS";
+            lblPrivHint.Text = Localization.IsPolish
+                ? "Anonimowe statystyki użycia, które pomagają ulepszać aplikację"
+                : "Anonymous usage stats to help improve the app";
+            chkTelemetry.Text = Localization.IsPolish
+                ? "Wysyłaj anonimowe statystyki"
+                : "Send anonymous usage stats";
             lblBc.Text = Localization.IsPolish ? "KLUCZ API BALLCHASING" : "BALLCHASING API KEY";
             lblBcHint.Text = Localization.IsPolish
                 ? "Darmowy klucz na ballchasing.com/upload → Settings. Dodaje historię meczów z Twoich powtórek."

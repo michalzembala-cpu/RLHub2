@@ -18,6 +18,17 @@ namespace RLHub2
 
             var store = new SettingsStore();
 
+            // Ask once, up front, before any usage happens — and only when a telemetry key is
+            // actually compiled in. Opt-in: no key or no consent means nothing is ever sent.
+            if (Telemetry.IsAvailable && !store.TelemetryAsked)
+            {
+                using var consent = new TelemetryConsentDialog();
+                consent.ShowDialog();
+                store.SaveTelemetryConsent(consent.Consent);
+            }
+            Telemetry.Init();
+            Telemetry.Track("app_started");
+
             // Game first, then who you are: "which game" decides which pages exist, and only
             // Rocket League has profiles to choose between.
             bool picked = false;

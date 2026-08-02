@@ -46,6 +46,10 @@ namespace RLHub2
         private Button btnAddProfile;
         private CheckBox chkAskProfile;
 
+        private Panel privPanel;
+        private Label lblPriv;
+        private Label lblPrivHint;
+        private CheckBox chkTelemetry;
         private Panel bcPanel;
         private Label lblBc;
         private Label lblBcHint;
@@ -88,6 +92,10 @@ namespace RLHub2
             btnProfile = new Button();
             btnAddProfile = new Button();
             chkAskProfile = new CheckBox();
+            privPanel = new Panel();
+            lblPriv = new Label();
+            lblPrivHint = new Label();
+            chkTelemetry = new CheckBox();
             bcPanel = new Panel();
             lblBc = new Label();
             lblBcHint = new Label();
@@ -181,6 +189,17 @@ namespace RLHub2
             updPanel.Controls.AddRange(new Control[]
                 { lblUpd, lblUpdHint, txtUpdRepo, btnCheckUpd, lblUpdStatus, btnInstallUpd, chkAutoUpd });
 
+            // ===== STATISTICS (opt-in telemetry) =====
+            Card(privPanel, panelColor, 130);
+            SectionTitle(lblPriv, "STATISTICS");
+            Hint(lblPrivHint, "Anonymous usage stats to help improve the app");
+            chkTelemetry.Location = new Point(20, 78);
+            chkTelemetry.AutoSize = true;
+            chkTelemetry.ForeColor = Theme.TextSecondary;
+            chkTelemetry.Font = new Font("Segoe UI", 9.5F);
+            chkTelemetry.Cursor = Cursors.Hand;
+            privPanel.Controls.AddRange(new Control[] { lblPriv, lblPrivHint, chkTelemetry });
+
             // ===== LANGUAGE =====
             Card(langPanel, panelColor, 134);
             SectionTitle(lblLanguage, "LANGUAGE");
@@ -272,7 +291,7 @@ namespace RLHub2
 
             bcPanel.Controls.AddRange(new Control[] { lblBc, lblBcHint, txtBcKey, btnTestBc, lblBcStatus, chkDeleteOld });
 
-            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, keyPanel, langPanel, themePanel, accentPanel, updPanel, bcPanel });
+            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, keyPanel, langPanel, themePanel, accentPanel, updPanel, privPanel, bcPanel });
             this.Controls.Add(flow);
 
             ResumeLayout(false);

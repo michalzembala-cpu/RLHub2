@@ -245,6 +245,7 @@ namespace RLHub2
             SetActive(button);
             SwitchPage(factory());
             _store.SaveLastPage(key);
+            Services.Telemetry.Track("page_opened", new() { ["page"] = key });
         }
 
         private void OnLanguageChanged()
