@@ -256,11 +256,6 @@ PacketSendRate=10</pre>
       </div></div>
 
       <div class="step"><div class="num">4</div><div>
-        <h3>Player profiles — tracker.gg <span class="opt">optional</span> <span class="tag rl">Rocket League</span></h3>
-        <p>Only needed for looking up player profiles. Grab a free key at <code>tracker.gg/developers</code> and paste it in NexPlay under <b>Settings</b>.</p>
-      </div></div>
-
-      <div class="step"><div class="num">5</div><div>
         <h3>Counter-Strike 2 <span class="tag cs">CS2</span></h3>
         <p>Nothing to set up. NexPlay writes the Game State Integration config for you the first time it detects CS2 — just launch NexPlay, start the game and play.</p>
       </div></div>
@@ -297,7 +292,7 @@ PacketSendRate=10</pre>
       <details open><summary>Is NexPlay free?</summary><p>Yes, completely. No account and no payment required.</p></details>
       <details><summary>Can I get banned for using it?</summary><p>NexPlay only reads data — it doesn't modify either game or inject any code. CS2 uses Valve's official Game State Integration. Rocket League uses the game's own built-in match stats exporter, switched on with a config file — no third-party mod. Even so, no external tool can promise anything with total certainty, so use it at your own discretion.</p></details>
       <details><summary>Where does MMR come from if the game doesn't expose it?</summary><p>Rocket League doesn't publish MMR through any official API. So NexPlay derives it from match results (±9 per win/loss) and lets you enter a starting value by hand — rather than showing made-up numbers.</p></details>
-      <details><summary>Is any of my data sent anywhere?</summary><p>Your stats stay on your PC (in the app's folder under %LocalAppData%). NexPlay reaches the internet only to check GitHub for updates and — if you add the keys yourself — to fetch your own data from Ballchasing and tracker.gg. Nothing is uploaded to any server of ours.</p></details>
+      <details><summary>Is any of my data sent anywhere?</summary><p>Your stats stay on your PC (in the app's folder under %LocalAppData%). NexPlay reaches the internet only to check GitHub for updates and — if you add a Ballchasing key yourself — to fetch your own match history. Nothing is uploaded to any server of ours.</p></details>
       <details><summary>Do I need .NET installed?</summary><p>No. The installer is self-contained — it includes everything it needs.</p></details>
       <details><summary>Does the game need to be running?</summary><p>For live data (overlay, match result) yes. Previously collected stats and the tools (crosshairs, commands) work any time.</p></details>
       <details><summary>How do updates work?</summary><p>The app checks GitHub for the latest release and can download and install it — you don't have to find files by hand.</p></details>
