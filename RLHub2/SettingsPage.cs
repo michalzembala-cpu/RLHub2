@@ -325,8 +325,8 @@ namespace RLHub2
                 : "Check for updates on startup";
             lblBc.Text = Localization.IsPolish ? "KLUCZ API BALLCHASING" : "BALLCHASING API KEY";
             lblBcHint.Text = Localization.IsPolish
-                ? "Darmowy klucz na ballchasing.com/upload → Settings. Daje prawdziwe mecze, rangi i automatyczne MMR."
-                : "Free key at ballchasing.com/upload → Settings. Enables real matches, ranks and auto MMR.";
+                ? "Darmowy klucz na ballchasing.com/upload → Settings. Dodaje historię meczów z Twoich powtórek."
+                : "Free key at ballchasing.com/upload → Settings. Adds match history from your replays.";
             btnSaveKey.Text = Localization.T("settings_save");
 
             segLanguage.SetOptions(new[] { "Polski", "English" });
