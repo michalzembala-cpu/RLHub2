@@ -89,10 +89,10 @@
   /* screenshots */
   .shots{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
   @media(max-width:800px){ .shots{grid-template-columns:1fr} }
-  .ph{aspect-ratio:16/10; border-radius:var(--radius); border:1px dashed var(--line);
-    background:linear-gradient(135deg,var(--surface),var(--bg2)); display:grid; place-items:center; text-align:center; color:var(--muted2); padding:20px}
-  .ph span{font-size:13px}
-  .ph .big{font-size:15px; color:var(--muted); font-weight:600; margin-bottom:4px}
+  .shot-card{margin:0; border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); background:var(--surface); transition:.15s}
+  .shot-card:hover{border-color:var(--muted2); transform:translateY(-3px)}
+  .shot-card img{display:block; width:100%; aspect-ratio:16/10; object-fit:cover; object-position:top center}
+  .shot-card figcaption{padding:13px 16px; font-size:14px; color:var(--muted); font-weight:600}
 
   /* changelog */
   .log{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:26px 28px}
@@ -204,11 +204,11 @@
   <div class="wrap">
     <p class="eyebrow">Zrzuty ekranu</p>
     <h2>Jak to wygląda</h2>
-    <p class="sub">Wrzuć własne zrzuty do <code>docs/img</code> i podmień te ramki — poniżej gotowe miejsca.</p>
+    <p class="sub">Prawdziwe ekrany z aplikacji — ciemny, spójny interfejs dla obu gier.</p>
     <div class="shots">
-      <div class="ph"><div><div class="big">Pulpit / MMR</div><span>docs/img/shot-home.png</span></div></div>
-      <div class="ph"><div><div class="big">Overlay na żywo</div><span>docs/img/shot-overlay.png</span></div></div>
-      <div class="ph"><div><div class="big">Celowniki CS2</div><span>docs/img/shot-crosshair.png</span></div></div>
+      <figure class="shot-card"><img src="img/shot-home.png" alt="Pulpit z rangą i MMR"><figcaption>Pulpit — ranga, MMR i sezon</figcaption></figure>
+      <figure class="shot-card"><img src="img/shot-overlay.png" alt="Tracker sesji z overlayem na żywo"><figcaption>Tracker sesji + overlay na żywo</figcaption></figure>
+      <figure class="shot-card"><img src="img/shot-crosshair.png" alt="Biblioteka celowników CS2"><figcaption>Biblioteka celowników CS2</figcaption></figure>
     </div>
   </div>
 </section>
