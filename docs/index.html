@@ -94,6 +94,18 @@
   .shot-card img{display:block; width:100%; aspect-ratio:16/10; object-fit:cover; object-position:top center}
   .shot-card figcaption{padding:13px 16px; font-size:14px; color:var(--muted); font-weight:600}
 
+  /* setup steps */
+  .steps{display:grid; gap:16px}
+  .step{display:grid; grid-template-columns:auto 1fr; gap:20px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px 24px}
+  .step .num{width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-weight:800; font-size:16px; color:#160d02; background:linear-gradient(135deg,var(--orange),#ff7a2e)}
+  .step h3{margin:0 0 6px; font-size:17px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .step p{margin:0 0 10px; color:var(--muted); font-size:14.5px}
+  .step p:last-child{margin-bottom:0}
+  .step code{background:var(--bg2); border:1px solid var(--line); border-radius:6px; padding:2px 7px; font-size:13px; color:var(--text)}
+  .step pre{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:13px 16px; overflow-x:auto; margin:10px 0 0; font-size:13px; line-height:1.5; color:var(--text)}
+  .step .opt{font-size:10.5px; font-weight:700; letter-spacing:.5px; color:var(--muted2); border:1px solid var(--line); border-radius:20px; padding:2px 9px; text-transform:uppercase}
+  @media(max-width:600px){ .step{grid-template-columns:1fr} .step .num{display:none} }
+
   /* changelog */
   .log{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:26px 28px}
   .log .ver{display:flex; align-items:baseline; gap:12px; margin-bottom:14px}
@@ -131,6 +143,7 @@
     <a class="brand" href="#top"><img class="logo" src="img/game_rl.jpg" alt=""><span>Nex<b>Play</b></span></a>
     <nav class="links">
       <a href="#features">Features</a>
+      <a href="#setup">Setup</a>
       <a href="#screenshots">Screenshots</a>
       <a href="#changelog">Changelog</a>
       <a href="#faq">FAQ</a>
@@ -213,6 +226,49 @@
   </div>
 </section>
 
+<!-- SETUP -->
+<section id="setup">
+  <div class="wrap">
+    <p class="eyebrow">Getting started</p>
+    <h2>Set it up in a few minutes</h2>
+    <p class="sub">The app runs the moment you install it — these steps switch on the live and history features.</p>
+    <div class="steps">
+
+      <div class="step"><div class="num">1</div><div>
+        <h3>Install NexPlay</h3>
+        <p>Download the installer and run it. No account, no .NET — it's self-contained. Then add your in-game name as a profile in <b>Settings → Add profile</b>.</p>
+      </div></div>
+
+      <div class="step"><div class="num">2</div><div>
+        <h3>Rocket League — live stats <span class="tag rl">Rocket League</span></h3>
+        <p>Turns on the session tracker, the overlay and the ±9 MMR chart. Rocket League has a built-in stats exporter you switch on with one small config file — no mod, nothing injected.</p>
+        <p>Close Rocket League, then create or edit this file:</p>
+        <pre>Documents\My Games\Rocket League\TAGame\Config\TAStatsAPI.ini</pre>
+        <p>Put exactly this inside, save it, and start the game:</p>
+        <pre>[TAGame.MatchStatsExporter_TA]
+Port=49123
+PacketSendRate=10</pre>
+      </div></div>
+
+      <div class="step"><div class="num">3</div><div>
+        <h3>Match history — Ballchasing <span class="tag rl">Rocket League</span></h3>
+        <p>Pulls your recent matches from your uploaded replays. Open <code>ballchasing.com/upload</code> → <b>Settings</b>, copy your free API key, then paste it in NexPlay under <b>Settings → Ballchasing</b> and click <b>Test</b>.</p>
+      </div></div>
+
+      <div class="step"><div class="num">4</div><div>
+        <h3>Player profiles — tracker.gg <span class="opt">optional</span> <span class="tag rl">Rocket League</span></h3>
+        <p>Only needed for looking up player profiles. Grab a free key at <code>tracker.gg/developers</code> and paste it in NexPlay under <b>Settings</b>.</p>
+      </div></div>
+
+      <div class="step"><div class="num">5</div><div>
+        <h3>Counter-Strike 2 <span class="tag cs">CS2</span></h3>
+        <p>Nothing to set up. NexPlay writes the Game State Integration config for you the first time it detects CS2 — just launch NexPlay, start the game and play.</p>
+      </div></div>
+
+    </div>
+  </div>
+</section>
+
 <!-- CHANGELOG -->
 <section id="changelog" style="background:var(--bg2)">
   <div class="wrap">
@@ -239,9 +295,9 @@
     <h2>Frequently asked questions</h2>
     <div class="faq" style="margin-top:30px">
       <details open><summary>Is NexPlay free?</summary><p>Yes, completely. No account and no payment required.</p></details>
-      <details><summary>Can I get banned for using it?</summary><p>NexPlay only reads data — it doesn't modify the game or inject any code. On CS2 it uses Valve's official Game State Integration. Rocket League data comes from a local stats plugin (the community BakkesMod). The app itself changes nothing in-game — but the RL integration isn't controlled by Valve/Epic, so I can't give an absolute guarantee.</p></details>
+      <details><summary>Can I get banned for using it?</summary><p>NexPlay only reads data — it doesn't modify either game or inject any code. CS2 uses Valve's official Game State Integration. Rocket League uses the game's own built-in match stats exporter, switched on with a config file — no third-party mod. Even so, no external tool can promise anything with total certainty, so use it at your own discretion.</p></details>
       <details><summary>Where does MMR come from if the game doesn't expose it?</summary><p>Rocket League doesn't publish MMR through any official API. So NexPlay derives it from match results (±9 per win/loss) and lets you enter a starting value by hand — rather than showing made-up numbers.</p></details>
-      <details><summary>Is any of my data sent anywhere?</summary><p>No. Everything is saved locally on your PC (in the app's folder under %LocalAppData%). The app only talks to GitHub to check for updates.</p></details>
+      <details><summary>Is any of my data sent anywhere?</summary><p>Your stats stay on your PC (in the app's folder under %LocalAppData%). NexPlay reaches the internet only to check GitHub for updates and — if you add the keys yourself — to fetch your own data from Ballchasing and tracker.gg. Nothing is uploaded to any server of ours.</p></details>
       <details><summary>Do I need .NET installed?</summary><p>No. The installer is self-contained — it includes everything it needs.</p></details>
       <details><summary>Does the game need to be running?</summary><p>For live data (overlay, match result) yes. Previously collected stats and the tools (crosshairs, commands) work any time.</p></details>
       <details><summary>How do updates work?</summary><p>The app checks GitHub for the latest release and can download and install it — you don't have to find files by hand.</p></details>
