@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NexPlay — statystyki i narzędzia do Rocket League i CS2</title>
+<meta name="description" content="NexPlay to darmowa aplikacja na Windows dla graczy Rocket League i CS2: śledzenie MMR, overlay na żywo, biblioteka celowników, statystyki per mapa i komendy treningowe.">
+<link rel="icon" href="img/game_rl.jpg">
+<style>
+  :root{
+    --bg:#0F1115; --bg2:#0b0d11; --surface:#171B22; --surface2:#1d222b;
+    --line:#272d38; --text:#e8ebf1; --muted:#9aa4b6; --muted2:#6b7486;
+    --orange:#FF9D2E; --blue:#3d8bff; --purple:#8b5cff;
+    --radius:16px; --max:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit; text-decoration:none}
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 22px}
+  section{padding:74px 0}
+  h2{font-size:clamp(26px,4vw,36px); margin:0 0 6px; letter-spacing:-.5px}
+  .sub{color:var(--muted); margin:0 0 34px; font-size:16px}
+  .eyebrow{color:var(--orange); font-weight:700; letter-spacing:2px; font-size:12px; text-transform:uppercase; margin:0 0 10px}
+
+  /* nav */
+  header{position:sticky; top:0; z-index:20; background:rgba(15,17,21,.82);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
+  .nav{display:flex; align-items:center; gap:18px; height:62px}
+  .brand{display:flex; align-items:center; gap:11px; font-weight:800; font-size:19px; letter-spacing:-.3px}
+  .logo{width:30px; height:30px; border-radius:8px; object-fit:cover; box-shadow:0 0 0 1px var(--line)}
+  .brand b{background:linear-gradient(90deg,var(--blue),var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .nav .links{display:flex; gap:22px; margin-left:auto; font-size:14px; color:var(--muted)}
+  .nav .links a:hover{color:var(--text)}
+  .nav .cta{margin-left:22px}
+  @media(max-width:720px){ .nav .links{display:none} .nav .cta{margin-left:auto} }
+
+  .btn{display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:15px;
+    padding:12px 20px; border-radius:12px; border:1px solid transparent; cursor:pointer; transition:.15s}
+  .btn-primary{background:linear-gradient(90deg,var(--orange),#ff7a2e); color:#160d02; box-shadow:0 8px 26px -10px var(--orange)}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-ghost{background:var(--surface); border-color:var(--line); color:var(--text)}
+  .btn-ghost:hover{border-color:var(--muted2)}
+  .btn.sm{padding:9px 15px; font-size:14px}
+
+  /* hero */
+  .hero{position:relative; overflow:hidden; border-bottom:1px solid var(--line)}
+  .hero:before{content:""; position:absolute; inset:0;
+    background:radial-gradient(900px 500px at 78% 12%, rgba(255,157,46,.16), transparent 60%),
+               radial-gradient(800px 500px at 8% 20%, rgba(61,139,255,.16), transparent 60%)}
+  .hero .wrap{position:relative; display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center; padding-top:70px; padding-bottom:84px}
+  .hero h1{font-size:clamp(34px,5.4vw,56px); line-height:1.05; margin:14px 0 16px; letter-spacing:-1.5px}
+  .hero h1 span{background:linear-gradient(90deg,var(--blue),var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .hero p.lead{font-size:18px; color:var(--muted); margin:0 0 28px; max-width:34ch}
+  .hero-actions{display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+  .meta{margin-top:18px; color:var(--muted2); font-size:13px; display:flex; gap:16px; flex-wrap:wrap}
+  .meta b{color:var(--muted)}
+  .shot{position:relative}
+  .shot img{width:100%; border-radius:20px; box-shadow:0 30px 70px -30px #000, 0 0 0 1px var(--line)}
+  @media(max-width:860px){ .hero .wrap{grid-template-columns:1fr; text-align:center} .hero p.lead{margin-inline:auto} .hero-actions,.meta{justify-content:center} .shot{order:-1; max-width:360px; margin:0 auto} }
+
+  /* games strip */
+  .games{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  .game{display:flex; gap:16px; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px}
+  .game img{width:66px; height:66px; border-radius:12px; object-fit:cover}
+  .game h3{margin:0 0 2px; font-size:17px}
+  .game p{margin:0; color:var(--muted); font-size:14px}
+  @media(max-width:640px){ .games{grid-template-columns:1fr} }
+
+  /* features */
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+  @media(max-width:900px){ .grid{grid-template-columns:1fr 1fr} }
+  @media(max-width:600px){ .grid{grid-template-columns:1fr} }
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px; transition:.15s}
+  .card:hover{border-color:var(--muted2); transform:translateY(-3px)}
+  .card .ic{width:42px; height:42px; border-radius:11px; display:grid; place-items:center; font-size:20px; margin-bottom:13px;
+    background:linear-gradient(135deg,rgba(255,157,46,.18),rgba(139,92,255,.18)); border:1px solid var(--line)}
+  .card h3{margin:0 0 6px; font-size:16.5px}
+  .card p{margin:0; color:var(--muted); font-size:14px}
+  .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.5px; padding:2px 8px; border-radius:20px; margin-bottom:11px}
+  .tag.rl{color:var(--blue); background:rgba(61,139,255,.12)}
+  .tag.cs{color:var(--orange); background:rgba(255,157,46,.12)}
+  .tag.both{color:var(--purple); background:rgba(139,92,255,.12)}
+
+  /* screenshots */
+  .shots{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+  @media(max-width:800px){ .shots{grid-template-columns:1fr} }
+  .ph{aspect-ratio:16/10; border-radius:var(--radius); border:1px dashed var(--line);
+    background:linear-gradient(135deg,var(--surface),var(--bg2)); display:grid; place-items:center; text-align:center; color:var(--muted2); padding:20px}
+  .ph span{font-size:13px}
+  .ph .big{font-size:15px; color:var(--muted); font-weight:600; margin-bottom:4px}
+
+  /* changelog */
+  .log{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:26px 28px}
+  .log .ver{display:flex; align-items:baseline; gap:12px; margin-bottom:14px}
+  .log .ver b{font-size:20px}
+  .log .ver .date{color:var(--muted2); font-size:13px}
+  .log ul{margin:0; padding-left:20px; color:var(--muted)}
+  .log li{margin:7px 0}
+  .log li b{color:var(--text); font-weight:600}
+
+  /* faq */
+  .faq{display:grid; gap:12px}
+  details{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:2px 20px}
+  summary{cursor:pointer; font-weight:600; padding:16px 0; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px}
+  summary::-webkit-details-marker{display:none}
+  summary:after{content:"+"; color:var(--orange); font-size:22px; font-weight:400; line-height:1}
+  details[open] summary:after{content:"–"}
+  details p{margin:0 0 16px; color:var(--muted); font-size:15px}
+
+  /* contact / cta band */
+  .band{background:linear-gradient(135deg,var(--surface),var(--surface2)); border:1px solid var(--line);
+    border-radius:22px; padding:44px; text-align:center}
+  .band h2{margin-bottom:8px}
+  .band p{color:var(--muted); margin:0 auto 24px; max-width:52ch}
+
+  footer{border-top:1px solid var(--line); padding:30px 0; color:var(--muted2); font-size:13px}
+  .foot{display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; align-items:center}
+  footer a{color:var(--muted)} footer a:hover{color:var(--text)}
+  .disclaimer{margin-top:14px; font-size:12px; color:var(--muted2); max-width:70ch}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top"><img class="logo" src="img/game_rl.jpg" alt=""><span>Nex<b>Play</b></span></a>
+    <nav class="links">
+      <a href="#funkcje">Funkcje</a>
+      <a href="#screeny">Zrzuty</a>
+      <a href="#changelog">Zmiany</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary sm cta" href="https://github.com/michalzembala-cpu/RLHub2/releases/latest">Pobierz</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Rocket League&nbsp;+&nbsp;Counter-Strike 2</p>
+      <h1>Twoje statystyki. <span>Jeden hub.</span></h1>
+      <p class="lead">NexPlay to lekka aplikacja na Windows, która śledzi Twój progres w Rocket League i CS2 — MMR, sesje, overlay na żywo, celowniki i trening — w jednym ciemnym, spójnym miejscu.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://github.com/michalzembala-cpu/RLHub2/releases/latest">⬇ Pobierz dla Windows</a>
+        <a class="btn btn-ghost" href="#funkcje">Zobacz funkcje</a>
+      </div>
+      <div class="meta">
+        <span><b>Darmowe</b> · bez konta</span>
+        <span><b>Windows 10/11</b></span>
+        <span><b>Bez .NET</b> — instalator samodzielny</span>
+      </div>
+    </div>
+    <div class="shot"><img src="img/hero.jpg" alt="NexPlay — Rocket League i CS2"></div>
+  </div>
+</section>
+
+<!-- DESCRIPTION / GAMES -->
+<section id="opis">
+  <div class="wrap">
+    <p class="eyebrow">Co to jest</p>
+    <h2>Companion do dwóch gier naraz</h2>
+    <p class="sub">Przełączasz grę jednym kliknięciem — cały interfejs, statystyki i narzędzia dopasowują się do wybranego tytułu.</p>
+    <div class="games">
+      <div class="game">
+        <img src="img/game_rl.jpg" alt="Rocket League">
+        <div><h3>Rocket League</h3><p>MMR i wykresy, sesje W/L, overlay na żywo, wykrywanie trybu, droga do SSL.</p></div>
+      </div>
+      <div class="game">
+        <img src="img/game_cs2.jpg" alt="Counter-Strike 2">
+        <div><h3>Counter-Strike 2</h3><p>Statystyki meczów, biblioteka celowników, statystyki per mapa, komendy treningowe, AI Insights.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="funkcje" style="background:var(--bg2)">
+  <div class="wrap">
+    <p class="eyebrow">Funkcje</p>
+    <h2>Wszystko, czego potrzebujesz do grindu</h2>
+    <p class="sub">Zbudowane wokół jednej zasady: pokazujemy tylko dane, które da się uczciwie zdobyć — nic zmyślonego.</p>
+    <div class="grid">
+      <div class="card"><span class="tag rl">Rocket League</span><div class="ic">📈</div><h3>MMR i wykresy</h3><p>Świecowy wykres MMR na stałej skali 0–2000, osobno dla 1v1, 2v2 i 3v3.</p></div>
+      <div class="card"><span class="tag rl">Rocket League</span><div class="ic">🖥️</div><h3>Overlay na żywo</h3><p>Pływający panel W/L, streak i MMR — podąża za graną playlistą i liczy porażki przez FF.</p></div>
+      <div class="card"><span class="tag rl">Rocket League</span><div class="ic">🎯</div><h3>Wykrywanie trybu</h3><p>Rozpoznaje 1v1/2v2/3v3 oraz Hoops, Dropshot i Snow Day po arenie meczu.</p></div>
+      <div class="card"><span class="tag cs">CS2</span><div class="ic">✛</div><h3>Biblioteka celowników</h3><p>Gotowe ustawienia pro plus Twoje własne — kopiuj jedną linią do konsoli albo eksportuj do .cfg.</p></div>
+      <div class="card"><span class="tag cs">CS2</span><div class="ic">🗺️</div><h3>Statystyki per mapa</h3><p>Winrate i wyniki rozbite na mapy, żeby wiedzieć, gdzie naprawdę grasz dobrze.</p></div>
+      <div class="card"><span class="tag cs">CS2</span><div class="ic">🎓</div><h3>Komendy treningowe</h3><p>Uporządkowane cheaty sv_cheats do treningu — każda komenda kopiowana osobno.</p></div>
+      <div class="card"><span class="tag cs">CS2</span><div class="ic">🤖</div><h3>AI Insights</h3><p>Podsumowania i wskazówki wyciągane z Twoich meczów CS2.</p></div>
+      <div class="card"><span class="tag both">Obie gry</span><div class="ic">🔄</div><h3>Auto-aktualizacja</h3><p>Aplikacja sama sprawdza nowe wydania i instaluje je bez klikania po plikach.</p></div>
+      <div class="card"><span class="tag both">Obie gry</span><div class="ic">🔒</div><h3>Dane lokalnie</h3><p>Wszystko zostaje na Twoim komputerze. Nic nie jest wysyłane na żaden serwer.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOTS -->
+<section id="screeny">
+  <div class="wrap">
+    <p class="eyebrow">Zrzuty ekranu</p>
+    <h2>Jak to wygląda</h2>
+    <p class="sub">Wrzuć własne zrzuty do <code>docs/img</code> i podmień te ramki — poniżej gotowe miejsca.</p>
+    <div class="shots">
+      <div class="ph"><div><div class="big">Pulpit / MMR</div><span>docs/img/shot-home.png</span></div></div>
+      <div class="ph"><div><div class="big">Overlay na żywo</div><span>docs/img/shot-overlay.png</span></div></div>
+      <div class="ph"><div><div class="big">Celowniki CS2</div><span>docs/img/shot-crosshair.png</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CHANGELOG -->
+<section id="changelog" style="background:var(--bg2)">
+  <div class="wrap">
+    <p class="eyebrow">Changelog</p>
+    <h2>Co nowego</h2>
+    <p class="sub">Pełna historia zmian jest w <a href="https://github.com/michalzembala-cpu/RLHub2/releases" style="color:var(--orange)">wydaniach na GitHubie</a>.</p>
+    <div class="log">
+      <div class="ver"><b>1.0.0</b><span class="date">pierwsze wydanie</span></div>
+      <ul>
+        <li><b>Dwie gry w jednym:</b> wybór gry i profili, osobny interfejs dla RL i CS2.</li>
+        <li><b>Rocket League:</b> śledzenie MMR i wykresy 0–2000, sesje W/L i streak, overlay na żywo podążający za playlistą i liczący porażki przez forfeit.</li>
+        <li><b>Wykrywanie trybu</b> z areny meczu — 1v1/2v2/3v3 oraz Hoops, Dropshot i Snow Day.</li>
+        <li><b>CS2:</b> statystyki meczów, biblioteka celowników pro i własnych, statystyki per mapa, komendy treningowe i AI Insights.</li>
+        <li><b>Instalator</b> dla Windows i <b>automatyczna aktualizacja</b> z GitHuba.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <p class="eyebrow">FAQ</p>
+    <h2>Najczęstsze pytania</h2>
+    <div class="faq" style="margin-top:30px">
+      <details open><summary>Czy NexPlay jest darmowy?</summary><p>Tak, w całości. Nie wymaga konta ani żadnych opłat.</p></details>
+      <details><summary>Czy dostanę bana za używanie?</summary><p>NexPlay tylko odczytuje dane i nie modyfikuje samej gry ani nie wstrzykuje kodu. W CS2 korzysta z oficjalnego Game State Integration od Valve. Dane z Rocket League pochodzą z lokalnego pluginu statystyk (społecznościowy BakkesMod). Sama aplikacja niczego w grze nie zmienia — ale integracji z RL nie kontroluje Valve/Epic, więc pełnej gwarancji dać nie mogę.</p></details>
+      <details><summary>Skąd MMR, skoro gra go nie udostępnia?</summary><p>Rocket League nie podaje MMR przez żadne oficjalne API. Dlatego NexPlay liczy je z wyników meczów (±9 za wygraną/przegraną) i pozwala wpisać wartość startową ręcznie — zamiast pokazywać zmyślone liczby.</p></details>
+      <details><summary>Czy moje dane są gdzieś wysyłane?</summary><p>Nie. Wszystko zapisuje się lokalnie na Twoim komputerze (folder aplikacji w %LocalAppData%). Aplikacja łączy się tylko z GitHubem, żeby sprawdzić aktualizacje.</p></details>
+      <details><summary>Potrzebuję zainstalowanego .NET?</summary><p>Nie. Instalator jest samodzielny (self-contained) — zawiera wszystko, czego potrzeba.</p></details>
+      <details><summary>Czy gra musi być włączona?</summary><p>Do danych na żywo (overlay, wynik meczu) tak. Wcześniej zebrane statystyki i narzędzia (celowniki, komendy) działają zawsze.</p></details>
+      <details><summary>Jak działają aktualizacje?</summary><p>Aplikacja sama sprawdza najnowsze wydanie na GitHubie i potrafi je pobrać oraz zainstalować — nie musisz szukać plików ręcznie.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="kontakt">
+  <div class="wrap">
+    <div class="band">
+      <h2>Masz pomysł albo błąd?</h2>
+      <p>Najlepsze miejsce na zgłoszenia, sugestie i pytania to zakładka Issues na GitHubie — wszystko w jednym miejscu i widoczne dla innych.</p>
+      <a class="btn btn-primary" href="https://github.com/michalzembala-cpu/RLHub2/issues">Zgłoś na GitHubie →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <span>© <span id="yr"></span> NexPlay · projekt społecznościowy</span>
+    <span><a href="https://github.com/michalzembala-cpu/RLHub2">GitHub</a> · <a href="https://github.com/michalzembala-cpu/RLHub2/releases/latest">Pobierz</a> · <a href="#faq">FAQ</a></span>
+  </div>
+  <div class="wrap"><p class="disclaimer">NexPlay to niezależny projekt fanowski. Nie jest powiązany z Psyonix, Epic Games ani Valve. Rocket League i Counter-Strike są znakami towarowymi swoich właścicieli.</p></div>
+</footer>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+</body>
+</html>
