@@ -46,6 +46,7 @@ namespace RLHub2
         private TextBox txtKey;
         private Label lblNick;
         private Button btnProfile;
+        private Button btnAddProfile;
         private CheckBox chkAskProfile;
         private Button btnSaveKey;
 
@@ -92,6 +93,7 @@ namespace RLHub2
             txtKey = new TextBox();
             lblNick = new Label();
             btnProfile = new Button();
+            btnAddProfile = new Button();
             chkAskProfile = new CheckBox();
             btnSaveKey = new Button();
             bcPanel = new Panel();
@@ -211,7 +213,7 @@ namespace RLHub2
             accentPanel.Controls.AddRange(new Control[] { lblAccent, lblAccentHint, accentPicker });
 
             // ===== TRACKER KEY + ACTIVE ACCOUNT =====
-            Card(keyPanel, panelColor, 224);
+            Card(keyPanel, panelColor, 268);
             SectionTitle(lblKey, "TRACKER.GG API KEY");
             Hint(lblKeyHint, "Get a free key at tracker.gg/developers, then paste it here for real profiles");
 
@@ -241,7 +243,20 @@ namespace RLHub2
             btnProfile.Cursor = Cursors.Hand;
             btnProfile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            chkAskProfile.Location = new Point(20, 186);
+            // Full-width row below the switch/save row: the only way to create a profile now that
+            // the picker's "+" is gone.
+            btnAddProfile.Text = "+ ADD PROFILE";
+            btnAddProfile.Size = new Size(CardW - 40, 30);
+            btnAddProfile.Location = new Point(20, 182);
+            btnAddProfile.FlatStyle = FlatStyle.Flat;
+            btnAddProfile.FlatAppearance.BorderSize = 0;
+            btnAddProfile.BackColor = Theme.Accent;
+            btnAddProfile.ForeColor = Color.Black;
+            btnAddProfile.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnAddProfile.Cursor = Cursors.Hand;
+            btnAddProfile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            chkAskProfile.Location = new Point(20, 226);
             chkAskProfile.AutoSize = true;
             chkAskProfile.ForeColor = Theme.TextSecondary;
             chkAskProfile.Font = new Font("Segoe UI", 9.5F);
@@ -252,7 +267,7 @@ namespace RLHub2
             btnSaveKey.Size = new Size(110, 30);
             btnSaveKey.Anchor = AnchorStyles.Top | AnchorStyles.Right;
 
-            keyPanel.Controls.AddRange(new Control[] { lblKey, lblKeyHint, txtKey, lblNick, btnProfile, chkAskProfile, btnSaveKey });
+            keyPanel.Controls.AddRange(new Control[] { lblKey, lblKeyHint, txtKey, lblNick, btnProfile, btnAddProfile, chkAskProfile, btnSaveKey });
 
             // ===== BALLCHASING =====
             Card(bcPanel, panelColor, 224);

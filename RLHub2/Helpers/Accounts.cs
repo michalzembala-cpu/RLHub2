@@ -30,6 +30,30 @@ namespace RLHub2.Helpers
             ActiveChanged?.Invoke();
         }
 
+        // Add a new account and make it active. If the name (or an alias) already belongs to an
+        // existing account, that one is activated instead of creating a duplicate.
+        public static void Add(string name, IEnumerable<string>? aliases = null)
+        {
+            name = (name ?? "").Trim();
+            if (name.Length == 0) return;
+
+            var all = All;
+            var existing = all.FirstOrDefault(a => a.Matches(name));
+            if (existing != null) { SetActive(existing.Name); return; }
+
+            all.Add(new Account
+            {
+                Name = name,
+                Aliases = (aliases ?? Enumerable.Empty<string>())
+                    .Select(a => (a ?? "").Trim())
+                    .Where(a => a.Length > 0 && !string.Equals(a, name, StringComparison.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList()
+            });
+            Store.SaveAccounts(all);
+            SetActive(name);
+        }
+
         // Which account does this in-game player name belong to? (handles renames via aliases)
         public static Account? MatchByName(string playerName)
             => All.FirstOrDefault(a => a.Matches(playerName));

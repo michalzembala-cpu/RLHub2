@@ -64,6 +64,16 @@ namespace RLHub2
                 picker.ShowDialog(FindForm());
                 UpdateProfileButton();
             };
+            btnAddProfile.Click += (s, e) =>
+            {
+                using var dlg = new AddProfileDialog();
+                if (dlg.ShowDialog(FindForm()) != DialogResult.OK) return;
+                Accounts.Add(dlg.ProfileName, dlg.Aliases);   // Add also makes it active
+                UpdateProfileButton();
+                Toast.Show(FindForm() is Control c ? c : this,
+                    (Localization.IsPolish ? "Dodano profil: " : "Profile added: ") + dlg.ProfileName,
+                    ToastKind.Success);
+            };
             Accounts.ActiveChanged += UpdateProfileButton;
             Disposed += (s, e) => Accounts.ActiveChanged -= UpdateProfileButton;
 
@@ -294,6 +304,7 @@ namespace RLHub2
             lblKey.Text = Localization.T("settings_key");
             lblKeyHint.Text = Localization.T("settings_key_hint");
             lblNick.Text = Localization.IsPolish ? "AKTYWNE KONTO" : "ACTIVE ACCOUNT";
+            btnAddProfile.Text = Localization.IsPolish ? "+ DODAJ PROFIL" : "+ ADD PROFILE";
             chkAskProfile.Text = Localization.IsPolish
                 ? "Pytaj o profil przy starcie aplikacji"
                 : "Ask which profile to use on startup";
