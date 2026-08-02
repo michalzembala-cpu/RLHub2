@@ -13,8 +13,6 @@ namespace RLHub2
     {
         protected override string ArenaFile => "rl_bg.png";
 
-        // tracker.gg fallback (used only when no ballchasing key is set)
-        private readonly IProfileService _service = new ProfileServiceTracker();
         private readonly BallMatchStore _matchStore = new();
         private readonly SettingsStore _settings = new();
 
@@ -65,12 +63,9 @@ namespace RLHub2
                 return;
             }
 
-            // no ballchasing key → fall back to tracker.gg auto-search
-            if (!string.IsNullOrWhiteSpace(nick))
-            {
-                txtNick.Text = nick;
-                await SearchAsync(silent: true);
-            }
+            // No Ballchasing key → nothing to load. The empty-state prompt tells the user to add
+            // one; there is no other profile source now that tracker.gg is gone.
+            if (!string.IsNullOrWhiteSpace(nick)) txtNick.Text = nick;
         }
 
         private void ApplyLanguage()
@@ -105,26 +100,20 @@ namespace RLHub2
             btnSearch.Text = Localization.T("profile_loading");
             try
             {
-                if (HasBallchasing)
+                if (!HasBallchasing)
                 {
-                    // read-only lookup by name (no upload for searched players)
-                    var matches = await new BallchasingService().GetPlayerMatchesAsync(nick, 30);
-                    if (matches.Count == 0)
-                    {
-                        if (!silent) Toast.Show(this, Localization.T("profile_error"), ToastKind.Info, 4000);
-                        return;
-                    }
-                    Populate(BuildProfile(matches, nick));
+                    if (!silent) Toast.Show(this, Localization.T("profile_no_key"), ToastKind.Info, 4000);
+                    return;
                 }
-                else
+
+                // read-only lookup by name (no upload for searched players)
+                var matches = await new BallchasingService().GetPlayerMatchesAsync(nick, 30);
+                if (matches.Count == 0)
                 {
-                    var profile = await _service.GetProfileAsync(nick);
-                    Populate(profile);
+                    if (!silent) Toast.Show(this, Localization.T("profile_error"), ToastKind.Info, 4000);
+                    return;
                 }
-            }
-            catch (ProfileServiceTracker.NoKeyException)
-            {
-                if (!silent) Toast.Show(this, Localization.T("profile_no_key"), ToastKind.Info, 4000);
+                Populate(BuildProfile(matches, nick));
             }
             catch
             {

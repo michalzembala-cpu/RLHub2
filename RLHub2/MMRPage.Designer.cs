@@ -16,7 +16,6 @@ namespace RLHub2
         private StatTile card2v2;
         private StatTile card3v3;
         private FlowLayoutPanel dataPanel;
-        private Button btnFetch;
         private Button btnExport;
         private Button btnImport;
         private Button btnFolder;
@@ -63,7 +62,6 @@ namespace RLHub2
             card2v2 = new StatTile();
             card3v3 = new StatTile();
             dataPanel = new FlowLayoutPanel();
-            btnFetch = new Button();
             btnExport = new Button();
             btnImport = new Button();
             btnFolder = new Button();
@@ -224,7 +222,6 @@ namespace RLHub2
             // dataPanel
             // 
             dataPanel.BackColor = Theme.PageBg;
-            dataPanel.Controls.Add(btnFetch);
             dataPanel.Controls.Add(btnExport);
             dataPanel.Controls.Add(btnImport);
             dataPanel.Controls.Add(btnFolder);
@@ -235,17 +232,7 @@ namespace RLHub2
             dataPanel.Size = new Size(597, 48);
             dataPanel.TabIndex = 3;
             dataPanel.WrapContents = false;
-            // 
-            // btnFetch
-            // 
-            btnFetch.BackColor = Color.FromArgb(120, 60, 255);
-            btnFetch.ForeColor = Color.White;
-            btnFetch.Location = new Point(3, 3);
-            btnFetch.Name = "btnFetch";
-            btnFetch.Size = new Size(170, 34);
-            btnFetch.TabIndex = 0;
-            btnFetch.UseVisualStyleBackColor = false;
-            // 
+            //
             // btnExport
             // 
             btnExport.Location = new Point(159, 3);

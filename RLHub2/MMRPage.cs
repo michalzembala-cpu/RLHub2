@@ -31,7 +31,6 @@ namespace RLHub2
             card2v2.Click += (s, e) => OpenMode("2v2");
             card3v3.Click += (s, e) => OpenMode("3v3");
 
-            btnFetch.Click += async (s, e) => await FetchMmrAsync();
             btnExport.Click += (s, e) => ExportData();
             btnImport.Click += (s, e) => ImportData();
             btnFolder.Click += (s, e) => OpenFolder();
@@ -87,7 +86,6 @@ namespace RLHub2
             btnUndo.Text = Localization.T("mmr_undo");
             btnCancelEdit.Text = Localization.T("mmr_cancel");
 
-            btnFetch.Text = Localization.T("mmr_fetch");
             btnExport.Text = Localization.T("mmr_export");
             btnImport.Text = Localization.T("mmr_import");
             btnFolder.Text = Localization.T("mmr_folder");
@@ -120,13 +118,6 @@ namespace RLHub2
         // the primary action carries the accent, the rest are outlined and quiet.
         private void StyleDataButtons()
         {
-            btnFetch.FlatStyle = FlatStyle.Flat;
-            btnFetch.FlatAppearance.BorderSize = 0;
-            btnFetch.BackColor = Theme.Accent;
-            btnFetch.ForeColor = Color.White;
-            btnFetch.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnFetch.Cursor = Cursors.Hand;
-
             foreach (var b in new[] { btnExport, btnImport, btnFolder })
             {
                 b.FlatStyle = FlatStyle.Flat;
@@ -141,7 +132,7 @@ namespace RLHub2
             }
 
             // Rounded like the cards above them, rather than square system buttons.
-            foreach (var b in new[] { btnFetch, btnExport, btnImport, btnFolder })
+            foreach (var b in new[] { btnExport, btnImport, btnFolder })
             {
                 ApplyRoundedRegion(b, 8);
                 b.SizeChanged += (s, e) => ApplyRoundedRegion(b, 8);
@@ -151,9 +142,9 @@ namespace RLHub2
         private void LayoutDataButtons()
         {
             const int gap = 10;
-            int y = Math.Max(4, (dataPanel.Height - btnFetch.Height) / 2);
+            int y = Math.Max(4, (dataPanel.Height - btnExport.Height) / 2);
             int x = 0;
-            foreach (var b in new[] { btnFetch, btnExport, btnImport, btnFolder })
+            foreach (var b in new[] { btnExport, btnImport, btnFolder })
             {
                 b.Location = new Point(x, y);
                 x += b.Width + gap;
@@ -302,58 +293,6 @@ namespace RLHub2
                 $"{Localization.T("mmr_peak")} {peak}   {Localization.T("mmr_avg")} {avg}   Δ {S(change)}\n" +
                 $"{Localization.T("mmr_peak_all")} {allPeak}   {Localization.T("mmr_week")} {S(weekly)}\n" +
                 prediction;
-        }
-
-        // ===== AUTO-FETCH MMR FROM TRACKER.GG =====
-        private async System.Threading.Tasks.Task FetchMmrAsync()
-        {
-            string nick = Accounts.ActiveName;
-            if (string.IsNullOrWhiteSpace(nick))
-            {
-                Toast.Show(this, Localization.T("mmr_fetch_nonick"), ToastKind.Info, 4000);
-                return;
-            }
-
-            btnFetch.Enabled = false;
-            try
-            {
-                var profile = await new ProfileServiceTracker().GetProfileAsync(nick);
-
-                PushUndo();
-                int added = 0;
-                foreach (var rank in profile.Ranks)
-                {
-                    if (rank.Mmr > 0 && (rank.Mode == "1v1" || rank.Mode == "2v2" || rank.Mode == "3v3"))
-                    {
-                        _entries.Add(new MmrEntry(DateTime.Now, rank.Mmr, rank.Mode) { Account = Accounts.ActiveName });
-                        added++;
-                    }
-                }
-
-                if (added > 0)
-                {
-                    _store.SaveForActive(_entries);
-                    ShowSelection();
-                    Toast.Show(this, Localization.T("mmr_fetched"), ToastKind.Success);
-                }
-                else
-                {
-                    if (_undo.Count > 0) _undo.Pop();
-                    Toast.Show(this, Localization.T("mmr_fetch_fail"), ToastKind.Error);
-                }
-            }
-            catch (ProfileServiceTracker.NoKeyException)
-            {
-                Toast.Show(this, Localization.T("profile_no_key"), ToastKind.Info, 4000);
-            }
-            catch
-            {
-                Toast.Show(this, Localization.T("mmr_fetch_fail"), ToastKind.Error);
-            }
-            finally
-            {
-                btnFetch.Enabled = true;
-            }
         }
 
         // ===== DATA: EXPORT / IMPORT / FOLDER =====

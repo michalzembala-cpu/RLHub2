@@ -12,7 +12,6 @@ namespace RLHub2.Services
     public class AppConfig
     {
         public string Language { get; set; } = "en"; // "pl" or "en" — English is the factory default
-        public string TrackerKey { get; set; } = ""; // tracker.gg API key (public-api.tracker.gg)
         public string LastPage { get; set; } = "home";
         public bool SidebarCollapsed { get; set; } = false;
         public string Theme { get; set; } = "dark"; // "dark" or "light"
@@ -138,14 +137,6 @@ namespace RLHub2.Services
             Save(cfg);
         }
 
-        public string LoadTrackerKey() => Load().TrackerKey ?? "";
-
-        public void SaveTrackerKey(string key)
-        {
-            var cfg = Load();
-            cfg.TrackerKey = (key ?? "").Trim();
-            Save(cfg);
-        }
 
         public void SaveLastPage(string page)
         {

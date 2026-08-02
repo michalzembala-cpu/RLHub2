@@ -30,7 +30,6 @@ namespace RLHub2
 
             segLanguage.SetSelectedSilent(Localization.IsPolish ? 0 : 1);
             segTheme.SetSelectedSilent(Theme.IsDark ? 0 : 1);
-            txtKey.Text = _store.LoadTrackerKey();
             txtBcKey.Text = _store.LoadBallchasingKey();
 
             // updates
@@ -97,12 +96,10 @@ namespace RLHub2
 
             accentPicker.AccentSelected += (s, e) => _store.SaveAccent(Theme.Accent);
 
-            btnSaveKey.Click += (s, e) =>
-            {
-                _store.SaveTrackerKey(txtKey.Text);
-                _store.SaveBallchasingKey(txtBcKey.Text);
-                Toast.Show(this, Localization.T("settings_saved"), ToastKind.Success);
-            };
+            // The dedicated SAVE button lived on the (removed) tracker.gg card. TEST already
+            // saves the Ballchasing key; persist it on focus-loss too so it can't be lost by
+            // closing Settings without testing.
+            txtBcKey.Leave += (s, e) => _store.SaveBallchasingKey(txtBcKey.Text);
 
             btnTestBc.Click += async (s, e) => await TestBallchasing();
 
@@ -246,7 +243,6 @@ namespace RLHub2
                         if (c is Panel card)
                             card.Width = w;
 
-                    lblKeyHint.MaximumSize = new Size(w - 40, 0);
                     lblBcHint.MaximumSize = new Size(w - 40, 0);
                     lblBcStatus.MaximumSize = new Size(w - 40, 0);
                     chkDeleteOld.MaximumSize = new Size(w - 40, 0);
@@ -301,8 +297,6 @@ namespace RLHub2
             lblThemeHint.Text = Localization.T("settings_theme_hint");
             lblAccent.Text = Localization.T("settings_accent");
             lblAccentHint.Text = Localization.T("settings_accent_hint");
-            lblKey.Text = Localization.T("settings_key");
-            lblKeyHint.Text = Localization.T("settings_key_hint");
             lblNick.Text = Localization.IsPolish ? "AKTYWNE KONTO" : "ACTIVE ACCOUNT";
             btnAddProfile.Text = Localization.IsPolish ? "+ DODAJ PROFIL" : "+ ADD PROFILE";
             chkAskProfile.Text = Localization.IsPolish
@@ -327,7 +321,6 @@ namespace RLHub2
             lblBcHint.Text = Localization.IsPolish
                 ? "Darmowy klucz na ballchasing.com/upload → Settings. Dodaje historię meczów z Twoich powtórek."
                 : "Free key at ballchasing.com/upload → Settings. Adds match history from your replays.";
-            btnSaveKey.Text = Localization.T("settings_save");
 
             segLanguage.SetOptions(new[] { "Polski", "English" });
             segTheme.SetOptions(new[] { Localization.T("theme_dark"), Localization.T("theme_light") });

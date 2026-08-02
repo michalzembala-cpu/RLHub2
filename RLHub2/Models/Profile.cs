@@ -6,7 +6,7 @@ namespace RLHub2.Models
     {
         public string Nick { get; set; } = "";
 
-        // Legacy summary fields (still used by ProfileServiceTracker).
+        // Legacy summary fields.
         public string Rank { get; set; } = "";
         public int MMR { get; set; }
         public int Wins { get; set; }

@@ -41,14 +41,10 @@ namespace RLHub2
         private AccentPicker accentPicker;
 
         private Panel keyPanel;
-        private Label lblKey;
-        private Label lblKeyHint;
-        private TextBox txtKey;
         private Label lblNick;
         private Button btnProfile;
         private Button btnAddProfile;
         private CheckBox chkAskProfile;
-        private Button btnSaveKey;
 
         private Panel bcPanel;
         private Label lblBc;
@@ -88,14 +84,10 @@ namespace RLHub2
             lblAccentHint = new Label();
             accentPicker = new AccentPicker();
             keyPanel = new Panel();
-            lblKey = new Label();
-            lblKeyHint = new Label();
-            txtKey = new TextBox();
             lblNick = new Label();
             btnProfile = new Button();
             btnAddProfile = new Button();
             chkAskProfile = new CheckBox();
-            btnSaveKey = new Button();
             bcPanel = new Panel();
             lblBc = new Label();
             lblBcHint = new Label();
@@ -212,26 +204,14 @@ namespace RLHub2
             accentPicker.Location = new Point(18, 74);
             accentPanel.Controls.AddRange(new Control[] { lblAccent, lblAccentHint, accentPicker });
 
-            // ===== TRACKER KEY + ACTIVE ACCOUNT =====
-            Card(keyPanel, panelColor, 268);
-            SectionTitle(lblKey, "TRACKER.GG API KEY");
-            Hint(lblKeyHint, "Get a free key at tracker.gg/developers, then paste it here for real profiles");
-
-            Input(txtKey, inputBg);
-            txtKey.Location = new Point(20, 90);
-            txtKey.Size = new Size(CardW - 40, 26);
-            txtKey.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-
-            lblNick.Text = "ACTIVE ACCOUNT";
-            lblNick.AutoSize = true;
-            lblNick.ForeColor = Theme.TextMuted;
-            lblNick.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblNick.Location = new Point(20, 126);
+            // ===== ACTIVE ACCOUNT =====
+            Card(keyPanel, panelColor, 190);
+            SectionTitle(lblNick, "ACTIVE ACCOUNT");
 
             // The account is chosen on the Big-Picture-style picker, not in a combo box.
             btnProfile.Text = "PROFILE";
-            btnProfile.Size = new Size(CardW - 20 - 130 - 10, 30);
-            btnProfile.Location = new Point(20, 146);
+            btnProfile.Size = new Size(CardW - 40, 30);
+            btnProfile.Location = new Point(20, 56);
             btnProfile.FlatStyle = FlatStyle.Flat;
             btnProfile.FlatAppearance.BorderSize = 1;
             btnProfile.FlatAppearance.BorderColor = Theme.Accent;
@@ -243,11 +223,10 @@ namespace RLHub2
             btnProfile.Cursor = Cursors.Hand;
             btnProfile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            // Full-width row below the switch/save row: the only way to create a profile now that
-            // the picker's "+" is gone.
+            // The only way to create a profile now that the picker's "+" is gone.
             btnAddProfile.Text = "+ ADD PROFILE";
             btnAddProfile.Size = new Size(CardW - 40, 30);
-            btnAddProfile.Location = new Point(20, 182);
+            btnAddProfile.Location = new Point(20, 96);
             btnAddProfile.FlatStyle = FlatStyle.Flat;
             btnAddProfile.FlatAppearance.BorderSize = 0;
             btnAddProfile.BackColor = Theme.Accent;
@@ -256,18 +235,13 @@ namespace RLHub2
             btnAddProfile.Cursor = Cursors.Hand;
             btnAddProfile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
 
-            chkAskProfile.Location = new Point(20, 226);
+            chkAskProfile.Location = new Point(20, 142);
             chkAskProfile.AutoSize = true;
             chkAskProfile.ForeColor = Theme.TextSecondary;
             chkAskProfile.Font = new Font("Segoe UI", 9.5F);
             chkAskProfile.Cursor = Cursors.Hand;
 
-            AccentButton(btnSaveKey, "SAVE", 110);
-            btnSaveKey.Location = new Point(CardW - 130, 146);
-            btnSaveKey.Size = new Size(110, 30);
-            btnSaveKey.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-
-            keyPanel.Controls.AddRange(new Control[] { lblKey, lblKeyHint, txtKey, lblNick, btnProfile, btnAddProfile, chkAskProfile, btnSaveKey });
+            keyPanel.Controls.AddRange(new Control[] { lblNick, btnProfile, btnAddProfile, chkAskProfile });
 
             // ===== BALLCHASING =====
             Card(bcPanel, panelColor, 224);
