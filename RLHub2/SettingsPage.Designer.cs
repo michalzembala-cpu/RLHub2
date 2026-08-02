@@ -272,7 +272,7 @@ namespace RLHub2
 
             bcPanel.Controls.AddRange(new Control[] { lblBc, lblBcHint, txtBcKey, btnTestBc, lblBcStatus, chkDeleteOld });
 
-            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, updPanel, langPanel, themePanel, accentPanel, keyPanel, bcPanel });
+            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, keyPanel, langPanel, themePanel, accentPanel, updPanel, bcPanel });
             this.Controls.Add(flow);
 
             ResumeLayout(false);
