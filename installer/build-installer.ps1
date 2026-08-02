@@ -1,4 +1,4 @@
-# Builds a release of RL Hub 2 and packages it into an installer.
+# Builds a release of NexPlay and packages it into an installer.
 #
 #   .\installer\build-installer.ps1
 #
@@ -71,7 +71,7 @@ Write-Host "Buduję instalator..." -ForegroundColor Cyan
 & $iscc "/DAppVersion=$version" $iss | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "ISCC nie powiodlo sie" }
 
-$setup = Join-Path $PSScriptRoot "Output\RLHub2-Setup-$version.exe"
+$setup = Join-Path $PSScriptRoot "Output\NexPlay-Setup-$version.exe"
 $mb = [math]::Round((Get-Item $setup).Length / 1MB, 1)
 Write-Host "`nGotowe: $setup ($mb MB)" -ForegroundColor Green
 Write-Host "Wrzuc ten plik jako zasob wydania na GitHubie z tagiem v$version." -ForegroundColor DarkGray

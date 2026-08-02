@@ -1,4 +1,4 @@
-; Inno Setup script for RL Hub 2.
+; Inno Setup script for NexPlay.
 ;
 ; Build it with build-installer.ps1, which publishes the app first and passes the version
 ; from the csproj — so the version lives in one place instead of drifting between the two.
@@ -29,7 +29,7 @@ DisableDirPage=no
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=Output
-OutputBaseFilename=RLHub2-Setup-{#AppVersion}
+OutputBaseFilename=NexPlay-Setup-{#AppVersion}
 SetupIconFile=..\RLHub2\Resources\app.ico
 UninstallDisplayIcon={app}\{#AppExe}
 Compression=lzma2/max

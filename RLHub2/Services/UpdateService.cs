@@ -85,7 +85,7 @@ namespace RLHub2.Services
                         if (!exe && !zip) continue;
 
                         int score = 0;
-                        if (n.Contains("rlhub")) score += 100;   // our own build wins outright
+                        if (n.Contains("nexplay") || n.Contains("rlhub")) score += 100;   // our own build wins outright
                         if (n.Contains("setup")) score += 50;    // an installer knows how to install
                         if (exe) score += 30; else score += 10;
                         if (n.Contains("arm")) score -= 60;      // wrong architecture
@@ -175,8 +175,12 @@ namespace RLHub2.Services
                 string current = Environment.ProcessPath ?? Application.ExecutablePath;
                 int pid = Environment.ProcessId;
 
-                // An installer knows how to install itself — just run it and step aside.
-                if (downloadedPath.EndsWith("setup.exe", StringComparison.OrdinalIgnoreCase))
+                // An installer knows how to install itself — just run it and step aside. Match
+                // "setup" anywhere in the name (ours is NexPlay-Setup-1.0.0.exe), not only the
+                // "setup.exe" suffix, or the installer would be mistaken for a bare-exe swap and
+                // copied straight over the running app.
+                string file = Path.GetFileName(downloadedPath);
+                if (file.Contains("setup", StringComparison.OrdinalIgnoreCase))
                 {
                     Process.Start(new ProcessStartInfo(downloadedPath) { UseShellExecute = true });
                     return true;
