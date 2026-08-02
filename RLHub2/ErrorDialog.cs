@@ -18,7 +18,7 @@ namespace RLHub2
             _details = details;
             bool pl = Localization.IsPolish;
 
-            Text = "RL Hub 2";
+            Text = "NexPlay";
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;

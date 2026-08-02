@@ -77,7 +77,9 @@ namespace RLHub2
             {
                 using var f = new Font("Segoe UI", 28f, FontStyle.Bold);
                 using var b = new SolidBrush(Color.White);
-                g.DrawString("RL HUB 2", f, b, 90, Height / 2 - 24);
+                const string wordmark = "NexPlay";
+                var sz = g.MeasureString(wordmark, f);
+                g.DrawString(wordmark, f, b, (Width - sz.Width) / 2, Height / 2 - 24);
             }
         }
     }

@@ -290,7 +290,9 @@ namespace RLHub2
             btnMaps.Visible = !rl;
             btnPractice.Visible = !rl;
 
-            lblLogo.Text = rl ? "RL HUB" : "CS2 HUB";
+            // One wordmark for the whole app now that it spans both games; which game you're in
+            // is already clear from the picker and the page content.
+            lblLogo.Text = "NexPlay";
         }
 
         // A page key only reachable in the other game (a remembered LastPage after switching)

@@ -7,6 +7,10 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <!-- Display name (taskbar, file properties). AssemblyName stays RLHub2: the exe filename is
+         wired into the updater, installer and launch.json, and the data folder is unaffected. -->
+    <Product>NexPlay</Product>
+    <AssemblyTitle>NexPlay</AssemblyTitle>
     <!-- The updater compares this against the latest GitHub release tag, so bump it per release. -->
     <Version>1.0.0</Version>
     <!-- Deliberately NOT PublishSingleFile: it silently drops the larger Content files

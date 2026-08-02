@@ -11,7 +11,7 @@
   #define AppVersion "1.0.0"
 #endif
 
-#define AppName "RL Hub 2"
+#define AppName "NexPlay"
 #define AppExe "RLHub2.exe"
 #define AppPublisher "micha"
 

@@ -77,7 +77,7 @@ namespace RLHub2.Services
             if (path == null) return false;
 
             var cfg =
-$@"""RL Hub 2 Game State Integration""
+$@"""NexPlay Game State Integration""
 {{
 	""uri""			""http://127.0.0.1:{port}/""
 	""timeout""		""5.0""

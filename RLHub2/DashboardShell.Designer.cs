@@ -70,7 +70,7 @@ namespace RLHub2
             this.BackColor = Color.FromArgb(12, 12, 25);
             this.ClientSize = new Size(1100, 650);
             this.MinimumSize = new Size(900, 560);
-            this.Text = "RL Hub 2";
+            this.Text = "NexPlay";
             this.StartPosition = FormStartPosition.CenterScreen;
 
             // ===== SIDEBAR =====
@@ -94,7 +94,7 @@ namespace RLHub2
             btnToggle.Font = new Font("Segoe UI Symbol", 14F, FontStyle.Bold);
             btnToggle.Cursor = Cursors.Hand;
 
-            lblLogo.Text = "RL HUB";
+            lblLogo.Text = "NexPlay";
             lblLogo.Location = new Point(62, 22);
             lblLogo.AutoSize = true;
             lblLogo.ForeColor = Color.FromArgb(150, 110, 255);
