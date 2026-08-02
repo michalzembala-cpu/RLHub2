@@ -18,6 +18,11 @@ namespace RLHub2
 
             var store = new SettingsStore();
 
+            // Load the saved language before anything with text appears. The game/profile pickers
+            // and the consent dialog run here, before DashboardShell — without this they'd show in
+            // the default language instead of the one you chose in Settings.
+            Localization.Initialize(store.LoadLanguage());
+
             // Ask once, up front, before any usage happens — and only when a telemetry key is
             // actually compiled in. Opt-in: no key or no consent means nothing is ever sent.
             if (Telemetry.IsAvailable && !store.TelemetryAsked)
