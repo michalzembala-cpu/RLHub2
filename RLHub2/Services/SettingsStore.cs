@@ -11,7 +11,7 @@ namespace RLHub2.Services
 {
     public class AppConfig
     {
-        public string Language { get; set; } = "pl"; // "pl" or "en"
+        public string Language { get; set; } = "en"; // "pl" or "en" — English is the factory default
         public string TrackerKey { get; set; } = ""; // tracker.gg API key (public-api.tracker.gg)
         public string LastPage { get; set; } = "home";
         public bool SidebarCollapsed { get; set; } = false;

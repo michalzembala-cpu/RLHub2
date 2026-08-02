@@ -8,7 +8,7 @@ namespace RLHub2.Helpers
     // App-wide language. Pages read strings via T(key) and rebuild on LanguageChanged.
     public static class Localization
     {
-        public static AppLanguage Language { get; private set; } = AppLanguage.Polish;
+        public static AppLanguage Language { get; private set; } = AppLanguage.English;
 
         public static event Action? LanguageChanged;
 
