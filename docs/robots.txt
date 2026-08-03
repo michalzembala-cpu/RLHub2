@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://michalzembala-cpu.github.io/RLHub2/sitemap.xml
