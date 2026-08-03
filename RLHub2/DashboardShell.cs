@@ -223,17 +223,26 @@ namespace RLHub2
 
             try
             {
-                await System.Threading.Tasks.Task.Delay(2500);   // let the scoreboard settle
-                int? mmr = await ScreenMmr.ReadScoreboardMmrAsync(match.Account);
-                if (mmr == null || IsDisposed) return;
+                // The scoreboard doesn't show immediately: a goal replay and the "Winner" screen
+                // come first, and their length varies. So poll for a while and take the first
+                // frame where the name + MMR actually appear.
+                for (int attempt = 0; attempt < 8; attempt++)
+                {
+                    await System.Threading.Tasks.Task.Delay(attempt == 0 ? 3000 : 2000);
+                    if (IsDisposed) return;
 
-                var store = new MmrStore();
-                var all = store.Load();
-                all.Add(new Models.MmrEntry(DateTime.Now, mmr.Value, match.Mode) { Account = match.Account });
-                store.Save(all);
+                    int? mmr = await ScreenMmr.ReadScoreboardMmrAsync(match.Account);
+                    if (mmr == null) continue;
 
-                Toast.Show(this, (Localization.IsPolish ? "MMR z ekranu: " : "MMR from screen: ") + mmr.Value,
-                    ToastKind.Success);
+                    var store = new MmrStore();
+                    var all = store.Load();
+                    all.Add(new Models.MmrEntry(DateTime.Now, mmr.Value, match.Mode) { Account = match.Account });
+                    store.Save(all);
+
+                    Toast.Show(this, (Localization.IsPolish ? "MMR z ekranu: " : "MMR from screen: ") + mmr.Value,
+                        ToastKind.Success);
+                    return;
+                }
             }
             catch { /* best-effort; never disrupt a match */ }
         }

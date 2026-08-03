@@ -12,19 +12,19 @@ namespace RLHub2
     // in the app's dark style, instead of a plain system message box. Result via DialogResult.OK.
     public class ScreenMmrDialog : Form
     {
-        private readonly (string Mode, int Mmr, Image? Icon, string Rank)[] _rows;
+        private readonly (string Mode, int Mmr)[] _rows;
 
         public ScreenMmrDialog(Dictionary<string, int> standard)
         {
             bool pl = Localization.IsPolish;
 
-            var rows = new List<(string, int, Image?, string)>();
+            // Only MMR is shown — not a rank. Rank thresholds in RL differ per playlist and per
+            // season, so deriving a rank from a single MMR number is unreliable, and the menu we
+            // read doesn't display the rank name anyway.
+            var rows = new List<(string, int)>();
             foreach (var m in new[] { "1v1", "2v2", "3v3" })
                 if (standard.TryGetValue(m, out int v))
-                {
-                    string rank = RankMmr.TierName(v);
-                    rows.Add((m, v, RankIcons.Get(rank), rank));
-                }
+                    rows.Add((m, v));
             _rows = rows.ToArray();
 
             Text = pl ? "Odczyt MMR z ekranu" : "MMR read from screen";
@@ -38,9 +38,9 @@ namespace RLHub2
             ForeColor = Theme.TextPrimary;
             Font = new Font("Segoe UI", 9.5F);
 
-            const int top = 92, rowH = 66, gap = 10;
+            const int top = 92, rowH = 52, gap = 10;
             int listH = _rows.Length * rowH + (_rows.Length - 1) * gap;
-            ClientSize = new Size(440, top + listH + 84);
+            ClientSize = new Size(400, top + listH + 84);
 
             var cancel = Flat(pl ? "ANULUJ" : "CANCEL", ClientSize.Width - 220, ClientSize.Height - 56, 100, Theme.Surface, Theme.TextPrimary);
             cancel.Click += (s, e) => { DialogResult = DialogResult.Cancel; Close(); };
@@ -70,7 +70,7 @@ namespace RLHub2
             using (var sbr = new SolidBrush(Theme.TextMuted))
                 g.DrawString(pl ? "Zapisać te wartości do wykresu?" : "Save these values to the chart?", sf, sbr, 24, 54);
 
-            const int top = 92, rowH = 66, gap = 10;
+            const int top = 92, rowH = 52, gap = 10;
             int y = top;
             foreach (var r in _rows)
             {
@@ -83,24 +83,9 @@ namespace RLHub2
                     g.DrawPath(pen, path);
                 }
 
-                // rank badge
-                if (r.Icon != null)
-                {
-                    int bs = rowH - 18;
-                    var badge = new Rectangle(rect.X + 12, rect.Y + 9, bs, bs);
-                    float ar = r.Icon.Width / (float)r.Icon.Height;
-                    float w = badge.Width, h = badge.Height;
-                    if (ar > 1) h = w / ar; else w = h * ar;
-                    g.DrawImage(r.Icon, badge.X + (badge.Width - w) / 2, badge.Y + (badge.Height - h) / 2, w, h);
-                }
-
-                int tx = rect.X + rowH + 6;
-                using (var mf = new Font("Segoe UI", 13F, FontStyle.Bold))
+                using (var mf = new Font("Segoe UI", 14F, FontStyle.Bold))
                 using (var mb = new SolidBrush(Theme.TextPrimary))
-                    g.DrawString(r.Mode.ToUpperInvariant(), mf, mb, tx, rect.Y + 10);
-                using (var rf = new Font("Segoe UI", 9F))
-                using (var rb = new SolidBrush(Theme.TextMuted))
-                    g.DrawString(r.Rank, rf, rb, tx, rect.Y + 36);
+                    g.DrawString(r.Mode.ToUpperInvariant(), mf, mb, rect.X + 18, rect.Y + (rowH - mf.Height) / 2);
 
                 using (var vf = new Font("Segoe UI", 20F, FontStyle.Bold))
                 using (var vb = new SolidBrush(Theme.Accent))
