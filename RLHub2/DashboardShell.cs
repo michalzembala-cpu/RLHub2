@@ -177,6 +177,7 @@ namespace RLHub2
             Load += (s, e) =>
             {
                 StatsApiClient.Instance.Start();
+                StatsApiClient.Instance.MatchLogged += OnRankedMatchMmr;
 
                 // CS2 only talks to apps it has a config for, and it reads that config at
                 // startup — so write it now and listen; whatever is running today will be
@@ -210,6 +211,31 @@ namespace RLHub2
             var home = new HomePage();
             home.OpenNewsRequested += (s, e) => NavigateKey("news");
             return home;
+        }
+
+        // Stage 3: right after a standard ranked match, the end-of-match scoreboard shows your MMR.
+        // Read it off the screen and save the real number for that playlist — no clicking needed.
+        // Silently does nothing if the scoreboard isn't visible (casual, or you alt-tabbed away).
+        private async void OnRankedMatchMmr(Models.SessionMatch match)
+        {
+            if (match.Mode is not ("1v1" or "2v2" or "3v3")) return;
+            if (string.IsNullOrWhiteSpace(match.Account)) return;
+
+            try
+            {
+                await System.Threading.Tasks.Task.Delay(2500);   // let the scoreboard settle
+                int? mmr = await ScreenMmr.ReadScoreboardMmrAsync(match.Account);
+                if (mmr == null || IsDisposed) return;
+
+                var store = new MmrStore();
+                var all = store.Load();
+                all.Add(new Models.MmrEntry(DateTime.Now, mmr.Value, match.Mode) { Account = match.Account });
+                store.Save(all);
+
+                Toast.Show(this, (Localization.IsPolish ? "MMR z ekranu: " : "MMR from screen: ") + mmr.Value,
+                    ToastKind.Success);
+            }
+            catch { /* best-effort; never disrupt a match */ }
         }
 
         private void NavigateKey(string key)

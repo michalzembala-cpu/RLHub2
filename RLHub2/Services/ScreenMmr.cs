@@ -82,6 +82,50 @@ namespace RLHub2.Services
             return r;
         }
 
+        // For the automatic post-match read: the end-of-match scoreboard shows the player's MMR
+        // right next to their name. Capture, find the account's name token, and take the MMR number
+        // on the same row just to its left. Returns null if the scoreboard isn't up (e.g. casual,
+        // or the player alt-tabbed away) — never guesses.
+        public static async Task<int?> ReadScoreboardMmrAsync(string accountName)
+        {
+            if (string.IsNullOrWhiteSpace(accountName)) return null;
+            Directory.CreateDirectory(DebugDir);
+
+            using var bmp = CapturePrimaryScreen();
+            try { bmp.Save(Path.Combine(DebugDir, "ocr_scoreboard.png"), ImageFormat.Png); } catch { }
+
+            var tokens = await OcrAsync(bmp);
+            DumpTokens(bmp, tokens);
+            return ParseScoreboard(tokens, accountName);
+        }
+
+        private static int? ParseScoreboard(List<Token> tokens, string account)
+        {
+            // Locate the player's own row by matching the name (aliases included).
+            Token? name = null;
+            foreach (var t in tokens)
+            {
+                var acc = Helpers.Accounts.MatchByName(t.Text);
+                if (acc != null && string.Equals(acc.Name, account, StringComparison.OrdinalIgnoreCase))
+                { name = t; break; }
+            }
+            if (name == null) return null;
+
+            double rowTol = Math.Max(24, name.H * 2.5);
+            int? best = null;
+            double bestX = double.MinValue;
+            foreach (var t in tokens)
+            {
+                if (Math.Abs(t.Y - name.Y) > rowTol) continue;   // same row as the name
+                if (t.X >= name.X) continue;                     // MMR sits to the left of the name
+                string d = OnlyDigits(t.Text);
+                if (d.Length < 3 || d.Length > 4) continue;
+                if (!int.TryParse(d, out int v) || v < 100 || v > 2500) continue;
+                if (t.X > bestX) { bestX = t.X; best = v; }       // closest number to the left of the name
+            }
+            return best;
+        }
+
         private static void DumpTokens(Bitmap bmp, List<Token> tokens)
         {
             try

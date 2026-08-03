@@ -213,18 +213,8 @@ namespace RLHub2
                     return;
                 }
 
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine(pl ? "Odczytano z ekranu:" : "Read from screen:");
-                foreach (var m in new[] { "1v1", "2v2", "3v3" })
-                    if (reading.Standard.TryGetValue(m, out int v))
-                        sb.AppendLine($"   {m.ToUpperInvariant()}:  {v}");
-                sb.AppendLine();
-                sb.Append(pl ? "Zapisać do wykresu?" : "Save to the chart?");
-
-                var ans = MessageBox.Show(FindForm()!, sb.ToString(),
-                    pl ? "Odczyt MMR" : "MMR read",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (ans != DialogResult.Yes) return;
+                using var dlg = new ScreenMmrDialog(reading.Standard);
+                if (dlg.ShowDialog(FindForm()) != DialogResult.OK) return;
 
                 var entries = _store.LoadForActive();
                 var now = DateTime.Now;
