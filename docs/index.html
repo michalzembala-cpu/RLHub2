@@ -66,10 +66,22 @@
 
   /* hero */
   .hero{position:relative; overflow:hidden; border-bottom:1px solid var(--line)}
-  .hero:before{content:""; position:absolute; inset:0;
+  .hero:before{content:""; position:absolute; inset:0; z-index:0;
     background:radial-gradient(900px 500px at 78% 12%, rgba(255,157,46,.16), transparent 60%),
                radial-gradient(800px 500px at 8% 20%, rgba(61,139,255,.16), transparent 60%)}
-  .hero .wrap{position:relative; display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center; padding-top:70px; padding-bottom:84px}
+  .hero .wrap{position:relative; z-index:2; display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center; padding-top:70px; padding-bottom:84px}
+
+  /* drifting ambient orbs behind the hero */
+  .orbs{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1}
+  .orbs span{position:absolute; border-radius:50%; filter:blur(46px); opacity:.28}
+  .orbs span:nth-child(1){width:320px; height:320px; left:-40px; top:8%;  background:var(--blue);   animation:drift1 24s ease-in-out infinite}
+  .orbs span:nth-child(2){width:300px; height:300px; right:6%;  top:2%;   background:var(--orange); animation:drift2 30s ease-in-out infinite}
+  .orbs span:nth-child(3){width:240px; height:240px; left:34%;  bottom:-40px; background:var(--purple); animation:drift3 27s ease-in-out infinite}
+  .orbs span:nth-child(4){width:220px; height:220px; right:22%; bottom:6%; background:var(--blue);   animation:drift1 33s ease-in-out infinite}
+  @keyframes drift1{0%,100%{transform:translate(0,0)}   50%{transform:translate(46px,-34px)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0)}   50%{transform:translate(-40px,30px)}}
+  @keyframes drift3{0%,100%{transform:translate(0,0)}   50%{transform:translate(30px,-24px)}}
+  @media (prefers-reduced-motion: reduce){ .orbs span{animation:none} }
   .hero h1{font-size:clamp(34px,5.4vw,56px); line-height:1.05; margin:14px 0 16px; letter-spacing:-1.5px}
   .hero h1 span{background:linear-gradient(90deg,var(--blue),var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent}
   .hero p.lead{font-size:18px; color:var(--muted); margin:0 0 28px; max-width:34ch}
@@ -201,6 +213,7 @@
 
 <!-- HERO -->
 <section class="hero" id="top">
+  <div class="orbs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
   <div class="wrap">
     <div>
       <p class="eyebrow">Rocket League&nbsp;+&nbsp;Counter-Strike 2</p>
