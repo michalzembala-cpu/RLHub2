@@ -134,6 +134,35 @@
   .foot{display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; align-items:center}
   footer a{color:var(--muted)} footer a:hover{color:var(--text)}
   .disclaimer{margin-top:14px; font-size:12px; color:var(--muted2); max-width:70ch}
+
+  /* hero tagline */
+  .tagline{font-size:clamp(17px,2.4vw,21px); font-weight:700; color:var(--text); margin:0 0 14px; letter-spacing:-.3px}
+  .tagline .g{background:linear-gradient(90deg,var(--blue),var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent}
+
+  /* animated counters */
+  .stats-band{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:36px}
+  .stat{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:26px 18px; text-align:center}
+  .stat .num{font-size:clamp(30px,4.4vw,42px); font-weight:800; line-height:1;
+    background:linear-gradient(90deg,var(--blue),var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .stat .lbl{margin-top:8px; color:var(--muted); font-size:14px; font-weight:600}
+  @media(max-width:600px){ .stats-band{grid-template-columns:1fr} }
+
+  /* roadmap */
+  .roadmap{display:grid; grid-template-columns:repeat(2,1fr); gap:18px}
+  @media(max-width:700px){ .roadmap{grid-template-columns:1fr} }
+  .rm{display:flex; gap:15px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px}
+  .rm .dot{width:10px; height:10px; border-radius:50%; margin-top:7px; flex:0 0 auto; background:linear-gradient(135deg,var(--orange),var(--purple))}
+  .rm h3{margin:0 0 4px; font-size:16px}
+  .rm p{margin:0; color:var(--muted); font-size:14px}
+
+  /* nav github link */
+  .nav .links a.gh{color:var(--text)}
+
+  /* scroll-reveal (disabled when the viewer prefers reduced motion) */
+  @media (prefers-reduced-motion: no-preference){
+    .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease}
+    .reveal.in{opacity:1; transform:none}
+  }
 </style>
 </head>
 <body>
@@ -145,8 +174,9 @@
       <a href="#features">Features</a>
       <a href="#setup">Setup</a>
       <a href="#screenshots">Screenshots</a>
-      <a href="#changelog">Changelog</a>
+      <a href="#roadmap">Roadmap</a>
       <a href="#faq">FAQ</a>
+      <a class="gh" href="https://github.com/michalzembala-cpu/RLHub2">GitHub</a>
     </nav>
     <a class="btn btn-primary sm cta" href="https://github.com/michalzembala-cpu/RLHub2/releases/latest">Download</a>
   </div>
@@ -158,6 +188,7 @@
     <div>
       <p class="eyebrow">Rocket League&nbsp;+&nbsp;Counter-Strike 2</p>
       <h1>Your stats. <span>One hub.</span></h1>
+      <p class="tagline">The ultimate <span class="g">Rocket League &amp; CS2</span> companion.</p>
       <p class="lead">NexPlay is a lightweight Windows app that tracks your progress in Rocket League and CS2 — MMR, sessions, a live overlay, crosshairs and training — all in one dark, consistent place.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="https://github.com/michalzembala-cpu/RLHub2/releases/latest">⬇ Download for Windows</a>
@@ -188,6 +219,11 @@
         <img src="img/game_cs2.jpg" alt="Counter-Strike 2">
         <div><h3>Counter-Strike 2</h3><p>Match stats, a crosshair library, per-map stats, training commands and AI Insights.</p></div>
       </div>
+    </div>
+    <div class="stats-band">
+      <div class="stat"><div class="num" data-to="2">0</div><div class="lbl">games supported</div></div>
+      <div class="stat"><div class="num" data-to="10" data-suffix="+">0</div><div class="lbl">features</div></div>
+      <div class="stat"><div class="num" data-to="100" data-suffix="%">0</div><div class="lbl">free, no account</div></div>
     </div>
   </div>
 </section>
@@ -283,6 +319,21 @@ PacketSendRate=10</pre>
   </div>
 </section>
 
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="wrap">
+    <p class="eyebrow">Roadmap</p>
+    <h2>What's next</h2>
+    <p class="sub">Ideas being worked on — no hard dates, and the list shifts with feedback.</p>
+    <div class="roadmap">
+      <div class="rm"><div class="dot"></div><div><h3>CS2 live overlay</h3><p>The same in-game HUD Rocket League already has, brought to Counter-Strike 2.</p></div></div>
+      <div class="rm"><div class="dot"></div><div><h3>Season history</h3><p>Snapshots at the end of each season, so you can look back on where you peaked.</p></div></div>
+      <div class="rm"><div class="dot"></div><div><h3>Per-map backdrops</h3><p>Each CS2 map's stats page dressed with its own artwork.</p></div></div>
+      <div class="rm"><div class="dot"></div><div><h3>Deeper insights</h3><p>More from your own matches — trends, habits and things to work on.</p></div></div>
+    </div>
+  </div>
+</section>
+
 <!-- FAQ -->
 <section id="faq">
   <div class="wrap">
@@ -319,6 +370,45 @@ PacketSendRate=10</pre>
   <div class="wrap"><p class="disclaimer">NexPlay is an independent fan project. It is not affiliated with Psyonix, Epic Games or Valve. Rocket League and Counter-Strike are trademarks of their respective owners.</p></div>
 </footer>
 
-<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Count-up for the stat numbers, fired when they scroll into view.
+  function countUp(el){
+    const to = +el.dataset.to, suffix = el.dataset.suffix || '';
+    if (reduce){ el.textContent = to + suffix; return; }
+    const dur = 1100; let start = null;
+    function step(t){
+      if (start === null) start = t;
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(to * eased) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  if ('IntersectionObserver' in window){
+    // Scroll-reveal: fade/slide elements in once.
+    if (!reduce){
+      const targets = document.querySelectorAll('.card, .step, .shot-card, .game, .rm, .stat, section > .wrap > h2, section > .wrap > .sub');
+      targets.forEach(el => el.classList.add('reveal'));
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); } });
+      }, { threshold: 0.12 });
+      targets.forEach(el => io.observe(el));
+    }
+    // Counters.
+    const nums = document.querySelectorAll('.stat .num[data-to]');
+    const co = new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => { if (e.isIntersecting){ countUp(e.target); obs.unobserve(e.target); } });
+    }, { threshold: 0.5 });
+    nums.forEach(el => co.observe(el));
+  } else {
+    document.querySelectorAll('.stat .num[data-to]').forEach(el => el.textContent = el.dataset.to + (el.dataset.suffix || ''));
+  }
+</script>
 </body>
 </html>
