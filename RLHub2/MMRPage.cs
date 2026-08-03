@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using RLHub2.Helpers;
 using RLHub2.Models;
@@ -17,6 +18,9 @@ namespace RLHub2
         private readonly MmrStore _store = new();
         private List<MmrEntry> _entries = new();
         private readonly Stack<List<MmrEntry>> _undo = new();
+
+        // Stage-1 calibration button for reading MMR off the screen (Windows OCR).
+        private readonly Button _btnReadScreen = new();
 
         private string _range = "MONTH";
         private string _mode = "2v2";
@@ -35,9 +39,16 @@ namespace RLHub2
             btnImport.Click += (s, e) => ImportData();
             btnFolder.Click += (s, e) => OpenFolder();
 
+            _btnReadScreen.Text = Localization.IsPolish ? "ODCZYT MMR" : "READ MMR";
+            _btnReadScreen.Size = new Size(150, 34);
+            dataPanel.Controls.Add(_btnReadScreen);
+            dataPanel.Controls.SetChildIndex(_btnReadScreen, 0);   // leftmost, so the fixed-width row can't push it off
+            _btnReadScreen.Click += async (s, e) => await ReadScreenTestAsync();
+
             // The Designer pinned these at fixed points sized for smaller buttons; lay them out
             // in a row instead so they can't overlap once they grow.
             StyleDataButtons();
+            StyleActionButtons();
             LayoutDataButtons();
             dataPanel.Resize += (s, e) => LayoutDataButtons();
 
@@ -118,7 +129,7 @@ namespace RLHub2
         // the primary action carries the accent, the rest are outlined and quiet.
         private void StyleDataButtons()
         {
-            foreach (var b in new[] { btnExport, btnImport, btnFolder })
+            foreach (var b in new[] { _btnReadScreen, btnExport, btnImport, btnFolder })
             {
                 b.FlatStyle = FlatStyle.Flat;
                 // No border: a 1px outline plus a rounded region clips its own corners and
@@ -131,9 +142,32 @@ namespace RLHub2
                 b.Cursor = Cursors.Hand;
             }
 
+            // The screen-read button is the new primary action here, so give it the accent.
+            _btnReadScreen.BackColor = Theme.Accent;
+            _btnReadScreen.ForeColor = Color.White;
+
             // Rounded like the cards above them, rather than square system buttons.
-            foreach (var b in new[] { btnExport, btnImport, btnFolder })
+            foreach (var b in new[] { _btnReadScreen, btnExport, btnImport, btnFolder })
             {
+                ApplyRoundedRegion(b, 8);
+                b.SizeChanged += (s, e) => ApplyRoundedRegion(b, 8);
+            }
+        }
+
+        // The Designer left edit / delete / undo / cancel as default WinForms buttons — black text
+        // on a light plate, which reads as a system dialog dropped on the dark page. Give them the
+        // same dark, flat, rounded look as the rest of the app.
+        private void StyleActionButtons()
+        {
+            foreach (var b in new[] { btnEdit, btnDelete, btnUndo, btnCancelEdit })
+            {
+                b.FlatStyle = FlatStyle.Flat;
+                b.FlatAppearance.BorderSize = 0;
+                b.FlatAppearance.MouseOverBackColor = Theme.Mix(Theme.SurfaceAlt, Theme.Accent, 0.25f);
+                b.BackColor = Theme.SurfaceAlt;
+                b.ForeColor = Theme.TextPrimary;
+                b.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+                b.Cursor = Cursors.Hand;
                 ApplyRoundedRegion(b, 8);
                 b.SizeChanged += (s, e) => ApplyRoundedRegion(b, 8);
             }
@@ -144,10 +178,73 @@ namespace RLHub2
             const int gap = 10;
             int y = Math.Max(4, (dataPanel.Height - btnExport.Height) / 2);
             int x = 0;
-            foreach (var b in new[] { btnExport, btnImport, btnFolder })
+            foreach (var b in new[] { _btnReadScreen, btnExport, btnImport, btnFolder })
             {
                 b.Location = new Point(x, y);
                 x += b.Width + gap;
+            }
+        }
+
+        // Read the 1v1/2v2/3v3 MMR straight off Rocket League's Play menu (Windows OCR). The
+        // countdown gives you time to alt-tab to the game so the app grabs the menu, not itself.
+        private async Task ReadScreenTestAsync()
+        {
+            bool pl = Localization.IsPolish;
+            string original = _btnReadScreen.Text;
+            _btnReadScreen.Enabled = false;
+            try
+            {
+                for (int i = 5; i >= 1; i--)
+                {
+                    _btnReadScreen.Text = (pl ? "Przełącz na RL… " : "Switch to RL… ") + i;
+                    await Task.Delay(1000);
+                }
+                _btnReadScreen.Text = pl ? "Czytam ekran…" : "Reading…";
+
+                var reading = await ScreenMmr.ReadAsync();
+
+                if (reading.Standard.Count == 0)
+                {
+                    MessageBox.Show(FindForm()!,
+                        (pl ? "Nie znalazłem MMR na ekranie. Upewnij się, że w RL jest otwarte menu Play, a gra działa w trybie „bez ramki”.\n\nSzczegóły: "
+                            : "No MMR found on screen. Make sure RL's Play menu is open and the game runs in borderless mode.\n\nDetails: ")
+                        + ScreenMmr.DebugDir,
+                        "OCR", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine(pl ? "Odczytano z ekranu:" : "Read from screen:");
+                foreach (var m in new[] { "1v1", "2v2", "3v3" })
+                    if (reading.Standard.TryGetValue(m, out int v))
+                        sb.AppendLine($"   {m.ToUpperInvariant()}:  {v}");
+                sb.AppendLine();
+                sb.Append(pl ? "Zapisać do wykresu?" : "Save to the chart?");
+
+                var ans = MessageBox.Show(FindForm()!, sb.ToString(),
+                    pl ? "Odczyt MMR" : "MMR read",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (ans != DialogResult.Yes) return;
+
+                var entries = _store.LoadForActive();
+                var now = DateTime.Now;
+                foreach (var kv in reading.Standard)
+                    entries.Add(new MmrEntry(now, kv.Value, kv.Key) { Account = Accounts.ActiveName });
+                _store.SaveForActive(entries);
+
+                LoadEntries();   // refresh the cards from the freshly saved data
+                Toast.Show(FindForm() is Control c ? c : this,
+                    pl ? "Zapisano MMR z ekranu" : "Screen MMR saved", ToastKind.Success);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(FindForm()!, ex.Message + "\n\n" + ex.GetType().Name,
+                    "OCR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _btnReadScreen.Enabled = true;
+                _btnReadScreen.Text = original;
             }
         }
 
