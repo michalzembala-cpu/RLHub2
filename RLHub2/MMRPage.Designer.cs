@@ -26,6 +26,7 @@ namespace RLHub2
         private Button btnBack;
         private Label lblDetailTitle;
         private FlowLayoutPanel rangePanel;
+        private Button btnDay;
         private Button btnWeek;
         private Button btnMonth;
         private Button btnSeason;
@@ -68,6 +69,7 @@ namespace RLHub2
             detailView = new TableLayoutPanel();
             headerPanel = new Panel();
             rangePanel = new FlowLayoutPanel();
+            btnDay = new Button();
             btnWeek = new Button();
             btnMonth = new Button();
             btnSeason = new Button();
@@ -291,6 +293,7 @@ namespace RLHub2
             // 
             rangePanel.AutoSize = true;
             rangePanel.BackColor = Theme.PageBg;
+            rangePanel.Controls.Add(btnDay);
             rangePanel.Controls.Add(btnWeek);
             rangePanel.Controls.Add(btnMonth);
             rangePanel.Controls.Add(btnSeason);
@@ -324,11 +327,17 @@ namespace RLHub2
             btnSeason.TabIndex = 2;
             // 
             // btnAll
-            // 
+            //
             btnAll.Location = new Point(246, 3);
             btnAll.Name = "btnAll";
             btnAll.Size = new Size(75, 23);
             btnAll.TabIndex = 3;
+            //
+            // btnDay
+            //
+            btnDay.Name = "btnDay";
+            btnDay.Size = new Size(75, 23);
+            btnDay.TabIndex = 4;
             // 
             // lblDetailTitle
             // 

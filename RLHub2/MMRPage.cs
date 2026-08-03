@@ -54,6 +54,7 @@ namespace RLHub2
 
             btnBack.Click += (s, e) => ShowSelection();
 
+            btnDay.Click += (s, e) => SetRange("DAY");
             btnWeek.Click += (s, e) => SetRange("WEEK");
             btnMonth.Click += (s, e) => SetRange("MONTH");
             btnSeason.Click += (s, e) => SetRange("SEASON");
@@ -87,6 +88,7 @@ namespace RLHub2
             lblSelSub.Text = Localization.T("mmr_choose");
 
             btnBack.Text = Localization.T("mmr_back");
+            btnDay.Text = Localization.T("mmr_day");
             btnWeek.Text = Localization.T("mmr_week");
             btnMonth.Text = Localization.T("mmr_month");
             btnSeason.Text = Localization.T("mmr_season");
@@ -322,7 +324,7 @@ namespace RLHub2
 
             foreach (var (b, key) in new[]
                      {
-                         (btnWeek, "WEEK"), (btnMonth, "MONTH"),
+                         (btnDay, "DAY"), (btnWeek, "WEEK"), (btnMonth, "MONTH"),
                          (btnSeason, "SEASON"), (btnAll, "ALL")
                      })
             {
@@ -429,15 +431,26 @@ namespace RLHub2
         private IEnumerable<MmrEntry> CurrentEntries()
         {
             DateTime now = DateTime.Now;
-            var byMode = _entries.Where(e => e.Mode == _mode);
+            var byMode = _entries.Where(e => e.Mode == _mode).OrderBy(e => e.Timestamp).ToList();
 
-            return _range switch
+            // DAY shows every match from today, at full match granularity.
+            if (_range == "DAY")
+                return byMode.Where(e => e.Timestamp.Date == now.Date);
+
+            // The other ranges collapse each day to one point — the day's final MMR — so a long
+            // span reads as a day-by-day trend instead of hundreds of individual matches.
+            IEnumerable<MmrEntry> windowed = _range switch
             {
                 "WEEK" => byMode.Where(e => e.Timestamp >= now.AddDays(-7)),
                 "MONTH" => byMode.Where(e => e.Timestamp >= now.AddDays(-30)),
                 "SEASON" => byMode.Where(e => e.Timestamp >= now.AddDays(-90)),
                 _ => byMode
             };
+
+            return windowed
+                .GroupBy(e => e.Timestamp.Date)
+                .Select(g => g.OrderBy(e => e.Timestamp).Last())
+                .OrderBy(e => e.Timestamp);
         }
 
         // ===== REFRESH =====
