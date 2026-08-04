@@ -44,10 +44,22 @@ namespace RLHub2.Controls
             if (_entries.Count == 0) { if (_hover != -1) { _hover = -1; Invalidate(); } return; }
 
             var plot = PlotRect();
-            float slot = plot.Width / (float)_entries.Count;
-            int idx = (int)((e.X - plot.Left) / slot);
+            var (startX, candleW) = CandleLayout(plot);
+            int idx = candleW <= 0 ? -1 : (int)((e.X - startX) / candleW);
             if (idx < 0 || idx >= _entries.Count) idx = -1;
             if (idx != _hover) { _hover = idx; Invalidate(); }
+        }
+
+        // Candles have a capped width and touch edge-to-edge (no gaps), packed from the left. With
+        // few entries that's a compact run on the left rather than a couple of giant blocks; with
+        // many, the width shrinks to fill the plot. Returns the left edge of the first candle and
+        // the per-candle width so painting, hit-testing and the hover guide all line up.
+        private (float startX, float candleW) CandleLayout(Rectangle plot)
+        {
+            int n = _entries.Count;
+            if (n == 0) return (plot.Left, 0f);
+            float w = Math.Min(plot.Width / (float)n, 48f);
+            return (plot.Left, w);
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -138,22 +150,26 @@ namespace RLHub2.Controls
             }
 
             int n = _entries.Count;
-            // Candles fill the full plot width: fewer entries (e.g. WEEK) => wider candles,
-            // many entries (ALL) => narrower. They touch each other, starting from the left.
-            float slot = plot.Width / (float)n;
-            float candleW = slot;
+            var (startX, candleW) = CandleLayout(plot);
 
-            // X date labels (up to 6).
+            // X labels. When every entry is from the same day (the DAY view) the date would just
+            // repeat, so show the time instead. Labels are drawn left to right and any that would
+            // overlap the previous one are skipped — so they never run into each other.
+            bool sameDay = _entries[0].Timestamp.Date == _entries[n - 1].Timestamp.Date;
+            string fmt = sameDay ? "HH:mm" : "dd.MM";
             using (var axisFont = new Font("Segoe UI", 10f, FontStyle.Bold))
             using (var axisBrush = new SolidBrush(Theme.TextMuted))
             {
-                int step = Math.Max(1, n / 6);
-                for (int i = 0; i < n; i += step)
+                float lastRight = float.MinValue;
+                for (int i = 0; i < n; i++)
                 {
-                    float xCenter = plot.Left + slot * (i + 0.5f);
-                    string s = _entries[i].Timestamp.ToString("dd.MM");
+                    float xCenter = startX + candleW * (i + 0.5f);
+                    string s = _entries[i].Timestamp.ToString(fmt);
                     var sz = g.MeasureString(s, axisFont);
-                    g.DrawString(s, axisFont, axisBrush, xCenter - sz.Width / 2f, plot.Bottom + 6);
+                    float lx = xCenter - sz.Width / 2f;
+                    if (lx <= lastRight + 8) continue;   // would touch the previous label — skip
+                    g.DrawString(s, axisFont, axisBrush, lx, plot.Bottom + 6);
+                    lastRight = lx + sz.Width;
                 }
             }
 
@@ -166,7 +182,7 @@ namespace RLHub2.Controls
                 bool up = close >= open;
                 Color col = up ? UpColor : DownColor;
 
-                float left = plot.Left + slot * i;
+                float left = startX + candleW * i;   // candles touch edge-to-edge
 
                 float yHigh = YOf(Math.Max(open, close));
                 float yLow = YOf(Math.Min(open, close));
@@ -197,7 +213,8 @@ namespace RLHub2.Controls
             if (_hover >= 0 && _hover < n)
             {
                 var en = _entries[_hover];
-                float xc = plot.Left + slot * (_hover + 0.5f);
+                var (hStartX, hCandleW) = CandleLayout(plot);
+                float xc = hStartX + hCandleW * (_hover + 0.5f);
 
                 using (var guide = new Pen(Color.FromArgb(130, Accent), 1f) { DashStyle = DashStyle.Dash })
                     g.DrawLine(guide, xc, plot.Top, xc, plot.Bottom);
