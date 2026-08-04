@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
@@ -44,41 +45,51 @@ namespace RLHub2.Services
         {
             Directory.CreateDirectory(DebugDir);
 
-            using var bmp = CapturePrimaryScreen();
-            try { bmp.Save(Path.Combine(DebugDir, "ocr_capture.png"), ImageFormat.Png); } catch { }
+            using var full = CapturePrimaryScreen();
+            try { full.Save(Path.Combine(DebugDir, "ocr_capture.png"), ImageFormat.Png); } catch { }
 
-            var tokens = await OcrAsync(bmp);
-            DumpTokens(bmp, tokens);
-            return Parse(tokens);
+            // The tile MMRs are white numbers on colourful art, so OCR often misses them at native
+            // size (contrast). Crop the Play menu's top-row band and upscale it 3x so they read
+            // reliably, then take the numbers left to right: 3v3, 2v2, 1v1 (RL's fixed order).
+            int top = (int)(full.Height * 0.235);
+            int h = (int)(full.Height * 0.055);
+            using var band = CropUpscale(full, new Rectangle(0, top, full.Width, h), 3);
+
+            var tokens = await OcrAsync(band);
+            DumpTokens(band, tokens);
+            return ParseRow(tokens);
         }
 
-        // The three ranked playlists are always the first three tiles of the Play menu's top row
-        // (3v3 Standard, 2v2 Doubles, 1v1 Duel), with the MMR in each tile's top-right corner. So:
-        // keep the MMR-plausible numbers, find the topmost row, and read it left to right.
-        private static Reading Parse(List<Token> tokens)
+        private static Bitmap CropUpscale(Bitmap src, Rectangle r, int scale)
         {
-            var cand = new List<(int val, double x, double y)>();
+            r.Intersect(new Rectangle(0, 0, src.Width, src.Height));
+            var b = new Bitmap(Math.Max(1, r.Width * scale), Math.Max(1, r.Height * scale), PixelFormat.Format32bppArgb);
+            using var g = Graphics.FromImage(b);
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.DrawImage(src, new Rectangle(0, 0, b.Width, b.Height), r, GraphicsUnit.Pixel);
+            return b;
+        }
+
+        // The band we OCR is just the Play menu's top row, so the MMR-plausible numbers are already
+        // 3v3, 2v2, 1v1 left to right (RL's fixed order), with extra modes / an FPS overlay falling
+        // to their right. Read them by X and take the first three.
+        private static Reading ParseRow(List<Token> tokens)
+        {
+            var cand = new List<(int val, double x)>();
             foreach (var t in tokens)
             {
                 string d = OnlyDigits(t.Text);
                 if (d.Length < 3 || d.Length > 4) continue;      // MMR is 3–4 digits
                 if (!int.TryParse(d, out int v)) continue;
-                if (v < 100 || v > 2500) continue;               // excludes "players online", level, labels
-                cand.Add((v, t.X, t.Y));
+                if (v < 100 || v > 2500) continue;               // excludes players-online, level, labels
+                cand.Add((v, t.X));
             }
 
             var r = new Reading { AllTiles = cand.Select(c => c.val).ToList() };
-            if (cand.Count == 0) return r;
-
-            // Rows are far apart; group by Y with a tolerance relative to the tile height we saw.
-            double tol = cand.Max(c => c.y) * 0.06 + 20;
-            double topY = cand.Min(c => c.y);
-            var topRow = cand.Where(c => c.y - topY <= tol).OrderBy(c => c.x).ToList();
-
+            var ordered = cand.OrderBy(c => c.x).ToList();
             string[] order = { "3v3", "2v2", "1v1" };
-            for (int i = 0; i < order.Length && i < topRow.Count; i++)
-                r.Standard[order[i]] = topRow[i].val;
-
+            for (int i = 0; i < order.Length && i < ordered.Count; i++)
+                r.Standard[order[i]] = ordered[i].val;
             return r;
         }
 
