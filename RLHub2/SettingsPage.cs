@@ -32,8 +32,11 @@ namespace RLHub2
             segTheme.SetSelectedSilent(Theme.IsDark ? 0 : 1);
             txtBcKey.Text = _store.LoadBallchasingKey();
 
-            // updates
-            txtUpdRepo.Text = _store.LoadUpdateRepo();
+            // updates — the repo is baked in, so there's nothing to type: just the button.
+            txtUpdRepo.Visible = false;
+            btnCheckUpd.Location = new Point(20, 90);
+            btnCheckUpd.Size = new Size(210, 32);
+            btnCheckUpd.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             chkAutoUpd.Checked = _store.LoadAutoCheckUpdates();
             chkAutoUpd.CheckedChanged += (s, e) => _store.SaveAutoCheckUpdates(chkAutoUpd.Checked);
 
@@ -126,12 +129,11 @@ namespace RLHub2
 
         private async Task CheckUpdates()
         {
-            _store.SaveUpdateRepo(txtUpdRepo.Text);
             btnCheckUpd.Enabled = false;
             btnInstallUpd.Visible = false;
             Status(Localization.IsPolish ? "Sprawdzam…" : "Checking…", Theme.TextMuted);
 
-            var info = await new UpdateService().CheckAsync(txtUpdRepo.Text);
+            var info = await new UpdateService().CheckAsync(_store.LoadUpdateRepo());
             btnCheckUpd.Enabled = true;
 
             // Each failure means something different to the user, so none of them collapse
@@ -323,9 +325,9 @@ namespace RLHub2
                 : "Ask which game to use on startup";
             lblUpd.Text = Localization.IsPolish ? "AKTUALIZACJE" : "UPDATES";
             lblUpdHint.Text = Localization.IsPolish
-                ? $"Masz wersję {UpdateService.CurrentVersionText}. Podaj repozytorium GitHub z wydaniami."
-                : $"You have version {UpdateService.CurrentVersionText}. Point this at a GitHub repo with releases.";
-            btnCheckUpd.Text = Localization.IsPolish ? "SPRAWDŹ" : "CHECK";
+                ? $"Masz wersję {UpdateService.CurrentVersionText}. Kliknij, aby sprawdzić nowszą."
+                : $"You have version {UpdateService.CurrentVersionText}. Click to check for a newer one.";
+            btnCheckUpd.Text = Localization.IsPolish ? "SPRAWDŹ AKTUALIZACJE" : "CHECK FOR UPDATES";
             chkAutoUpd.Text = Localization.IsPolish
                 ? "Sprawdzaj aktualizacje przy starcie"
                 : "Check for updates on startup";

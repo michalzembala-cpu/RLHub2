@@ -225,7 +225,12 @@ namespace RLHub2.Services
             Save(cfg);
         }
 
-        public string LoadUpdateRepo() => Load().UpdateRepo ?? "";
+        // Falls back to the built-in repo so updates work with no setup; a saved value overrides it.
+        public string LoadUpdateRepo()
+        {
+            var repo = (Load().UpdateRepo ?? "").Trim();
+            return repo.Length > 0 ? repo : UpdateService.DefaultRepo;
+        }
 
         public void SaveUpdateRepo(string repo)
         {

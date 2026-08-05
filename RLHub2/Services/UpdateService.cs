@@ -28,6 +28,10 @@ namespace RLHub2.Services
     // Until a release is published it reports that plainly rather than pretending to work.
     public class UpdateService
     {
+        // Where releases live. Baked in so the update check just works — the user never has to type
+        // a repo. A value saved in Settings still overrides this, for anyone pointing at a fork.
+        public const string DefaultRepo = "michalzembala-cpu/RLHub2";
+
         private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(30) };
 
         public static Version CurrentVersion =>
