@@ -108,7 +108,7 @@ namespace RLHub2
             // season history (current in-progress + archived)
             _history = new List<SeasonSnapshot>();
             var current = SeasonStats.ComputeCurrent();
-            if (current.Matches > 0) _history.Add(current);
+            if (current.Matches > 0 || current.HighestMmr > 0) _history.Add(current);
             _history.AddRange(new SeasonHistoryStore().LoadForActive());
             _history = _history.OrderByDescending(s => s.InProgress).ThenByDescending(s => s.EndedOn).ToList();
 
@@ -175,12 +175,15 @@ namespace RLHub2
                         g.DrawString(Localization.T("records_in_progress"), tagFont, tt, tag.X + 8, tag.Y + 2);
                 }
 
-                string line = $"Peak {Dash(s.PeakRank)}   ·   Final {Dash(s.FinalRank)}";
-                string line2 = $"MMR {s.HighestMmr}   ·   WR {s.WinRate}%   ·   {s.Matches} {Localization.T("records_games")}";
+                // No rank name (RL hides the MMR-to-rank mapping) — the peak MMR is the real figure.
                 using (var sb = new SolidBrush(Theme.TextSecondary))
-                    g.DrawString(line, statFont, sb, pad, y + 30);
-                using (var mb = new SolidBrush(Theme.TextMuted))
+                    g.DrawString($"Peak MMR {s.HighestMmr}", statFont, sb, pad, y + 30);
+
+                if (s.Matches > 0)
                 {
+                    int wins = (int)Math.Round(s.Matches * s.WinRate / 100.0);
+                    string line2 = $"{wins}–{s.Matches - wins}   ·   WR {s.WinRate}%   ·   {s.Matches} {Localization.T("records_games")}";
+                    using var mb = new SolidBrush(Theme.TextMuted);
                     var sz = g.MeasureString(line2, statFont);
                     g.DrawString(line2, statFont, mb, W - pad - sz.Width, y + 8);
                 }

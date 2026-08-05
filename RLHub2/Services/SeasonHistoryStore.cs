@@ -77,31 +77,26 @@ namespace RLHub2.Services
         {
             var start = SeasonService.CurrentSeasonStart;
 
-            var ball = new BallMatchStore().LoadForActive().Where(m => m.Date.ToUniversalTime() >= start).ToList();
-            var mmr = new MmrStore().LoadForActive().Where(e => e.Timestamp.ToUniversalTime() >= start).ToList();
+            // Matches and win rate come from the live Stats API (real games this season); the peak
+            // MMR from the recorded MMR (now the real on-screen number). Ballchasing is not used —
+            // it stopped returning ranks and is often empty, which left this whole section blank.
+            var matches = new SessionStore().LoadForActive()
+                .Where(m => m.Time.ToUniversalTime() >= start).ToList();
+            var mmr = new MmrStore().LoadForActive()
+                .Where(e => e.Timestamp.ToUniversalTime() >= start).ToList();
 
             var snap = new SeasonSnapshot
             {
                 Season = SeasonService.CurrentSeasonName,
                 Account = Helpers.Accounts.ActiveName,
                 InProgress = true,
-                Matches = ball.Count,
+                Matches = matches.Count,
             };
 
-            if (ball.Count > 0)
-            {
-                snap.WinRate = (int)Math.Round(100.0 * ball.Count(m => m.Won) / ball.Count);
+            if (matches.Count > 0)
+                snap.WinRate = (int)Math.Round(100.0 * matches.Count(m => m.Won) / matches.Count);
 
-                var ranked = ball.Where(m => m.RankTier > 0).ToList();
-                if (ranked.Count > 0)
-                {
-                    var peak = ranked.OrderByDescending(m => m.RankTier).ThenByDescending(m => m.RankDivision).First();
-                    var final = ranked.OrderByDescending(m => m.Date).First();
-                    snap.PeakRank = peak.RankName;
-                    snap.FinalRank = final.RankName;
-                }
-            }
-
+            // No rank name: RL hides MMR-to-rank, and the value we read is the MMR, not the tier.
             snap.HighestMmr = mmr.Count > 0 ? mmr.Max(e => e.Value) : 0;
             return snap;
         }
