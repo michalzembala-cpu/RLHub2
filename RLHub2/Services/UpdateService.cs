@@ -186,7 +186,28 @@ namespace RLHub2.Services
                 string file = Path.GetFileName(downloadedPath);
                 if (file.Contains("setup", StringComparison.OrdinalIgnoreCase))
                 {
-                    Process.Start(new ProcessStartInfo(downloadedPath) { UseShellExecute = true });
+                    // Run the installer SILENTLY on an in-app update: the language prompt and wizard
+                    // belong to the first manual install only, not to every update. Wait for this
+                    // app to exit (the exe is locked while running), install with no UI, then
+                    // relaunch the freshly installed app ourselves (/VERYSILENT skips the installer's
+                    // own "launch" step).
+                    var dir = Path.GetDirectoryName(downloadedPath)!;
+                    var script = Path.Combine(dir, "apply-update.cmd");
+                    File.WriteAllText(script,
+                        "@echo off\r\n" +
+                        ":wait\r\n" +
+                        $"tasklist /fi \"PID eq {pid}\" | find \"{pid}\" >nul\r\n" +
+                        "if not errorlevel 1 (ping -n 2 127.0.0.1 >nul & goto wait)\r\n" +
+                        $"\"{downloadedPath}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART\r\n" +
+                        $"start \"\" \"{current}\"\r\n" +
+                        "del \"%~f0\"\r\n");
+
+                    Process.Start(new ProcessStartInfo(script)
+                    {
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        WorkingDirectory = dir,
+                    });
                     return true;
                 }
 

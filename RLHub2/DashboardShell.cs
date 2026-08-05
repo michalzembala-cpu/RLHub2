@@ -567,11 +567,13 @@ namespace RLHub2
                 var info = await new UpdateService().CheckAsync(_store.LoadUpdateRepo());
                 if (!info.Ok || !info.Available || IsDisposed) return;
 
-                BeginInvoke(new Action(() => Toast.Show(this,
-                    Localization.IsPolish
-                        ? $"Dostępna wersja {info.Version} — zobacz Ustawienia"
-                        : $"Version {info.Version} available — see Settings",
-                    ToastKind.Info, 6000)));
+                // A newer release exists → offer to update right here, at launch.
+                BeginInvoke(new Action(() =>
+                {
+                    if (IsDisposed) return;
+                    using var dlg = new UpdateAvailableDialog(info);
+                    dlg.ShowDialog(this);
+                }));
             }
             catch { /* a failed update check must never bother the user at launch */ }
         }

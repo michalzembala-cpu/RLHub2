@@ -14,7 +14,7 @@
     <Product>NexPlay</Product>
     <AssemblyTitle>NexPlay</AssemblyTitle>
     <!-- The updater compares this against the latest GitHub release tag, so bump it per release. -->
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <!-- Deliberately NOT PublishSingleFile: it silently drops the larger Content files
          (cs2_bg.png, gamepicker_bg.png, overlay_bg.png never reached the publish folder), and
          the app loads those from Resources\ next to the exe, so a single-file build shipped
