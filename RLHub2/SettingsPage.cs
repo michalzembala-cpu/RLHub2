@@ -11,8 +11,12 @@ namespace RLHub2
     {
         // Settings is shared by both games, so its backdrop follows whichever one is active —
         // a Rocket League stadium behind CS2 settings is the same mismatch as on the CS2 pages.
-        protected override string ArenaFile
-            => Games.Active == GameId.Cs2 ? "cs2_bg.png" : "rl_bg.png";
+        protected override string ArenaFile => Games.Active switch
+        {
+            GameId.Cs2 => "cs2_bg.png",
+            GameId.Overwatch => "ow_bg.png",   // absent -> flat accent gradient
+            _ => "rl_bg.png",
+        };
 
         private readonly SettingsStore _store = new();
 

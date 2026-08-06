@@ -208,9 +208,8 @@ namespace RLHub2
                 if (reading.Standard.Count == 0)
                 {
                     MessageBox.Show(FindForm()!,
-                        (pl ? "Nie znalazłem MMR na ekranie. Upewnij się, że w RL jest otwarte menu Play, a gra działa w trybie „bez ramki”.\n\nSzczegóły: "
-                            : "No MMR found on screen. Make sure RL's Play menu is open and the game runs in borderless mode.\n\nDetails: ")
-                        + ScreenMmr.DebugDir,
+                        pl ? "Nie znalazłem MMR na ekranie. Upewnij się, że w RL jest otwarte menu Play, a gra działa w trybie „bez ramki”."
+                           : "No MMR found on screen. Make sure RL's Play menu is open and the game runs in borderless mode.",
                         "OCR", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }

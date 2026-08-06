@@ -26,6 +26,8 @@ namespace RLHub2
         private NavButton btnCrosshair;
         private NavButton btnMaps;
         private NavButton btnPractice;
+        private NavButton btnOw;
+        private NavButton btnOwSession;
         private NavButton btnNews;
         private NavButton btnProfile;
         private NavButton btnRecords;
@@ -55,6 +57,8 @@ namespace RLHub2
             btnCrosshair = new NavButton();
             btnMaps = new NavButton();
             btnPractice = new NavButton();
+            btnOw = new NavButton();
+            btnOwSession = new NavButton();
             btnNews = new NavButton();
             btnProfile = new NavButton();
             btnRecords = new NavButton();
@@ -121,6 +125,8 @@ namespace RLHub2
             ConfigureNav(btnCrosshair, "Celowniki", "\U0001F3AF");   // 🎯
             ConfigureNav(btnMaps, "Mapy", "\U0001F5FA");             // 🗺
             ConfigureNav(btnPractice, "Trening", "\U0001F393");      // 🎓
+            ConfigureNav(btnOw, "Dashboard", "\U0001F9B8");          // 🦸
+            ConfigureNav(btnOwSession, "Sesja", "\U0001F534");       // 🔴
             ConfigureNav(btnProfile, "Profile", "\U0001F464");       // 👤
             ConfigureNav(btnRecords, "Records", "\U0001F3C5");       // 🏅
             ConfigureNav(btnTournaments, "Tournaments", "\U0001F3C6");// 🏆
@@ -142,6 +148,8 @@ namespace RLHub2
             navPanel.Controls.Add(btnCrosshair);
             navPanel.Controls.Add(btnMaps);
             navPanel.Controls.Add(btnPractice);
+            navPanel.Controls.Add(btnOw);
+            navPanel.Controls.Add(btnOwSession);
             navPanel.Controls.Add(btnProfile);
             navPanel.Controls.Add(btnRecords);
             navPanel.Controls.Add(lblSecSocial);

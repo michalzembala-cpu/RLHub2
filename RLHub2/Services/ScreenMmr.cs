@@ -26,10 +26,6 @@ namespace RLHub2.Services
             public double X, Y, W, H;   // bounding box in screen pixels
         }
 
-        public static string DebugDir { get; } = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "RLHub2", "ocr");
-
         // What one screen read produced.
         public sealed class Reading
         {
@@ -43,10 +39,8 @@ namespace RLHub2.Services
         // ocr_capture.png + ocr_debug.txt so a missed read can be diagnosed.
         public static async Task<Reading> ReadAsync()
         {
-            Directory.CreateDirectory(DebugDir);
-
+            // Everything stays in memory — no screenshot or debug file is written to disk.
             using var full = CapturePrimaryScreen();
-            try { full.Save(Path.Combine(DebugDir, "ocr_capture.png"), ImageFormat.Png); } catch { }
 
             // The tile MMRs are white numbers on colourful art, so OCR often misses them at native
             // size (contrast). Crop the Play menu's top-row band and upscale it 3x so they read
@@ -56,7 +50,6 @@ namespace RLHub2.Services
             using var band = CropUpscale(full, new Rectangle(0, top, full.Width, h), 3);
 
             var tokens = await OcrAsync(band);
-            DumpTokens(band, tokens);
             return ParseRow(tokens);
         }
 
@@ -100,13 +93,10 @@ namespace RLHub2.Services
         public static async Task<int?> ReadScoreboardMmrAsync(string accountName)
         {
             if (string.IsNullOrWhiteSpace(accountName)) return null;
-            Directory.CreateDirectory(DebugDir);
 
+            // In-memory only — nothing is saved to disk.
             using var bmp = CapturePrimaryScreen();
-            try { bmp.Save(Path.Combine(DebugDir, "ocr_scoreboard.png"), ImageFormat.Png); } catch { }
-
             var tokens = await OcrAsync(bmp);
-            DumpTokens(bmp, tokens);
             return ParseScoreboard(tokens, accountName);
         }
 
@@ -137,18 +127,115 @@ namespace RLHub2.Services
             return best;
         }
 
-        private static void DumpTokens(Bitmap bmp, List<Token> tokens)
+        // ===== Overwatch competitive rank =====
+        // Capture the screen, OCR it, and pull the per-role ranks (tier + division). Everything is
+        // done IN MEMORY — no screenshot or debug file is ever written to disk. The result only
+        // pre-fills a dialog the user confirms, so an imperfect read is corrected, never trusted
+        // blindly. Returns role -> "Diamond 3"; roles it can't read are simply absent.
+        public static async Task<Dictionary<string, string>> ReadOwRankAsync()
         {
-            try
+            using var full = CapturePrimaryScreen();     // in-memory bitmap, disposed on return
+            var tokens = await OcrAsync(full);            // no Save(), no DumpTokens() — nothing hits disk
+            return ParseOwRanks(tokens);
+        }
+
+        private static readonly Dictionary<string, string> OwTiers = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["bronze"] = "Bronze", ["braz"] = "Bronze", ["brąz"] = "Bronze",
+            ["silver"] = "Silver", ["srebro"] = "Silver",
+            ["gold"] = "Gold", ["zloto"] = "Gold", ["złoto"] = "Gold",
+            ["platinum"] = "Platinum", ["platyna"] = "Platinum",
+            ["diamond"] = "Diamond", ["diament"] = "Diamond",
+            ["master"] = "Master", ["mistrz"] = "Master",
+            ["grandmaster"] = "Grandmaster", ["arcymistrz"] = "Grandmaster",
+            ["champion"] = "Champion",
+        };
+
+        private static readonly Dictionary<string, string> OwRoles = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["tank"] = "tank", ["czolg"] = "tank", ["czołg"] = "tank",
+            ["damage"] = "damage", ["dps"] = "damage", ["obrazenia"] = "damage", ["obrażenia"] = "damage",
+            ["support"] = "support", ["wsparcie"] = "support", ["pomoc"] = "support",
+        };
+
+        private static Dictionary<string, string> ParseOwRanks(List<Token> tokens)
+        {
+            var tiers = new List<(string tier, double x, double y)>();
+            var roles = new List<(string role, double x, double y)>();
+            var divs = new List<(int d, double x, double y)>();
+
+            foreach (var t in tokens)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine($"screen: {bmp.Width}x{bmp.Height}    tokens: {tokens.Count}");
-                sb.AppendLine("text\tx\ty\tw\th");
-                foreach (var t in tokens)
-                    sb.AppendLine($"{t.Text}\t{t.X:0}\t{t.Y:0}\t{t.W:0}\t{t.H:0}");
-                File.WriteAllText(Path.Combine(DebugDir, "ocr_debug.txt"), sb.ToString(), new UTF8Encoding(false));
+                double cx = t.X + t.W / 2, cy = t.Y + t.H / 2;
+                string word = LettersOnly(t.Text);
+                if (word.Length > 0 && OwTiers.TryGetValue(word, out var tier)) tiers.Add((tier, cx, cy));
+                if (word.Length > 0 && OwRoles.TryGetValue(word, out var role)) roles.Add((role, cx, cy));
+                string d = OnlyDigits(t.Text);
+                if (d.Length == 1 && d[0] >= '1' && d[0] <= '5') divs.Add((d[0] - '0', cx, cy));
             }
-            catch { }
+
+            var result = new Dictionary<string, string>();
+            foreach (var (role, rx, ry) in roles)
+            {
+                if (tiers.Count == 0) break;
+                // nearest tier to this role label
+                var tier = tiers.OrderBy(t => Dist(t.x, t.y, rx, ry)).First();
+                // a division digit close to that tier (within a generous radius)
+                int div = 0;
+                if (divs.Count > 0)
+                {
+                    var near = divs.OrderBy(v => Dist(v.x, v.y, tier.x, tier.y)).First();
+                    if (Dist(near.x, near.y, tier.x, tier.y) < 260) div = near.d;
+                }
+                result[role] = div > 0 ? $"{tier.tier} {div}" : tier.tier;
+            }
+            return result;
+        }
+
+        // Read the numbers on the player's row of the end-of-match scoreboard. In memory, no files.
+        // Returns the row's numeric tokens left-to-right (elims/assists/deaths/damage/healing on
+        // OW's scoreboard) for the confirmation dialog to map; empty if the player's row wasn't
+        // found (never guesses a stranger's row).
+        public static async Task<List<int>> ReadOwScoreboardAsync(string playerName)
+        {
+            using var full = CapturePrimaryScreen();
+            var tokens = await OcrAsync(full);
+            return ParseOwScoreboardRow(tokens, playerName);
+        }
+
+        private static List<int> ParseOwScoreboardRow(List<Token> tokens, string playerName)
+        {
+            string n = LettersOnly(playerName ?? "").ToLowerInvariant();
+            if (n.Length < 3) return new List<int>();
+
+            Token? nameTok = null;
+            foreach (var t in tokens)
+                if (LettersOnly(t.Text).ToLowerInvariant().Contains(n)) { nameTok = t; break; }
+            if (nameTok == null) return new List<int>();
+
+            double tol = Math.Max(24, nameTok.H * 1.8);
+            var nums = new List<(int v, double x)>();
+            foreach (var t in tokens)
+            {
+                if (Math.Abs(t.Y - nameTok.Y) > tol) continue;   // same row as the name
+                string d = OnlyDigits(t.Text);
+                if (d.Length == 0 || d.Length > 7) continue;
+                if (int.TryParse(d, out int v)) nums.Add((v, t.X));
+            }
+            return nums.OrderBy(p => p.x).Select(p => p.v).ToList();
+        }
+
+        private static double Dist(double x1, double y1, double x2, double y2)
+        {
+            double dx = x1 - x2, dy = y1 - y2;
+            return Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        private static string LettersOnly(string s)
+        {
+            var sb = new StringBuilder();
+            foreach (char c in s) if (char.IsLetter(c)) sb.Append(c);
+            return sb.ToString();
         }
 
         private static Bitmap CapturePrimaryScreen()

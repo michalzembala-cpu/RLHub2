@@ -8,6 +8,7 @@ namespace RLHub2.Helpers
     {
         RocketLeague,
         Cs2,
+        Overwatch,
     }
 
     // Which game the app is showing. Each game has its own pages, its own data and its own
@@ -21,7 +22,12 @@ namespace RLHub2.Helpers
 
         public static GameId Active
         {
-            get => Store.Load().ActiveGame == "cs2" ? GameId.Cs2 : GameId.RocketLeague;
+            get => Store.Load().ActiveGame switch
+            {
+                "cs2" => GameId.Cs2,
+                "ow" => GameId.Overwatch,
+                _ => GameId.RocketLeague,
+            };
         }
 
         public static void SetActive(GameId g)
@@ -33,24 +39,54 @@ namespace RLHub2.Helpers
             ActiveChanged?.Invoke();
         }
 
-        public static string Key(GameId g) => g == GameId.Cs2 ? "cs2" : "rl";
+        public static string Key(GameId g) => g switch
+        {
+            GameId.Cs2 => "cs2",
+            GameId.Overwatch => "ow",
+            _ => "rl",
+        };
 
-        public static string Name(GameId g) => g == GameId.Cs2 ? "Counter-Strike 2" : "Rocket League";
+        public static string Name(GameId g) => g switch
+        {
+            GameId.Cs2 => "Counter-Strike 2",
+            GameId.Overwatch => "Overwatch 2",
+            _ => "Rocket League",
+        };
 
-        public static string ShortName(GameId g) => g == GameId.Cs2 ? "CS2" : "RL";
+        public static string ShortName(GameId g) => g switch
+        {
+            GameId.Cs2 => "CS2",
+            GameId.Overwatch => "OW",
+            _ => "RL",
+        };
 
         // The page a game opens on.
-        public static string HomePage(GameId g) => g == GameId.Cs2 ? "cs2" : "home";
+        public static string HomePage(GameId g) => g switch
+        {
+            GameId.Cs2 => "cs2",
+            GameId.Overwatch => "ow",
+            _ => "home",
+        };
 
         // Each game gets its own accent so you can tell at a glance which one you are in.
-        public static Color Accent(GameId g)
-            => g == GameId.Cs2 ? Color.FromArgb(222, 130, 40) : Color.FromArgb(120, 60, 255);
+        public static Color Accent(GameId g) => g switch
+        {
+            GameId.Cs2 => Color.FromArgb(222, 130, 40),      // amber
+            GameId.Overwatch => Color.FromArgb(250, 150, 20), // Overwatch orange
+            _ => Color.FromArgb(120, 60, 255),                // Rocket League purple
+        };
 
-        // Only Rocket League tracks named accounts; CS2 identity comes from whoever is
-        // signed into Steam, so there is nothing to pick.
+        // Only Rocket League tracks named accounts; CS2 identity comes from whoever is signed
+        // into Steam, and Overwatch identity is the BattleTag entered in Settings — so neither
+        // has a profile to pick between.
         public static bool HasProfiles(GameId g) => g == GameId.RocketLeague;
 
         // Cover art for the game-picker tile (in Resources). Falls back to a drawn tile if absent.
-        public static string TileImage(GameId g) => g == GameId.Cs2 ? "game_cs2.jpg" : "game_rl.jpg";
+        public static string TileImage(GameId g) => g switch
+        {
+            GameId.Cs2 => "game_cs2.jpg",
+            GameId.Overwatch => "game_ow.jpg",
+            _ => "game_rl.jpg",
+        };
     }
 }

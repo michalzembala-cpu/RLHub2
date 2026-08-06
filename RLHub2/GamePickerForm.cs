@@ -16,7 +16,7 @@ namespace RLHub2
         private const int Tile = 190;
         private const int Gap = 28;
 
-        private readonly List<GameId> _games = new() { GameId.RocketLeague, GameId.Cs2 };
+        private readonly List<GameId> _games = new() { GameId.RocketLeague, GameId.Cs2, GameId.Overwatch };
         private readonly List<Rectangle> _hits = new();
         private int _hover = -1;
         private Image? _blurred;

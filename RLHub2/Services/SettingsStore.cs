@@ -17,6 +17,12 @@ namespace RLHub2.Services
         public string Theme { get; set; } = "dark"; // "dark" or "light"
         public string Accent { get; set; } = "#783CFF"; // hex accent color (Rocket League)
         public string AccentCs2 { get; set; } = "#FF9D2E"; // CS2 gets its own — orange by default
+        public string AccentOw { get; set; } = "#FA9C1E"; // Overwatch — its own orange
+
+        // Overwatch identity: the Battle.net BattleTag (e.g. "Nick#21837") and platform. OW has no
+        // account picker — stats come from this one public career profile via OverFast.
+        public string OwBattleTag { get; set; } = "";
+        public string OwPlatform { get; set; } = "pc"; // "pc" or "console"
         public string TrackedNick { get; set; } = ""; // legacy single nick (migrated to Accounts)
         public string BallchasingKey { get; set; } = ""; // ballchasing.com API key
         public bool BallchasingAutoUpload { get; set; } = true; // auto-upload local replays
@@ -317,23 +323,54 @@ namespace RLHub2.Services
         public Color LoadAccent()
         {
             var cfg = Load();
-            bool cs2 = cfg.ActiveGame == "cs2";
             try
             {
-                var hex = cs2 ? cfg.AccentCs2 : cfg.Accent;
+                var hex = cfg.ActiveGame switch
+                {
+                    "cs2" => cfg.AccentCs2,
+                    "ow" => cfg.AccentOw,
+                    _ => cfg.Accent,
+                };
                 if (!string.IsNullOrWhiteSpace(hex))
                     return ColorTranslator.FromHtml(hex);
             }
             catch { }
-            return cs2 ? Color.FromArgb(222, 130, 40) : Color.FromArgb(120, 60, 255);
+            return cfg.ActiveGame switch
+            {
+                "cs2" => Color.FromArgb(222, 130, 40),
+                "ow" => Color.FromArgb(250, 150, 20),
+                _ => Color.FromArgb(120, 60, 255),
+            };
         }
 
         public void SaveAccent(Color c)
         {
             var cfg = Load();
             var hex = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
-            if (cfg.ActiveGame == "cs2") cfg.AccentCs2 = hex;
-            else cfg.Accent = hex;
+            switch (cfg.ActiveGame)
+            {
+                case "cs2": cfg.AccentCs2 = hex; break;
+                case "ow": cfg.AccentOw = hex; break;
+                default: cfg.Accent = hex; break;
+            }
+            Save(cfg);
+        }
+
+        public string LoadOwBattleTag() => Load().OwBattleTag ?? "";
+
+        public void SaveOwBattleTag(string tag)
+        {
+            var cfg = Load();
+            cfg.OwBattleTag = (tag ?? "").Trim();
+            Save(cfg);
+        }
+
+        public string LoadOwPlatform() => Load().OwPlatform ?? "pc";
+
+        public void SaveOwPlatform(string platform)
+        {
+            var cfg = Load();
+            cfg.OwPlatform = platform == "console" ? "console" : "pc";
             Save(cfg);
         }
     }

@@ -56,8 +56,8 @@ namespace RLHub2
             navButtons = new[]
             {
                 btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnCs2Ai, btnCrosshair,
-                btnMaps, btnPractice, btnProfile, btnRecords, btnNews, btnTournaments, btnSeasons,
-                btnSettings
+                btnMaps, btnPractice, btnOw, btnOwSession, btnProfile, btnRecords, btnNews, btnTournaments,
+                btnSeasons, btnSettings
             };
 
             ApplyThemeColors();
@@ -83,6 +83,8 @@ namespace RLHub2
             btnCrosshair.Click += (s, e) => NavigateKey("cs2xhair");
             btnMaps.Click += (s, e) => NavigateKey("cs2maps");
             btnPractice.Click += (s, e) => NavigateKey("cs2prac");
+            btnOw.Click += (s, e) => NavigateKey("ow");
+            btnOwSession.Click += (s, e) => NavigateKey("owsession");
             btnRecords.Click += (s, e) => NavigateKey("records");
             btnNews.Click += (s, e) => NavigateKey("news");
             btnProfile.Click += (s, e) => NavigateKey("profile");
@@ -267,6 +269,8 @@ namespace RLHub2
                 case "cs2xhair": Navigate("cs2xhair", btnCrosshair, () => new Cs2CrosshairPage()); break;
                 case "cs2maps": Navigate("cs2maps", btnMaps, () => new Cs2MapsPage()); break;
                 case "cs2prac": Navigate("cs2prac", btnPractice, () => new Cs2PracticePage()); break;
+                case "ow": Navigate("ow", btnOw, () => new OwPage()); break;
+                case "owsession": Navigate("owsession", btnOwSession, () => new OwSessionPage()); break;
                 case "records": Navigate("records", btnRecords, () => new RecordsPage()); break;
                 case "news": Navigate("news", btnNews, () => new NewsPage()); break;
                 case "profile": Navigate("profile", btnProfile, () => new ProfilePage()); break;
@@ -308,6 +312,8 @@ namespace RLHub2
         {
             var game = Games.Active;
             bool rl = game == GameId.RocketLeague;
+            bool cs2 = game == GameId.Cs2;
+            bool ow = game == GameId.Overwatch;
 
             btnHome.Visible = rl;
             btnMMR.Visible = rl;
@@ -324,11 +330,14 @@ namespace RLHub2
             // section header that the collapsed sidebar had hidden.
             SetSectionHeadersVisible(!collapsed);
 
-            btnCs2.Visible = !rl;
-            btnCs2Ai.Visible = !rl;
-            btnCrosshair.Visible = !rl;
-            btnMaps.Visible = !rl;
-            btnPractice.Visible = !rl;
+            btnCs2.Visible = cs2;
+            btnCs2Ai.Visible = cs2;
+            btnCrosshair.Visible = cs2;
+            btnMaps.Visible = cs2;
+            btnPractice.Visible = cs2;
+
+            btnOw.Visible = ow;
+            btnOwSession.Visible = ow;
 
             // One wordmark for the whole app now that it spans both games; which game you're in
             // is already clear from the picker and the page content.
@@ -340,8 +349,9 @@ namespace RLHub2
         private bool BelongsToActiveGame(string key)
         {
             if (key == "settings") return true;
-            bool cs2Page = key.StartsWith("cs2");
-            return cs2Page == (Games.Active == GameId.Cs2);
+            if (key.StartsWith("cs2")) return Games.Active == GameId.Cs2;
+            if (key.StartsWith("ow")) return Games.Active == GameId.Overwatch;
+            return Games.Active == GameId.RocketLeague;   // all remaining keys are Rocket League's
         }
 
         private void ApplyThemeColors()
@@ -388,6 +398,8 @@ namespace RLHub2
             btnCrosshair.Text = Localization.IsPolish ? "Celowniki" : "Crosshairs";
             btnMaps.Text = Localization.IsPolish ? "Mapy" : "Maps";
             btnPractice.Text = Localization.IsPolish ? "Trening" : "Practice";
+            btnOw.Text = "Dashboard";
+            btnOwSession.Text = Localization.IsPolish ? "Sesja" : "Session";
             btnRecords.Text = Localization.T("nav_records");
             btnNews.Text = Localization.T("nav_news");
             btnProfile.Text = Localization.T("nav_profile");

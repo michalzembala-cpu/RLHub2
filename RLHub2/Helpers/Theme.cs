@@ -30,11 +30,13 @@ namespace RLHub2.Helpers
 
         public static void InitializeGame(GameId g) => _game = g;
 
-        private static bool Cs2 => _game == GameId.Cs2;
+        // CS2 and Overwatch both use the darker graphite palette; only Rocket League is navy.
+        // The games are told apart by their accent colour, not the surface tone.
+        private static bool Graphite => _game != GameId.RocketLeague;
 
-        // Dark-mode color that differs per game: (rocket league) vs (cs2).
+        // Dark-mode color that differs per game: navy (rocket league) vs graphite (cs2/overwatch).
         private static Color G(int r, int g, int b, int cr, int cg, int cb)
-            => Cs2 ? Color.FromArgb(cr, cg, cb) : Color.FromArgb(r, g, b);
+            => Graphite ? Color.FromArgb(cr, cg, cb) : Color.FromArgb(r, g, b);
 
         public static void SetTheme(AppTheme mode)
         {
