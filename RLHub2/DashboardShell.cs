@@ -26,6 +26,10 @@ namespace RLHub2
 
         private readonly System.Windows.Forms.Timer _pageAnim;
         private UserControl? _animPage;
+        // A double-buffered picture of the incoming page, slid up over the (hidden) live page so
+        // the glide is a cheap control-move blit instead of repainting a heavy page every frame.
+        private PictureBox? _slideShot;
+        private const int SlideStart = 42;
 
         private NavButton? _activeButton;
         private Func<UserControl>? _currentFactory;
@@ -404,42 +408,79 @@ namespace RLHub2
         private void SwitchPage(UserControl page)
         {
             DropFrozen();
-            _pageAnim.Stop();
+            EndSlide();   // finish any in-flight glide before tearing down the old page
             panelContent.Controls.Clear();
             currentPage?.Dispose();
 
             currentPage = page;
 
-            // Slide-up transition: start slightly lowered, animate to top, then dock.
-            page.Dock = DockStyle.None;
-            page.Bounds = new Rectangle(0, 42,
-                Math.Max(1, panelContent.ClientSize.Width),
-                Math.Max(1, panelContent.ClientSize.Height));
+            // Dock the page to its final place and lay it out immediately, so what we photograph
+            // is exactly what the user will end up looking at.
+            page.Dock = DockStyle.Fill;
             panelContent.Controls.Add(page);
+            panelContent.PerformLayout();
 
-            _animPage = page;
-            _pageAnim.Start();
+            // Slide-up transition. A heavy page (semi-transparent cards, ~34 ms to paint — see
+            // FreezePage) stutters if the LIVE control is animated, because every frame uncovers a
+            // few pixels and the whole thing repaints. So photograph the finished page once, hide
+            // the live page, and slide a double-buffered PictureBox of the photo up over it —
+            // moving a control is a pixel blit, so each frame repaints only the thin exposed strip.
+            if (panelContent.Width >= 2 && panelContent.Height >= 2)
+            {
+                var shot = new Bitmap(panelContent.Width, panelContent.Height);
+                panelContent.DrawToBitmap(shot, new Rectangle(Point.Empty, panelContent.Size));
+
+                page.Visible = false;   // the photo stands in for it during the glide
+                _slideShot = new PictureBox
+                {
+                    Image = shot,
+                    Bounds = new Rectangle(0, SlideStart, panelContent.Width, panelContent.Height),
+                    SizeMode = PictureBoxSizeMode.Normal,
+                };
+                panelContent.Controls.Add(_slideShot);
+                _slideShot.BringToFront();
+
+                _animPage = page;
+                _pageAnim.Start();
+            }
+            // Too small to have a meaningful size yet — just show it, no animation.
         }
 
         private void PageAnimTick(object? sender, EventArgs e)
         {
-            if (_animPage == null || _animPage.IsDisposed)
+            if (_slideShot == null || _slideShot.IsDisposed || _animPage == null || _animPage.IsDisposed)
             {
                 _pageAnim.Stop();
+                EndSlide();
                 return;
             }
 
-            int top = _animPage.Top;
+            int top = _slideShot.Top;
             if (top <= 1)
             {
-                _animPage.Top = 0;
-                _animPage.Dock = DockStyle.Fill;
                 _pageAnim.Stop();
-                _animPage = null;
+                EndSlide();   // swap the photo out for the live page
                 return;
             }
 
-            _animPage.Top = top - Math.Max(2, (int)(top * 0.20f)); // ease-out glide
+            _slideShot.Top = top - Math.Max(2, (int)(top * 0.20f)); // ease-out glide
+        }
+
+        // The glide is over (or was cut short): reveal the live page and drop the photo.
+        private void EndSlide()
+        {
+            _pageAnim.Stop();
+            _animPage = null;
+            if (_slideShot != null)
+            {
+                var img = _slideShot.Image;
+                panelContent.Controls.Remove(_slideShot);
+                _slideShot.Dispose();
+                img?.Dispose();
+                _slideShot = null;
+            }
+            if (currentPage != null && !currentPage.IsDisposed)
+                currentPage.Visible = true;
         }
 
         // ===== PAGE FREEZING =====

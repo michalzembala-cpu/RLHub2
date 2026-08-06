@@ -117,7 +117,7 @@ namespace RLHub2
 
             var ts = g.MeasureString(title, titleFont);
             var ss = g.MeasureString(sub, subFont);
-            float titleY = Height * 0.30f;
+            float titleY = Height * 0.18f;
             g.DrawString(title, titleFont, white, (Width - ts.Width) / 2, titleY);
             g.DrawString(sub, subFont, muted, (Width - ss.Width) / 2, titleY + ts.Height + 6);
 
