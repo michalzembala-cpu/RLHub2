@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="49_ZRdia9qcKasFSFXnG5PjR1PG3lSUBH_UnIEcOq5E" />
-<title>NexPlay — stats and tools for Rocket League and CS2</title>
-<meta name="description" content="NexPlay is a free Windows app for Rocket League and CS2 players: MMR tracking, a live overlay, a crosshair library, per-map stats and training commands.">
+<title>NexPlay — stats and tools for Rocket League, CS2 and Overwatch 2</title>
+<meta name="description" content="NexPlay is a free Windows app for Rocket League, CS2 and Overwatch 2 players: MMR and rank tracking, a live overlay, a crosshair library, per-map stats and training commands.">
 <link rel="icon" href="img/game_rl.jpg">
 <link rel="canonical" href="https://nexplayhub.netlify.app/">
 <meta name="theme-color" content="#0F1115">
@@ -13,15 +13,15 @@
 <!-- Open Graph / social cards -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="NexPlay">
-<meta property="og:title" content="NexPlay — the ultimate Rocket League & CS2 companion">
-<meta property="og:description" content="Free Windows app: MMR tracking, a live overlay, a crosshair library, per-map stats and training — for Rocket League and CS2.">
+<meta property="og:title" content="NexPlay — the ultimate Rocket League, CS2 & Overwatch 2 companion">
+<meta property="og:description" content="Free Windows app: MMR and rank tracking, a live overlay, a crosshair library, per-map stats and training — for Rocket League, CS2 and Overwatch 2.">
 <meta property="og:url" content="https://nexplayhub.netlify.app/">
 <meta property="og:image" content="https://nexplayhub.netlify.app/img/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="NexPlay — the ultimate Rocket League & CS2 companion">
-<meta name="twitter:description" content="Free Windows app for Rocket League and CS2: MMR, live overlay, crosshairs, per-map stats.">
+<meta name="twitter:title" content="NexPlay — the ultimate Rocket League, CS2 & Overwatch 2 companion">
+<meta name="twitter:description" content="Free Windows app for Rocket League, CS2 and Overwatch 2: MMR and rank tracking, live overlay, crosshairs, per-map stats.">
 <meta name="twitter:image" content="https://nexplayhub.netlify.app/img/og.jpg">
 <style>
   :root{
@@ -93,7 +93,8 @@
   @media(max-width:860px){ .hero .wrap{grid-template-columns:1fr; text-align:center} .hero p.lead{margin-inline:auto} .hero-actions,.meta{justify-content:center} .shot{order:-1; max-width:360px; margin:0 auto} }
 
   /* games strip */
-  .games{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  .games{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+  @media(max-width:900px){ .games{grid-template-columns:1fr} }
   .game{display:flex; gap:16px; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px}
   .game img{width:66px; height:66px; border-radius:12px; object-fit:cover}
   .game h3{margin:0 0 2px; font-size:17px}
@@ -114,6 +115,7 @@
   .tag.rl{color:var(--blue); background:rgba(61,139,255,.12)}
   .tag.cs{color:var(--orange); background:rgba(255,157,46,.12)}
   .tag.both{color:var(--purple); background:rgba(139,92,255,.12)}
+  .tag.ow{color:#ff8a4c; background:rgba(255,138,76,.12)}
 
   /* screenshots */
   .shots{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
@@ -216,10 +218,10 @@
   <div class="orbs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
   <div class="wrap">
     <div>
-      <p class="eyebrow">Rocket League&nbsp;+&nbsp;Counter-Strike 2</p>
+      <p class="eyebrow">Rocket League&nbsp;+&nbsp;Counter-Strike 2&nbsp;+&nbsp;Overwatch 2</p>
       <h1>Your stats. <span>One hub.</span></h1>
-      <p class="tagline">The ultimate <span class="g">Rocket League &amp; CS2</span> companion.</p>
-      <p class="lead">NexPlay is a lightweight Windows app that tracks your progress in Rocket League and CS2 — MMR, sessions, a live overlay, crosshairs and training — all in one dark, consistent place.</p>
+      <p class="tagline">The ultimate <span class="g">Rocket League, CS2 &amp; Overwatch 2</span> companion.</p>
+      <p class="lead">NexPlay is a lightweight Windows app that tracks your progress in Rocket League, CS2 and Overwatch 2 — MMR and rank, sessions, a live overlay, crosshairs and training — all in one dark, consistent place.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="https://github.com/michalzembala-cpu/RLHub2/releases/latest">⬇ Download for Windows</a>
         <a class="btn btn-ghost" href="#features">See features</a>
@@ -230,7 +232,7 @@
         <span><b>No .NET needed</b> — self-contained installer</span>
       </div>
     </div>
-    <div class="shot"><img src="img/hero.jpg" alt="NexPlay — Rocket League and CS2"></div>
+    <div class="shot"><img src="img/hero.jpg" alt="NexPlay — Rocket League, CS2 and Overwatch 2"></div>
   </div>
 </section>
 
@@ -238,7 +240,7 @@
 <section id="about">
   <div class="wrap">
     <p class="eyebrow">What it is</p>
-    <h2>A companion for both games at once</h2>
+    <h2>A companion for all three games at once</h2>
     <p class="sub">Switch games with one click — the whole interface, stats and tools adapt to the title you pick.</p>
     <div class="games">
       <div class="game">
@@ -249,9 +251,13 @@
         <img src="img/game_cs2.jpg" alt="Counter-Strike 2">
         <div><h3>Counter-Strike 2</h3><p>Match stats, a crosshair library, per-map stats, training commands and AI Insights.</p></div>
       </div>
+      <div class="game">
+        <img src="img/game_ow.jpg" alt="Overwatch 2">
+        <div><h3>Overwatch 2</h3><p>Rank per role and career stats from your public profile, a manual session tracker with a trend chart, and a win/loss overlay.</p></div>
+      </div>
     </div>
     <div class="stats-band">
-      <div class="stat"><div class="num" data-to="2">0</div><div class="lbl">games supported</div></div>
+      <div class="stat"><div class="num" data-to="3">0</div><div class="lbl">games supported</div></div>
       <div class="stat"><div class="num" data-to="10" data-suffix="+">0</div><div class="lbl">features</div></div>
       <div class="stat"><div class="num" data-to="100" data-suffix="%">0</div><div class="lbl">free, no account</div></div>
     </div>
@@ -273,8 +279,12 @@
       <div class="card"><span class="tag cs">CS2</span><div class="ic">🗺️</div><h3>Per-map stats</h3><p>Win rate and scores broken down by map, so you know where you actually play well.</p></div>
       <div class="card"><span class="tag cs">CS2</span><div class="ic">🎓</div><h3>Training commands</h3><p>Organised sv_cheats commands for practice — each one copied on its own.</p></div>
       <div class="card"><span class="tag cs">CS2</span><div class="ic">🤖</div><h3>AI Insights</h3><p>Summaries and tips drawn from your own CS2 matches.</p></div>
-      <div class="card"><span class="tag both">Both games</span><div class="ic">🔄</div><h3>Auto-update</h3><p>The app checks for new releases and installs them without hunting for files.</p></div>
-      <div class="card"><span class="tag both">Both games</span><div class="ic">🔒</div><h3>Data stays local</h3><p>Everything stays on your PC. Nothing is sent to any server.</p></div>
+      <div class="card"><span class="tag ow">Overwatch 2</span><div class="ic">🦸</div><h3>Rank &amp; career</h3><p>Rank per role, win rate, KDA, time played and your most-played hero — read from your public career profile.</p></div>
+      <div class="card"><span class="tag ow">Overwatch 2</span><div class="ic">🔴</div><h3>Session &amp; trend</h3><p>A manual W/L/D tracker with record, win rate, streak and a net-result trend chart for the sitting.</p></div>
+      <div class="card"><span class="tag ow">Overwatch 2</span><div class="ic">🖥️</div><h3>Win/loss overlay</h3><p>A floating panel with Win/Draw/Loss buttons — log a result in one click while you play, no live feed needed.</p></div>
+      <div class="card"><span class="tag ow">Overwatch 2</span><div class="ic">👁️</div><h3>Rank &amp; match from screen</h3><p>Reads your rank and end-of-match stats from a screenshot — entirely in memory, no files saved — and you confirm before it's stored.</p></div>
+      <div class="card"><span class="tag both">All games</span><div class="ic">🔄</div><h3>Auto-update</h3><p>The app checks for new releases and installs them without hunting for files.</p></div>
+      <div class="card"><span class="tag both">All games</span><div class="ic">🔒</div><h3>Data stays local</h3><p>Everything stays on your PC. Nothing is sent to any server.</p></div>
     </div>
   </div>
 </section>
@@ -327,6 +337,11 @@ PacketSendRate=10</pre>
         <p>Nothing to set up. NexPlay writes the Game State Integration config for you the first time it detects CS2 — just launch NexPlay, start the game and play.</p>
       </div></div>
 
+      <div class="step"><div class="num">5</div><div>
+        <h3>Overwatch 2 <span class="tag ow">Overwatch 2</span></h3>
+        <p>The session tracker and the win/loss overlay work right away — just start logging results. For career stats and rank, set your profile to public in Overwatch 2 (<b>Options → Social → Career Profile Visibility → Everyone</b>), then enter your BattleTag on the Overwatch dashboard. Blizzard hides private profiles entirely, so this is required for any stats.</p>
+      </div></div>
+
     </div>
   </div>
 </section>
@@ -338,7 +353,13 @@ PacketSendRate=10</pre>
     <h2>What's new</h2>
     <p class="sub">The full history lives in the <a href="https://github.com/michalzembala-cpu/RLHub2/releases" style="color:var(--orange)">GitHub releases</a>.</p>
     <div class="log">
-      <div class="ver"><b>1.0.2</b><span class="date">latest</span></div>
+      <div class="ver"><b>1.0.5</b><span class="date">latest</span></div>
+      <ul>
+        <li><b>Overwatch 2 added as a third game:</b> rank per role and career stats from your public profile, a manual session tracker with a trend chart, a win/loss overlay, and rank/match reads from a screenshot (in memory, no files saved).</li>
+        <li>New NexPlay icon, splash and game-picker background; smoother page transitions.</li>
+        <li>In-app updates now install silently — no wizard or language prompt each time.</li>
+      </ul>
+      <div class="ver" style="margin-top:22px"><b>1.0.2</b><span class="date"></span></div>
       <ul>
         <li><b>Real Rocket League MMR:</b> reads the exact MMR the game shows on screen — all playlists from the Play menu, or automatically after a ranked match — instead of estimating it.</li>
         <li>Opt-in anonymous usage stats, English by default, and various fixes.</li>
@@ -379,6 +400,7 @@ PacketSendRate=10</pre>
       <details open><summary>Is NexPlay free?</summary><p>Yes, completely. No account and no payment required.</p></details>
       <details><summary>Can I get banned for using it?</summary><p>NexPlay only reads data — it doesn't modify either game or inject any code. CS2 uses Valve's official Game State Integration. Rocket League uses the game's own built-in match stats exporter, switched on with a config file — no third-party mod. Even so, no external tool can promise anything with total certainty, so use it at your own discretion.</p></details>
       <details><summary>Where does MMR come from if the game doesn't expose it?</summary><p>Rocket League doesn't publish MMR through any official API. So NexPlay derives it from match results (±9 per win/loss) and lets you enter a starting value by hand — rather than showing made-up numbers.</p></details>
+      <details><summary>Why can't NexPlay see my Overwatch 2 stats?</summary><p>Overwatch 2 profiles are private by default, and Blizzard hides private profiles completely. Set yours to public (<b>Options → Social → Career Profile Visibility → Everyone</b>) and enter your BattleTag; after a few minutes it becomes readable. Blizzard also publishes no match history or per-map data for OW2, so NexPlay doesn't show those — the session tracker and overlay cover per-match results instead, and they work with no setup at all.</p></details>
       <details><summary>Is any of my data sent anywhere?</summary><p>Your stats stay on your PC (in the app's folder under %LocalAppData%). NexPlay reaches the internet to check GitHub for updates, to fetch your own match history from Ballchasing if you add a key, and — only if you opt in — to send anonymous usage stats (which tabs you open, error types, app version) with no nick, no IP and no personal data. You choose on first launch and can flip it any time in Settings.</p></details>
       <details><summary>Windows says "unrecognized app" / SmartScreen blocks it — is it a virus?</summary><p>No. Windows SmartScreen shows that for any app that isn't code-signed and that it hasn't seen many times yet — NexPlay is new and unsigned, like a lot of small free tools. To run it, click <b>More info</b> → <b>Run anyway</b>. A code-signing certificate (which removes the warning) costs money that a free project doesn't have; the warning also fades on its own as more people install it.</p></details>
       <details><summary>Do I need .NET installed?</summary><p>No. The installer is self-contained — it includes everything it needs.</p></details>
@@ -404,7 +426,7 @@ PacketSendRate=10</pre>
     <span>© <span id="yr"></span> NexPlay · community project</span>
     <span><a href="https://github.com/michalzembala-cpu/RLHub2">GitHub</a> · <a href="https://github.com/michalzembala-cpu/RLHub2/releases/latest">Download</a> · <a href="#faq">FAQ</a></span>
   </div>
-  <div class="wrap"><p class="disclaimer">NexPlay is an independent fan project. It is not affiliated with Psyonix, Epic Games or Valve. Rocket League and Counter-Strike are trademarks of their respective owners.</p></div>
+  <div class="wrap"><p class="disclaimer">NexPlay is an independent fan project. It is not affiliated with Psyonix, Epic Games, Valve or Blizzard Entertainment. Rocket League, Counter-Strike and Overwatch are trademarks of their respective owners.</p></div>
 </footer>
 
 <script>
