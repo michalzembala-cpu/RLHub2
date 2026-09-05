@@ -14,7 +14,7 @@
     <Product>NexPlay</Product>
     <AssemblyTitle>NexPlay</AssemblyTitle>
     <!-- The updater compares this against the latest GitHub release tag, so bump it per release. -->
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <!-- Deliberately NOT PublishSingleFile: it silently drops the larger Content files
          (cs2_bg.png, gamepicker_bg.png, overlay_bg.png never reached the publish folder), and
          the app loads those from Resources\ next to the exe, so a single-file build shipped
@@ -41,6 +41,11 @@
          and their spaces/em-dashes broke the copy during publish. -->
     <Content Include="Resources\*.png" Exclude="Resources\ChatGPT*.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Resources\*.jpg" Exclude="Resources\images*.jpg;Resources\Mirage_*.jpg" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Anthropic" Version="12.46.0" />
+    <PackageReference Include="System.Speech" Version="10.0.11" />
   </ItemGroup>
 
 </Project>
