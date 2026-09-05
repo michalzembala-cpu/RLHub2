@@ -53,6 +53,25 @@ namespace RLHub2.Services
         // Send local .replay files to the Recycle Bin once they are safely on ballchasing
         // and older than this many days. 0 = never delete.
         public int DeleteReplaysAfterDays { get; set; } = 0;
+
+        // ---- Voice assistant ----
+        // Off until asked for: it takes the microphone, and an assistant nobody wanted listening
+        // is worse than no assistant. The offline command set works the moment this is on.
+        public bool AssistantEnabled { get; set; } = false;
+        public bool AssistantSpeak { get; set; } = true; // read answers out loud
+
+        // The model half is separately opt-in and needs the user's own key. Without both, nothing
+        // ever leaves the machine.
+        public bool AssistantUseLlm { get; set; } = false;
+        public string AssistantApiKey { get; set; } = "";
+        public string AssistantModel { get; set; } = "claude-opus-5";
+
+        // ---- NexHub — most do NexDrone (Android) ----
+        // Backend Cloudflare Worker współdzielony przez obie apki.
+        // NexPlay pushuje tu rangę + winrate; NexDrone czyta.
+        public string HubUrl { get; set; } = "";
+        public string HubToken { get; set; } = "";
+        public bool HubAutoSync { get; set; } = true;   // wysyłaj MMR automatycznie w tle
     }
 
     // Persists app settings (language, API key, ...) as JSON in %LocalAppData%\RLHub2\settings.json

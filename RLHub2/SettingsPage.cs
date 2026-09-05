@@ -35,6 +35,7 @@ namespace RLHub2
             segLanguage.SetSelectedSilent(Localization.IsPolish ? 0 : 1);
             segTheme.SetSelectedSilent(Theme.IsDark ? 0 : 1);
             txtBcKey.Text = _store.LoadBallchasingKey();
+            WireAssistant();
 
             // updates — the repo is baked in, so there's nothing to type: just the button.
             txtUpdRepo.Visible = false;
@@ -270,6 +271,11 @@ namespace RLHub2
                     lblPrivHint.MaximumSize = new Size(w - 40, 0);
                     chkTelemetry.MaximumSize = new Size(w - 40, 0);
                     chkAutoUpd.MaximumSize = new Size(w - 40, 0);
+                    lblAsstHint.MaximumSize = new Size(w - 40, 0);
+                    lblAsstKeyHint.MaximumSize = new Size(w - 40, 0);
+                    chkAsstEnabled.MaximumSize = new Size(w - 40, 0);
+                    chkAsstSpeak.MaximumSize = new Size(w - 40, 0);
+                    chkAsstLlm.MaximumSize = new Size(w - 40, 0);
 
                     flow.PerformLayout();
                     if (!flow.HorizontalScroll.Visible) break;
@@ -304,6 +310,79 @@ namespace RLHub2
                 lblBcStatus.Text = "✗ " + ex.Message;
             }
             finally { btnTestBc.Enabled = true; }
+        }
+
+        // The assistant is two separate opt-ins, and the card is laid out to make that obvious:
+        // the first switch turns on a local, offline command set; the second one — and only it —
+        // sends anything anywhere, and needs the user's own key to do it.
+        private void WireAssistant()
+        {
+            var cfg = _store.Load();
+            chkAsstEnabled.Checked = cfg.AssistantEnabled;
+            chkAsstSpeak.Checked = cfg.AssistantSpeak;
+            chkAsstLlm.Checked = cfg.AssistantUseLlm;
+            txtAsstKey.Text = cfg.AssistantApiKey;
+            UpdateAssistantEnabledState();
+
+            chkAsstEnabled.CheckedChanged += (s, e) =>
+            {
+                var c = _store.Load();
+                c.AssistantEnabled = chkAsstEnabled.Checked;
+                _store.Save(c);
+                UpdateAssistantEnabledState();
+
+                // Flipping the switch should do what it says right away rather than at the next
+                // launch — the window is the whole feature.
+                if (chkAsstEnabled.Checked != Assistant.AssistantWindow.IsOpen)
+                    Assistant.AssistantWindow.Toggle();
+            };
+
+            chkAsstSpeak.CheckedChanged += (s, e) =>
+            {
+                var c = _store.Load();
+                c.AssistantSpeak = chkAsstSpeak.Checked;
+                _store.Save(c);
+            };
+
+            chkAsstLlm.CheckedChanged += (s, e) =>
+            {
+                var c = _store.Load();
+                c.AssistantUseLlm = chkAsstLlm.Checked;
+                _store.Save(c);
+                UpdateAssistantEnabledState();
+            };
+
+            // Saved on focus-loss like the Ballchasing key, so navigating away can't lose it.
+            txtAsstKey.Leave += (s, e) =>
+            {
+                var c = _store.Load();
+                c.AssistantApiKey = txtAsstKey.Text.Trim();
+                _store.Save(c);
+            };
+
+            // NexHub — most do NexDrone. Wsuwamy przycisk pod klucz asystenta.
+            var btnHub = new Button
+            {
+                Text = Localization.IsPolish ? "NEXHUB — MOST DO NEXDRONE…" : "NEXHUB — BRIDGE TO NEXDRONE…",
+                Height = 34,
+                Width = 340,
+                Left = txtAsstKey.Left,
+                Top = txtAsstKey.Bottom + 12,
+                BackColor = Theme.Accent,
+                ForeColor = System.Drawing.Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Bold),
+            };
+            btnHub.Click += (s, e) => { using var d = new NexHubDialog(); d.ShowDialog(this); };
+            txtAsstKey.Parent?.Controls.Add(btnHub);
+        }
+
+        private void UpdateAssistantEnabledState()
+        {
+            bool on = chkAsstEnabled.Checked;
+            chkAsstSpeak.Enabled = on;
+            chkAsstLlm.Enabled = on;
+            txtAsstKey.Enabled = on && chkAsstLlm.Checked;
         }
 
         private void ApplyLanguage()
@@ -346,6 +425,23 @@ namespace RLHub2
             lblBcHint.Text = Localization.IsPolish
                 ? "Darmowy klucz na ballchasing.com/upload → Settings. Dodaje historię meczów z Twoich powtórek."
                 : "Free key at ballchasing.com/upload → Settings. Adds match history from your replays.";
+
+            lblAsst.Text = Localization.IsPolish ? "ASYSTENT GŁOSOWY" : "VOICE ASSISTANT";
+            lblAsstHint.Text = Localization.IsPolish
+                ? "Ctrl+Shift+Spacja, żeby mówić. Najczęstsze komendy działają offline, bez klucza."
+                : "Ctrl+Shift+Space to talk. The common commands work offline, with no key.";
+            chkAsstEnabled.Text = Localization.IsPolish
+                ? "Włącz asystenta (używa mikrofonu)"
+                : "Enable the assistant (uses the microphone)";
+            chkAsstSpeak.Text = Localization.IsPolish
+                ? "Czytaj odpowiedzi na głos"
+                : "Read answers out loud";
+            chkAsstLlm.Text = Localization.IsPolish
+                ? "Rozumienie dowolnych pytań przez Claude (wysyła pytanie do API)"
+                : "Understand free-form questions via Claude (sends the question to the API)";
+            lblAsstKeyHint.Text = Localization.IsPolish
+                ? "Twój klucz API z console.anthropic.com. Bez niego działa tylko tryb offline."
+                : "Your own API key from console.anthropic.com. Without it, only offline mode runs.";
 
             segLanguage.SetOptions(new[] { "Polski", "English" });
             segTheme.SetOptions(new[] { Localization.T("theme_dark"), Localization.T("theme_light") });

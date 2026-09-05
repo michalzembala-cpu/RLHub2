@@ -53,7 +53,12 @@ namespace RLHub2
 
             // Picking starts a fresh session — land on the game's own home page, not on whatever
             // tab the previous run happened to end on.
+            // NexHub background sync — push MMR/rank do wspólnego backendu jeśli skonfigurowany.
+            var hubSync = new NexHubSyncService();
+            hubSync.Start();
+
             Application.Run(new DashboardShell(picked ? Games.HomePage(Games.Active) : null));
+            hubSync.Stop();
         }
     }
 }
