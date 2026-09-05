@@ -131,7 +131,7 @@ namespace RLHub2
             }
             _status.Text = "Sprawdzam…";
             var client = new NexHubClient(_url.Text.Trim().TrimEnd('/'), _token.Text.Trim());
-            var ok = await client.PutMetaAsync(pilotName: Helpers.Accounts.ActiveName());
+            var ok = await client.PutMetaAsync(pilotName: Helpers.Accounts.ActiveName);
             _status.Text = ok ? "✓ Połączenie OK" : "✗ Backend nie odpowiada — sprawdź URL/token";
         }
 

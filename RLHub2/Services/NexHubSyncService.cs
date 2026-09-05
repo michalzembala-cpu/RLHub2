@@ -62,8 +62,8 @@ namespace RLHub2.Services
                 rank: rank,
                 gamesToday: today.Count > 0 ? today.Count : (int?)null);
 
-            if (ok && !string.IsNullOrWhiteSpace(Accounts.ActiveName()))
-                await client.PutMetaAsync(pilotName: Accounts.ActiveName());
+            if (ok && !string.IsNullOrWhiteSpace(Accounts.ActiveName))
+                await client.PutMetaAsync(pilotName: Accounts.ActiveName);
 
             return ok;
         }
