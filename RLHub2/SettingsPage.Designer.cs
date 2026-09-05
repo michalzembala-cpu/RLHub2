@@ -58,6 +58,15 @@ namespace RLHub2
         private Label lblBcStatus;
         private CheckBox chkDeleteOld;
 
+        private Panel asstPanel;
+        private Label lblAsst;
+        private Label lblAsstHint;
+        private CheckBox chkAsstEnabled;
+        private CheckBox chkAsstSpeak;
+        private CheckBox chkAsstLlm;
+        private TextBox txtAsstKey;
+        private Label lblAsstKeyHint;
+
         private void InitializeComponent()
         {
             flow = new FlowLayoutPanel();
@@ -103,6 +112,14 @@ namespace RLHub2
             btnTestBc = new Button();
             lblBcStatus = new Label();
             chkDeleteOld = new CheckBox();
+            asstPanel = new Panel();
+            lblAsst = new Label();
+            lblAsstHint = new Label();
+            chkAsstEnabled = new CheckBox();
+            chkAsstSpeak = new CheckBox();
+            chkAsstLlm = new CheckBox();
+            txtAsstKey = new TextBox();
+            lblAsstKeyHint = new Label();
 
             var pageColor = Theme.PageBg;
             var panelColor = Theme.Surface;
@@ -291,7 +308,32 @@ namespace RLHub2
 
             bcPanel.Controls.AddRange(new Control[] { lblBc, lblBcHint, txtBcKey, btnTestBc, lblBcStatus, chkDeleteOld });
 
-            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, keyPanel, langPanel, themePanel, accentPanel, updPanel, privPanel, bcPanel });
+            // ===== VOICE ASSISTANT =====
+            Card(asstPanel, panelColor, 250);
+            SectionTitle(lblAsst, "VOICE ASSISTANT");
+            Hint(lblAsstHint, "Ctrl+Shift+Space to talk. The common commands work offline.");
+
+            Toggle(chkAsstEnabled, 76);
+            Toggle(chkAsstSpeak, 104);
+            Toggle(chkAsstLlm, 132);
+
+            Input(txtAsstKey, inputBg);
+            txtAsstKey.Location = new Point(20, 166);
+            txtAsstKey.Size = new Size(CardW - 40, 26);
+            txtAsstKey.UseSystemPasswordChar = true;
+            txtAsstKey.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            lblAsstKeyHint.AutoSize = true;
+            lblAsstKeyHint.ForeColor = Theme.TextMuted;
+            lblAsstKeyHint.Font = new Font("Segoe UI", 9F);
+            lblAsstKeyHint.Location = new Point(20, 200);
+
+            asstPanel.Controls.AddRange(new Control[]
+            {
+                lblAsst, lblAsstHint, chkAsstEnabled, chkAsstSpeak, chkAsstLlm, txtAsstKey, lblAsstKeyHint,
+            });
+
+            flow.Controls.AddRange(new Control[] { lblTitle, gamePanel, keyPanel, langPanel, themePanel, accentPanel, updPanel, privPanel, bcPanel, asstPanel });
             this.Controls.Add(flow);
 
             ResumeLayout(false);
@@ -326,6 +368,15 @@ namespace RLHub2
             l.ForeColor = Theme.TextMuted;
             l.Font = new Font("Segoe UI", 9.5F);
             l.Location = new Point(20, 44);
+        }
+
+        private static void Toggle(CheckBox c, int y)
+        {
+            c.Location = new Point(20, y);
+            c.AutoSize = true;
+            c.ForeColor = Theme.TextSecondary;
+            c.Font = new Font("Segoe UI", 9.5F);
+            c.Cursor = Cursors.Hand;
         }
 
         private static void Input(TextBox t, Color back)

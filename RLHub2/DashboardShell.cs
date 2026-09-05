@@ -172,6 +172,25 @@ namespace RLHub2
 
             FormClosed += (s, e) => DropFrozen();
 
+            // The voice assistant reaches the UI only through these two hooks — it never holds a
+            // reference to the shell. Navigation reports back whether the page it was asked for
+            // exists in the game that's open, so the assistant can say so out loud instead of
+            // silently landing somewhere else.
+            Assistant.AssistantBridge.NavigateTo = key =>
+            {
+                if (!BelongsToActiveGame(key)) return false;
+                if (IsHandleCreated) BeginInvoke(new Action(() => NavigateKey(key)));
+                return true;
+            };
+            Assistant.AssistantBridge.RefreshCurrentPage = () =>
+            {
+                if (IsHandleCreated)
+                    BeginInvoke(new Action(() =>
+                    {
+                        if (_currentFactory != null) SwitchPage(_currentFactory());
+                    }));
+            };
+
             ApplyGame();
 
             ApplyNavTexts();
@@ -191,6 +210,11 @@ namespace RLHub2
                 if (Cs2Install.IsInstalled && !Cs2Install.IsConfigured)
                     Cs2Install.WriteConfig(Cs2GsiClient.Port);
                 Cs2GsiClient.Instance.Start();
+
+                // Opt-in only: the window takes the microphone and a global hotkey, so it never
+                // appears unless Settings says so.
+                if (_store.Load().AssistantEnabled && !Assistant.AssistantWindow.IsOpen)
+                    Assistant.AssistantWindow.Toggle();
 
                 // Update check runs in the background and stays silent unless there is actually
                 // something newer — a popup saying "you're up to date" on every launch is noise.
