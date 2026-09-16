@@ -51,7 +51,7 @@ namespace RLHub2.Services
             int? m1 = LatestForMode(entries, "1v1");
             int? m2 = LatestForMode(entries, "2v2");
             int? m3 = LatestForMode(entries, "3v3");
-            string rank = HighestOf(m1, m2, m3);
+            string rank = RankFor(m1, m2, m3);
 
             // Winrate — z ostatnich N pozycji tego samego trybu (proxy: rosnie/spadło)
             var today = entries.Where(e => e.Timestamp.Date == DateTime.UtcNow.Date).ToList();
@@ -77,7 +77,7 @@ namespace RLHub2.Services
         }
 
         // Zamień MMR na rangę wg tabeli Rocket League Season 15+.
-        private static string HighestOf(int? m1, int? m2, int? m3)
+        internal static string RankFor(int? m1, int? m2, int? m3)
         {
             int best = new[] { m1 ?? 0, m2 ?? 0, m3 ?? 0 }.Max();
             if (best == 0) return "Unranked";

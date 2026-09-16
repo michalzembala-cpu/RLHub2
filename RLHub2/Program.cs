@@ -13,6 +13,11 @@ namespace RLHub2
             // Must come first: from here on no exception can kill the app silently.
             ErrorReporter.Install();
 
+            // Most po lokalnej sieci startuje jako jedno z pierwszych — telefon ma sie dodzwonic
+            // nawet wtedy, gdy na ekranie stoi jeszcze splash albo wybor gry.
+            var lanBridge = new LanBridgeService();
+            lanBridge.Start();
+
             using (var splash = new SplashForm())
                 splash.ShowDialog();
 
@@ -59,6 +64,7 @@ namespace RLHub2
 
             Application.Run(new DashboardShell(picked ? Games.HomePage(Games.Active) : null));
             hubSync.Stop();
+            lanBridge.Stop();
         }
     }
 }
