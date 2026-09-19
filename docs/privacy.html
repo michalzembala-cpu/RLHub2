@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy — NexPlay</title>
+<meta name="description" content="How NexPlay and the NexAds Publisher tool handle your data. Short version: everything stays on your PC.">
+<style>
+  :root{--bg:#0F1115;--surface:#171B22;--line:#272d38;--text:#e8ebf1;--muted:#9aa4b6;--orange:#FF9D2E;--blue:#3d8bff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);line-height:1.7;
+       font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:56px 22px 80px}
+  a{color:var(--orange)}
+  h1{font-size:clamp(28px,5vw,40px);letter-spacing:-.5px;margin:0 0 8px}
+  h2{font-size:20px;margin:38px 0 10px;letter-spacing:-.2px}
+  p,li{color:#cfd6e2}
+  .muted{color:var(--muted);font-size:14px;margin:0 0 30px}
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:22px 0}
+  .box p{margin:0}
+  ul{padding-left:20px}
+  footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+  code{background:#0b0d11;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Privacy Policy</h1>
+  <p class="muted">Last updated: 19 September 2026</p>
+
+  <div class="box">
+    <p><strong>Short version:</strong> NexPlay has no accounts and no servers of its own.
+    Your stats stay in a folder on your PC. Nothing is uploaded anywhere unless you
+    explicitly use a feature that talks to an outside service, and each of those is listed below.</p>
+  </div>
+
+  <h2>Who this covers</h2>
+  <p>This policy covers the <strong>NexPlay</strong> desktop application for Windows,
+  the <strong>nexplayhub.netlify.app</strong> website, and <strong>NexAds Publisher</strong> —
+  a private tool the author uses to upload his own promotional videos to social platforms.
+  All three are made by one person, not a company.</p>
+
+  <h2>What NexPlay stores, and where</h2>
+  <p>Everything the app records about you is written to a folder on your own computer:</p>
+  <ul>
+    <li><code>%LocalAppData%\RLHub2</code> — your profile name, MMR and rank history,
+        match and session records, saved crosshairs and settings.</li>
+  </ul>
+  <p>There is no account, no login and no sync. Deleting that folder deletes your data.
+  Uninstalling the app leaves the folder in place so an update does not wipe your history;
+  remove it by hand if you want it gone.</p>
+
+  <h2>When the app talks to the internet</h2>
+  <ul>
+    <li><strong>Public game stats.</strong> The app queries public profile and match data
+        for the in-game name you enter, from the game publishers' public endpoints.</li>
+    <li><strong>Updates.</strong> The app checks GitHub Releases for a newer installer.
+        GitHub receives the request as any download would.</li>
+    <li><strong>AI assistant (optional).</strong> If you use the built-in assistant, the text
+        of your question is sent to the Groq API to produce an answer. Don't type anything
+        into it you wouldn't send to a third-party service. Not using the assistant sends nothing.</li>
+    <li><strong>Local network profile sharing (optional).</strong> If you switch it on,
+        the app serves your profile over your own Wi-Fi on port 8777 so your phone can read it.
+        This never leaves your network.</li>
+  </ul>
+  <p>The app sends no telemetry, no analytics and no crash reports.</p>
+
+  <h2>Screen reading</h2>
+  <p>To capture your real MMR and rank, the app reads what is already drawn on your screen
+  and looks for the numbers. Images are processed in memory and are not saved to disk or
+  sent anywhere. The app does not read the game's memory or modify the game.</p>
+
+  <h2>NexAds Publisher and social platforms</h2>
+  <p>NexAds Publisher is not a product for other people — it is a script the author runs on
+  his own computer to publish promotional videos for his own apps. When it is connected to a
+  YouTube or TikTok account:</p>
+  <ul>
+    <li>It requests only the permissions needed to upload a video and read the basic profile
+        information the platform requires for that upload.</li>
+    <li>Access tokens are stored in a single file on the author's computer and are never shared.</li>
+    <li>It does not read, collect or store content belonging to any other user, and it does not
+        post on anyone else's behalf.</li>
+    <li>Revoking access in your TikTok or Google account settings ends it immediately.</li>
+  </ul>
+
+  <h2>This website</h2>
+  <p>nexplayhub.netlify.app sets no cookies and runs no analytics. The hosting provider
+  (Netlify) keeps standard server logs, which include the IP address of anyone requesting a page.</p>
+
+  <h2>Children</h2>
+  <p>These tools are not directed at children under 13, and nothing here is collected knowingly
+  from them.</p>
+
+  <h2>Changes and contact</h2>
+  <p>If this policy changes, the date at the top changes with it. Questions, or a request to
+  delete something: open an issue at
+  <a href="https://github.com/michalzembala-cpu/RLHub2/issues">github.com/michalzembala-cpu/RLHub2/issues</a>.</p>
+
+  <footer>
+    <a href="/">Back to NexPlay</a> · <a href="/terms.html">Terms of Service</a>
+  </footer>
+</div>
+</body>
+</html>
