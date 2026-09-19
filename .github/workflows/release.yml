@@ -58,13 +58,15 @@ jobs:
         run: |
           $tag = "${{ steps.ver.outputs.tag }}"
           gh release view $tag *> $null
-          if ($LASTEXITCODE -eq 0) {
+          $code = $LASTEXITCODE          # 0 = istnieje, !=0 = brak (gh zwraca 1)
+          if ($code -eq 0) {
             Write-Host "Release $tag juz istnieje — pomijam budowanie."
             "skip=true" >> $env:GITHUB_OUTPUT
           } else {
             Write-Host "Release $tag nie istnieje — buduje i publikuje."
             "skip=false" >> $env:GITHUB_OUTPUT
           }
+          exit 0                         # brak release'u to nie blad tego kroku
 
       - name: Setup .NET 8
         if: steps.check.outputs.skip == 'false'
