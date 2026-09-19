@@ -179,6 +179,17 @@ namespace RLHub2.Services
                 string current = Environment.ProcessPath ?? Application.ExecutablePath;
                 int pid = Environment.ProcessId;
 
+                // A freshly downloaded file can carry a "came from the internet" mark; Windows can
+                // then silently refuse to launch it from a script. Strip it so the update isn't
+                // blocked before it even starts (harmless no-op if there is no such mark).
+                ClearMarkOfTheWeb(downloadedPath);
+
+                var logDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RLHub2");
+                Directory.CreateDirectory(logDir);
+                string log = Path.Combine(logDir, "update.log");
+                string instLog = Path.Combine(logDir, "installer.log");
+
                 // An installer knows how to install itself — just run it and step aside. Match
                 // "setup" anywhere in the name (ours is NexPlay-Setup-1.0.0.exe), not only the
                 // "setup.exe" suffix, or the installer would be mistaken for a bare-exe swap and
@@ -186,26 +197,31 @@ namespace RLHub2.Services
                 string file = Path.GetFileName(downloadedPath);
                 if (file.Contains("setup", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Run the installer SILENTLY on an in-app update: the language prompt and wizard
-                    // belong to the first manual install only, not to every update. Wait for this
-                    // app to exit (the exe is locked while running), install with no UI, then
-                    // relaunch the freshly installed app ourselves (/VERYSILENT skips the installer's
-                    // own "launch" step).
+                    // Run the installer with /SILENT (not /VERYSILENT) and WITHOUT /SUPPRESSMSGBOXES:
+                    // it shows a progress window and any UAC or error prompt. The app is unsigned, so
+                    // an elevation prompt (when it was first installed for all users) or a Defender
+                    // warning used to be swallowed by a fully silent run — the app just closed and
+                    // never came back. Visible means the user can see it working and answer a prompt;
+                    // the app is relaunched no matter what, so a failed update never leaves it closed.
                     var dir = Path.GetDirectoryName(downloadedPath)!;
                     var script = Path.Combine(dir, "apply-update.cmd");
                     File.WriteAllText(script,
                         "@echo off\r\n" +
+                        $"echo [%date% %time%] start pid={pid} > \"{log}\"\r\n" +
                         ":wait\r\n" +
                         $"tasklist /fi \"PID eq {pid}\" | find \"{pid}\" >nul\r\n" +
                         "if not errorlevel 1 (ping -n 2 127.0.0.1 >nul & goto wait)\r\n" +
-                        $"\"{downloadedPath}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART\r\n" +
+                        $"echo [%date% %time%] app closed, installing >> \"{log}\"\r\n" +
+                        $"\"{downloadedPath}\" /SILENT /NORESTART /LOG=\"{instLog}\"\r\n" +
+                        $"echo [%date% %time%] installer exit %errorlevel% >> \"{log}\"\r\n" +
                         $"start \"\" \"{current}\"\r\n" +
+                        $"echo [%date% %time%] relaunched >> \"{log}\"\r\n" +
                         "del \"%~f0\"\r\n");
 
                     Process.Start(new ProcessStartInfo(script)
                     {
                         UseShellExecute = false,
-                        CreateNoWindow = true,
+                        CreateNoWindow = true,   // the installer's own /SILENT progress is the visible part
                         WorkingDirectory = dir,
                     });
                     return true;
@@ -214,10 +230,12 @@ namespace RLHub2.Services
                 var bat = Path.Combine(Path.GetTempPath(), "RLHub2Update", "apply.cmd");
                 File.WriteAllText(bat,
                     "@echo off\r\n" +
+                    $"echo [%date% %time%] start pid={pid} > \"{log}\"\r\n" +
                     ":wait\r\n" +
                     $"tasklist /fi \"PID eq {pid}\" | find \"{pid}\" >nul\r\n" +
                     "if not errorlevel 1 (ping -n 2 127.0.0.1 >nul & goto wait)\r\n" +
                     $"copy /y \"{downloadedPath}\" \"{current}\" >nul\r\n" +
+                    $"echo [%date% %time%] copy exit %errorlevel% >> \"{log}\"\r\n" +
                     $"start \"\" \"{current}\"\r\n" +
                     "del \"%~f0\"\r\n");
 
@@ -230,6 +248,14 @@ namespace RLHub2.Services
                 return true;
             }
             catch { return false; }
+        }
+
+        // Removes the Zone.Identifier alternate data stream ("mark of the web") from a file, the
+        // flag Windows uses to gate downloaded executables. Deleting the stream is the same thing
+        // the file properties' "Unblock" checkbox does. No-op on non-NTFS or when absent.
+        private static void ClearMarkOfTheWeb(string path)
+        {
+            try { File.Delete(path + ":Zone.Identifier"); } catch { }
         }
     }
 }
