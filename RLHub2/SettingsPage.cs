@@ -14,7 +14,6 @@ namespace RLHub2
         protected override string ArenaFile => Games.Active switch
         {
             GameId.Cs2 => "cs2_bg.png",
-            GameId.Overwatch => "ow_bg.png",   // absent -> flat accent gradient
             _ => "rl_bg.png",
         };
 
@@ -437,11 +436,11 @@ namespace RLHub2
                 ? "Czytaj odpowiedzi na głos"
                 : "Read answers out loud";
             chkAsstLlm.Text = Localization.IsPolish
-                ? "Rozumienie dowolnych pytań przez Claude (wysyła pytanie do API)"
-                : "Understand free-form questions via Claude (sends the question to the API)";
+                ? "Rozumienie dowolnych pytań przez Groq (wysyła pytanie do API)"
+                : "Understand free-form questions via Groq (sends the question to the API)";
             lblAsstKeyHint.Text = Localization.IsPolish
-                ? "Twój klucz API z console.anthropic.com. Bez niego działa tylko tryb offline."
-                : "Your own API key from console.anthropic.com. Without it, only offline mode runs.";
+                ? "Twój klucz API z console.groq.com. Bez niego działa tylko tryb offline."
+                : "Your own API key from console.groq.com. Without it, only offline mode runs.";
 
             segLanguage.SetOptions(new[] { "Polski", "English" });
             segTheme.SetOptions(new[] { Localization.T("theme_dark"), Localization.T("theme_light") });

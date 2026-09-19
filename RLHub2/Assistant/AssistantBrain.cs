@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using RLHub.Helpers;
 using RLHub2.Helpers;
+using System.Linq;
+using RLHub2.Assistant.Ml;
 using RLHub2.Services;
 
 namespace RLHub2.Assistant
@@ -73,21 +75,35 @@ namespace RLHub2.Assistant
                 CancelPending();
             }
 
-            // ---- offline intents ----
+            // ---- offline intents: the written rules first ----
+            // They are exact and they extract slots from the very phrasings they match, so when
+            // one fires it is right by construction. The classifier only sees what they missed.
             var hit = IntentMatcher.Match(utterance);
-            if (hit != null)
+            if (hit != null) return Dispatch(hit.Tool, hit.Args);
+
+            // ---- offline intents: the trained classifier ----
+            // Same catalog, same sanitising, same confirmation on writes — the only difference is
+            // that this half generalises, so a phrasing nobody wrote a rule for still lands on
+            // the right tool. It stays quiet unless it is confident, and a write it proposes is
+            // still read back for a spoken yes.
+            var guess = IntentNet.Predict(utterance);
+            if (guess != null)
             {
-                if (hit.Tool.Kind == ToolKind.Write)
+                var args = IntentMatcher.ArgsFor(guess.Tool, utterance);
+                if (HasEveryRequiredArg(guess.Tool, args))
                 {
-                    _pending = hit.Tool;
-                    _pendingArgs = hit.Args;
-                    return hit.Tool.Preview?.Invoke(hit.Args) ?? (Pl ? "Potwierdzasz?" : "Confirm?");
+                    Logger.Log($"IntentNet: {guess.Tool.Name} at {guess.Confidence:P0}.");
+                    return Dispatch(guess.Tool, args);
                 }
-                return Safely(() => hit.Tool.Run(hit.Args));
+
+                // The tool is probably right but a required free-text slot (a goal's wording, say)
+                // could not be scraped out. Guessing it would store the wrong thing, so this goes
+                // to the LLM, which can ask about it properly.
+                Logger.Log($"IntentNet: {guess.Tool.Name} dropped, required argument missing.");
             }
 
             // ---- the model, only if the user opted in ----
-            var llm = ClaudeBrain.FromSettings();
+            var llm = GroqBrain.FromSettings();
             if (llm != null)
             {
                 try
@@ -119,6 +135,25 @@ namespace RLHub2.Assistant
                 ? "Nie rozumiem. Spróbuj: jaki mam winrate, jaka moja ranga, ostatni mecz, otwórz sesję."
                 : "I don't understand. Try: what's my win rate, what's my rank, last match, open session.";
         }
+
+        // The single place a chosen tool turns into an answer, so the confirmation guarantee is
+        // written once and holds for every path that can pick a tool.
+        private string Dispatch(AssistantTool tool, Dictionary<string, string> args)
+        {
+            if (tool.Kind == ToolKind.Write)
+            {
+                _pending = tool;
+                _pendingArgs = args;
+                return tool.Preview?.Invoke(args) ?? (Pl ? "Potwierdzasz?" : "Confirm?");
+            }
+            return Safely(() => tool.Run(args));
+        }
+
+        // Parameters with an allowed set are always filled by Sanitize, so this only ever catches
+        // the free-text ones — the goal wording that has to come out of the sentence itself.
+        private static bool HasEveryRequiredArg(AssistantTool tool, Dictionary<string, string> args) =>
+            tool.Params.All(p => !p.Required
+                || (args.TryGetValue(p.Name, out var v) && !string.IsNullOrWhiteSpace(v)));
 
         // Tool handlers touch the disk, so one unreadable file shouldn't surface as a crash.
         private static string Safely(Func<string> run)

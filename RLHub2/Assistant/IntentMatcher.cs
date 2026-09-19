@@ -33,25 +33,10 @@ namespace RLHub2.Assistant
             public Func<string, string, Dictionary<string, string>>? Args;
         }
 
-        public static string Normalize(string s)
-        {
-            if (string.IsNullOrEmpty(s)) return "";
-            var sb = new StringBuilder(s.Length);
-            foreach (var ch in s.ToLowerInvariant())
-            {
-                sb.Append(ch switch
-                {
-                    'ą' => 'a', 'ć' => 'c', 'ę' => 'e', 'ł' => 'l', 'ń' => 'n',
-                    'ó' => 'o', 'ś' => 's', 'ż' => 'z', 'ź' => 'z',
-                    _ => ch,
-                });
-            }
-            // Collapse punctuation to spaces so "winrate?" and "winrate" match the same way.
-            var cleaned = new StringBuilder(sb.Length);
-            foreach (var ch in sb.ToString())
-                cleaned.Append(char.IsLetterOrDigit(ch) ? ch : ' ');
-            return string.Join(" ", cleaned.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        }
+        // Lives in TextFeatures so the rules and the trained model are guaranteed to see a
+        // sentence the same way — a normaliser that drifted between them would mean the model was
+        // trained on text the matcher never produces.
+        public static string Normalize(string s) => Ml.TextFeatures.Normalize(s);
 
         // "tak"/"yes" and friends, used to settle a pending write.
         public static bool IsYes(string s)
@@ -134,28 +119,6 @@ namespace RLHub2.Assistant
                     ["text"] = Tail(orig, "odhacz", "ukończyłem", "ukonczylem", "zrobione", "complete goal", "mark goal"),
                 },
             },
-            new Rule
-            {
-                Tool = "log_ow_match",
-                Groups = new[]
-                {
-                    new[] { "zapisz", "dopisz", "dodaj", "log", "add" },
-                    new[] { "wygrana", "wygrane", "przegrana", "przegrane", "remis", "win", "loss", "lost", "draw" },
-                },
-                Args = (n, _) =>
-                {
-                    var result = n.Contains("remis") || n.Contains("draw") ? "d"
-                        : n.Contains("przegran") || n.Contains("loss") || n.Contains("lost") ? "l"
-                        : "w";
-                    var role =
-                        n.Contains("tank") || n.Contains("czolg") ? "tank"
-                        : n.Contains("damage") || n.Contains("dps") || n.Contains("dd") ? "damage"
-                        : n.Contains("support") || n.Contains("sup") || n.Contains("wsparcie") ? "support"
-                        : "";
-                    return new() { ["result"] = result, ["role"] = role };
-                },
-            },
-
             // ---------- actions ----------
             new Rule
             {
@@ -168,12 +131,11 @@ namespace RLHub2.Assistant
                 Groups = new[]
                 {
                     new[] { "przelacz", "zmien", "switch", "wroc do", "go to" },
-                    new[] { "rocket", "rl", "cs2", "counter", "cs", "overwatch", "ow" },
+                    new[] { "rocket", "rl", "cs2", "counter", "cs" },
                 },
                 Args = (n, _) =>
                 {
-                    var game = n.Contains("overwatch") || n.Contains(" ow") ? "ow"
-                        : n.Contains("cs2") || n.Contains("counter") || n.Contains(" cs ") ? "cs2"
+                    var game = n.Contains("cs2") || n.Contains("counter") || n.Contains(" cs ") ? "cs2"
                         : "rl";
                     return new() { ["game"] = game };
                 },
@@ -195,9 +157,8 @@ namespace RLHub2.Assistant
                 },
                 Args = (n, _) =>
                 {
-                    // The session page is per-game: Overwatch keeps its own.
                     if (n.Contains("sesj") || n.Contains("session"))
-                        return new() { ["page"] = Games.Active == GameId.Overwatch ? "owsession" : "session" };
+                        return new() { ["page"] = "session" };
                     foreach (var word in n.Split(' '))
                         if (PageWords.TryGetValue(word, out var key))
                             return new() { ["page"] = key };
@@ -263,6 +224,18 @@ namespace RLHub2.Assistant
                 return new IntentHit { Tool = tool, Args = AssistantTools.Sanitize(tool, args) };
             }
             return null;
+        }
+
+        // Slot filling for a tool the trained classifier picked. The model decides *which* tool
+        // the sentence means; pulling "today" or "as support" back out of it is the same scraping
+        // the rules already do, so it is shared rather than reimplemented — and it stays the only
+        // place a parameter value can be produced, which keeps Sanitize the single gate both
+        // paths pass through.
+        public static Dictionary<string, string> ArgsFor(AssistantTool tool, string utterance)
+        {
+            var rule = Rules.Find(r => string.Equals(r.Tool, tool.Name, StringComparison.OrdinalIgnoreCase));
+            var args = rule?.Args?.Invoke(Normalize(utterance), utterance) ?? new Dictionary<string, string>();
+            return AssistantTools.Sanitize(tool, args);
         }
     }
 }

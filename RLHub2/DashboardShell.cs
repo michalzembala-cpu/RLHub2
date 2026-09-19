@@ -56,7 +56,7 @@ namespace RLHub2
             navButtons = new[]
             {
                 btnHome, btnMMR, btnRoad, btnCoach, btnSession, btnCs2, btnCs2Ai, btnCrosshair,
-                btnMaps, btnPractice, btnOw, btnOwSession, btnProfile, btnRecords, btnNews, btnTournaments,
+                btnMaps, btnPractice, btnProfile, btnRecords, btnNews, btnTournaments,
                 btnSeasons, btnSettings
             };
 
@@ -83,8 +83,6 @@ namespace RLHub2
             btnCrosshair.Click += (s, e) => NavigateKey("cs2xhair");
             btnMaps.Click += (s, e) => NavigateKey("cs2maps");
             btnPractice.Click += (s, e) => NavigateKey("cs2prac");
-            btnOw.Click += (s, e) => NavigateKey("ow");
-            btnOwSession.Click += (s, e) => NavigateKey("owsession");
             btnRecords.Click += (s, e) => NavigateKey("records");
             btnNews.Click += (s, e) => NavigateKey("news");
             btnProfile.Click += (s, e) => NavigateKey("profile");
@@ -293,8 +291,6 @@ namespace RLHub2
                 case "cs2xhair": Navigate("cs2xhair", btnCrosshair, () => new Cs2CrosshairPage()); break;
                 case "cs2maps": Navigate("cs2maps", btnMaps, () => new Cs2MapsPage()); break;
                 case "cs2prac": Navigate("cs2prac", btnPractice, () => new Cs2PracticePage()); break;
-                case "ow": Navigate("ow", btnOw, () => new OwPage()); break;
-                case "owsession": Navigate("owsession", btnOwSession, () => new OwSessionPage()); break;
                 case "records": Navigate("records", btnRecords, () => new RecordsPage()); break;
                 case "news": Navigate("news", btnNews, () => new NewsPage()); break;
                 case "profile": Navigate("profile", btnProfile, () => new ProfilePage()); break;
@@ -337,7 +333,6 @@ namespace RLHub2
             var game = Games.Active;
             bool rl = game == GameId.RocketLeague;
             bool cs2 = game == GameId.Cs2;
-            bool ow = game == GameId.Overwatch;
 
             btnHome.Visible = rl;
             btnMMR.Visible = rl;
@@ -360,9 +355,6 @@ namespace RLHub2
             btnMaps.Visible = cs2;
             btnPractice.Visible = cs2;
 
-            btnOw.Visible = ow;
-            btnOwSession.Visible = ow;
-
             // One wordmark for the whole app now that it spans both games; which game you're in
             // is already clear from the picker and the page content.
             lblLogo.Text = "NexPlay";
@@ -374,7 +366,6 @@ namespace RLHub2
         {
             if (key == "settings") return true;
             if (key.StartsWith("cs2")) return Games.Active == GameId.Cs2;
-            if (key.StartsWith("ow")) return Games.Active == GameId.Overwatch;
             return Games.Active == GameId.RocketLeague;   // all remaining keys are Rocket League's
         }
 
@@ -422,8 +413,6 @@ namespace RLHub2
             btnCrosshair.Text = Localization.IsPolish ? "Celowniki" : "Crosshairs";
             btnMaps.Text = Localization.IsPolish ? "Mapy" : "Maps";
             btnPractice.Text = Localization.IsPolish ? "Trening" : "Practice";
-            btnOw.Text = "Dashboard";
-            btnOwSession.Text = Localization.IsPolish ? "Sesja" : "Session";
             btnRecords.Text = Localization.T("nav_records");
             btnNews.Text = Localization.T("nav_news");
             btnProfile.Text = Localization.T("nav_profile");

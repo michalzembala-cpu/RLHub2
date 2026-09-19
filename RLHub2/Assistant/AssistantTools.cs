@@ -40,13 +40,13 @@ namespace RLHub2.Assistant
         // ===================== data helpers =====================
 
         // "session" means the current sitting. RL and CS2 clear their session stores between
-        // sittings so the whole file is the session; Overwatch keeps a start timestamp instead.
+        // sittings, so the whole file is the session.
         private static DateTime Since(string period, GameId g) => period switch
         {
             "today" => DateTime.Today,
             "week" => DateTime.Today.AddDays(-7),
             "all" => DateTime.MinValue,
-            _ => g == GameId.Overwatch ? new OwSessionStore().Load().SessionStart : DateTime.MinValue,
+            _ => DateTime.MinValue,
         };
 
         private static (int Won, int Lost, int Total) Record(GameId g, string period)
@@ -58,11 +58,6 @@ namespace RLHub2.Assistant
                 {
                     var ms = new Cs2SessionStore().Load().Where(m => m.Time >= since).ToList();
                     return (ms.Count(m => m.Won), ms.Count(m => !m.Won && !m.Draw), ms.Count);
-                }
-                case GameId.Overwatch:
-                {
-                    var ms = new OwSessionStore().Load().Matches.Where(m => m.Time >= since).ToList();
-                    return (ms.Count(m => m.Won), ms.Count(m => m.Lost), ms.Count);
                 }
                 default:
                 {
@@ -83,9 +78,6 @@ namespace RLHub2.Assistant
             {
                 case GameId.Cs2:
                     return new Cs2SessionStore().Load().Where(m => !m.Draw)
-                        .OrderByDescending(m => m.Time).Select(m => m.Won).ToList();
-                case GameId.Overwatch:
-                    return new OwSessionStore().Load().Matches.Where(m => !m.Draw)
                         .OrderByDescending(m => m.Time).Select(m => m.Won).ToList();
                 default:
                 {
@@ -215,18 +207,6 @@ namespace RLHub2.Assistant
                                 ? $"Twój rating Premier to {latest.Value}."
                                 : $"Your Premier rating is {latest.Value}.") + move;
                         }
-                        case GameId.Overwatch:
-                        {
-                            var snap = new OwRankStore().Latest();
-                            if (snap == null || !snap.Any) return Pl
-                                ? "Nie mam jeszcze zapisanej rangi Overwatcha."
-                                : "I have no Overwatch rank logged yet.";
-                            var parts = new List<string>();
-                            if (snap.Tank.Length > 0) parts.Add("tank " + snap.Tank);
-                            if (snap.Damage.Length > 0) parts.Add("damage " + snap.Damage);
-                            if (snap.Support.Length > 0) parts.Add("support " + snap.Support);
-                            return (Pl ? "Twoje rangi: " : "Your ranks: ") + string.Join(", ", parts) + ".";
-                        }
                         default:
                         {
                             var mmr = new MmrStore().LoadForActive()
@@ -262,19 +242,6 @@ namespace RLHub2.Assistant
                             return Pl
                                 ? $"Ostatni mecz na {m.Map}: {res}, {m.RoundsWon} do {m.RoundsLost}. {m.Kills} zabójstw, {m.Deaths} śmierci, {m.Assists} asyst."
                                 : $"Last match on {m.Map}: {res}, {m.RoundsWon} to {m.RoundsLost}. {m.Kills} kills, {m.Deaths} deaths, {m.Assists} assists.";
-                        }
-                        case GameId.Overwatch:
-                        {
-                            var m = new OwSessionStore().Load().Matches.OrderByDescending(x => x.Time).FirstOrDefault();
-                            if (m == null) return NoData(GameId.Overwatch);
-                            var res = m.Draw
-                                ? (Pl ? "remis" : "a draw")
-                                : m.Won ? (Pl ? "wygrana" : "a win") : (Pl ? "przegrana" : "a loss");
-                            var role = m.Role.Length > 0 ? (Pl ? $" jako {m.Role}" : $" as {m.Role}") : "";
-                            if (!m.HasStats) return Pl ? $"Ostatni mecz: {res}{role}." : $"Last match: {res}{role}.";
-                            return Pl
-                                ? $"Ostatni mecz: {res}{role}. {m.Eliminations} eliminacji, {m.Deaths} śmierci, {m.Assists} asyst."
-                                : $"Last match: {res}{role}. {m.Eliminations} eliminations, {m.Deaths} deaths, {m.Assists} assists.";
                         }
                         default:
                         {
@@ -337,7 +304,7 @@ namespace RLHub2.Assistant
                         {
                             "home", "mmr", "road", "coach", "session", "records", "news", "profile",
                             "tournaments", "seasons", "settings", "cs2", "cs2ai", "cs2xhair",
-                            "cs2maps", "cs2prac", "ow", "owsession",
+                            "cs2maps", "cs2prac",
                         },
                     },
                 },
@@ -359,14 +326,6 @@ namespace RLHub2.Assistant
                 Description = "Show or hide the always-on-top overlay for the game currently open.",
                 Run = _ =>
                 {
-                    // Overwatch has its own overlay window; the other two share the original one.
-                    if (Games.Active == GameId.Overwatch)
-                    {
-                        OwOverlayWindow.Toggle();
-                        return OwOverlayWindow.IsOpen
-                            ? (Pl ? "Overlay włączony." : "Overlay on.")
-                            : (Pl ? "Overlay wyłączony." : "Overlay off.");
-                    }
                     OverlayWindow.Toggle();
                     return OverlayWindow.IsOpen
                         ? (Pl ? "Overlay włączony." : "Overlay on.")
@@ -384,9 +343,9 @@ namespace RLHub2.Assistant
                     new ToolParam
                     {
                         Name = "game",
-                        Description = "rl, cs2 or ow",
+                        Description = "rl or cs2",
                         Required = true,
-                        Allowed = new[] { "rl", "cs2", "ow" },
+                        Allowed = new[] { "rl", "cs2" },
                     },
                 },
                 Run = a =>
@@ -395,7 +354,6 @@ namespace RLHub2.Assistant
                     GameId? id = key switch
                     {
                         "cs2" => GameId.Cs2,
-                        "ow" => GameId.Overwatch,
                         "rl" => GameId.RocketLeague,
                         _ => null,
                     };
@@ -407,49 +365,6 @@ namespace RLHub2.Assistant
             },
 
             // ---------- writes (always confirmed out loud first) ----------
-            new AssistantTool
-            {
-                Name = "log_ow_match",
-                Kind = ToolKind.Write,
-                Description = "Add an Overwatch match result to the current session.",
-                Params =
-                {
-                    new ToolParam
-                    {
-                        Name = "result",
-                        Description = "w for win, l for loss, d for draw",
-                        Required = true,
-                        Allowed = new[] { "w", "l", "d" },
-                    },
-                    new ToolParam
-                    {
-                        Name = "role",
-                        Description = "tank, damage or support; empty when the user didn't say",
-                        Allowed = new[] { "tank", "damage", "support", "" },
-                    },
-                },
-                Preview = a =>
-                {
-                    var res = a.TryGetValue("result", out var r) ? r : "";
-                    var role = a.TryGetValue("role", out var ro) ? ro : "";
-                    var word = Pl
-                        ? res switch { "w" => "wygraną", "l" => "przegraną", _ => "remis" }
-                        : res switch { "w" => "a win", "l" => "a loss", _ => "a draw" };
-                    var asRole = role.Length > 0 ? (Pl ? $" jako {role}" : $" as {role}") : "";
-                    return Pl ? $"Dopisać {word}{asRole} do sesji?" : $"Log {word}{asRole} to the session?";
-                },
-                Run = a =>
-                {
-                    var res = a.TryGetValue("result", out var r) ? r.ToUpperInvariant() : "";
-                    if (res != "W" && res != "L" && res != "D")
-                        return Pl ? "Nie zrozumiałem wyniku." : "I didn't catch the result.";
-                    var role = a.TryGetValue("role", out var ro) ? ro : "";
-                    new OwSessionStore().Append(new OwMatch { Time = DateTime.Now, Result = res, Role = role });
-                    AssistantBridge.Refresh();
-                    return Pl ? "Zapisane." : "Logged.";
-                },
-            },
-
             new AssistantTool
             {
                 Name = "add_goal",
@@ -522,7 +437,6 @@ namespace RLHub2.Assistant
                     switch (Games.Active)
                     {
                         case GameId.Cs2: new Cs2SessionStore().Clear(); break;
-                        case GameId.Overwatch: new OwSessionStore().NewSession(); break;
                         default: new SessionStore().Clear(); break;
                     }
                     AssistantBridge.Refresh();

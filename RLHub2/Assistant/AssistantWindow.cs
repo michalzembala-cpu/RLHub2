@@ -57,6 +57,11 @@ namespace RLHub2.Assistant
 
         public AssistantWindow()
         {
+            // Trains or loads the intent model off the UI thread while the window is being built,
+            // so the first spoken command doesn't wait on it. Doing nothing is a valid outcome:
+            // the assistant falls back to the rules and the LLM if it isn't ready in time.
+            Ml.IntentNet.WarmUp();
+
             Text = Pl ? "Asystent NexPlay" : "NexPlay Assistant";
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
             StartPosition = FormStartPosition.Manual;
