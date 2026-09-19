@@ -279,14 +279,50 @@ namespace RLHub2.Services
         private static IEnumerable<string> Training(string weakCat, bool pl)
         {
             string c = weakCat.ToUpperInvariant();
-            var list = new List<string>();
-            if (c.Contains("OBRON") || c.Contains("DEF")) { list.Add("Shadow Defense"); list.Add(pl ? "Backboard Clears (obrona zza bramki)" : "Backboard Clears"); }
-            else if (c.Contains("BOOST")) { list.Add(pl ? "Trasy zbierania małych padów" : "Small-pad boost routes"); list.Add(pl ? "Gra z 30-50 boosta" : "Playing with 30-50 boost"); }
-            else if (c.Contains("POZYC") || c.Contains("POSITION")) { list.Add(pl ? "Trening rotacji 1-2-3" : "Rotation training 1-2-3"); list.Add(pl ? "Kick-off + retreat" : "Kick-off + retreat"); }
-            else if (c.Contains("STRZA") || c.Contains("SHOOT")) { list.Add(pl ? "Striker (celność strzałów)" : "Striker (shot accuracy)"); list.Add(pl ? "Power Shots" : "Power Shots"); }
-            else { list.Add(pl ? "Striker / kreowanie okazji" : "Striker / creating chances"); list.Add(pl ? "Passing plays" : "Passing plays"); }
-            list.Add("Fast Aerial (5 min)");
-            list.Add(pl ? "Czas: ~20-25 min" : "Time: ~20-25 min");
+
+            // Pula ćwiczeń dopasowanych do najsłabszej kategorii. "Trening dnia" bierze z niej
+            // inny zestaw każdego dnia, więc plan się rotuje zamiast pokazywać wciąż to samo —
+            // przy tym zawsze celuje w Twoją realną słabość, a nie losuje na oślep.
+            string[] pool =
+                c.Contains("OBRON") || c.Contains("DEF") ? (pl
+                    ? new[] { "Shadow Defense", "Backboard Clears (obrona zza bramki)", "Obrona 1v1 (retreat + shadow)",
+                              "Blokowanie strzałów pod bramką", "Redirecty i cięcie dośrodkowań", "Powerslide clears z rogu" }
+                    : new[] { "Shadow Defense", "Backboard Clears", "1v1 defending (retreat + shadow)",
+                              "Net-front shot blocking", "Redirects / cutting crosses", "Powerslide corner clears" })
+              : c.Contains("BOOST") ? (pl
+                    ? new[] { "Trasy zbierania małych padów", "Gra z 30-50 boosta", "Sesja bez big padów (boost starvation)",
+                              "Rotacja przez pady na swojej połowie", "Zero-boost recovery (powerslide + pady)", "Kontrola boosta na kick-offie" }
+                    : new[] { "Small-pad boost routes", "Playing with 30-50 boost", "Boost starvation (no big pads)",
+                              "Rotating through your mid pads", "Zero-boost recovery", "Kick-off boost control" })
+              : c.Contains("POZYC") || c.Contains("POSITION") ? (pl
+                    ? new[] { "Trening rotacji 1-2-3", "Kick-off + retreat", "Trzymanie tyłu (last man)",
+                              "Freeplay: zawsze za piłką", "Powerslide recovery do pozycji", "Spacing na rotacji (trójkąt)" }
+                    : new[] { "Rotation training 1-2-3", "Kick-off + retreat", "Holding back as last man",
+                              "Freeplay: stay behind the ball", "Powerslide recovery to position", "Rotation spacing (triangle)" })
+              : c.Contains("STRZA") || c.Contains("SHOOT") ? (pl
+                    ? new[] { "Striker (celność strzałów)", "Power Shots", "Backboard double-taps",
+                              "Redirects (custom pack)", "Wykańczanie z bliska", "Strzały z powietrza (aerial shots)" }
+                    : new[] { "Striker (shot accuracy)", "Power Shots", "Backboard double-taps",
+                              "Redirects (custom pack)", "Close-range finishing", "Aerial shots" })
+              : (pl
+                    ? new[] { "Striker / kreowanie okazji", "Passing plays", "Podstawy air dribble",
+                              "Dribbling + flick (45°/Musty)", "Gra ze ściany w powietrze", "Ofensywne aeriale" }
+                    : new[] { "Striker / creating chances", "Passing plays", "Air dribble basics",
+                              "Dribbling + flick (45°/Musty)", "Wall-to-air plays", "Attacking aerials" });
+
+            // Mechanika dnia — nazwy identyczne w obu językach.
+            string[] mechanics = { "Fast Aerial", "Half-flip", "Wave dash", "Speed-flip (kick-off)", "Powerslide recovery", "Directional air roll" };
+
+            // Ziarno = dzień roku: zestaw jest stały w ciągu dnia, a zmienia się nazajutrz.
+            int day = DateTime.Now.DayOfYear;
+
+            var list = new List<string>
+            {
+                pool[day % pool.Length],
+                pool[(day + 1) % pool.Length],
+                (pl ? "Mechanika: " : "Mechanic: ") + mechanics[day % mechanics.Length] + " (5 min)",
+                pl ? "Czas: ~20-25 min" : "Time: ~20-25 min",
+            };
             return list;
         }
 
