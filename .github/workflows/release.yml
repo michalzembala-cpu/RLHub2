@@ -1,0 +1,99 @@
+# Automatyczne wydania NexPlay.
+#
+# Zasada: wersja zyje w jednym miejscu — <Version> w RLHub2/RLHub2.csproj. Kiedy ja podbijesz
+# i wypchniesz na main, ten workflow sam publikuje (self-contained) aplikacje, buduje instalator
+# Inno Setup (dokladnie tym samym build-installer.ps1 co lokalnie) i tworzy Release na GitHubie
+# z tagiem vX.Y.Z oraz assetem NexPlay-Setup-X.Y.Z.exe.
+#
+# Updater w aplikacji sam znajdzie ten Release (patrzy na releases/latest, czyta tag i sciaga
+# asset "NexPlay-Setup-*.exe"), wiec u uzytkownikow aktualizacja pojawia sie automatycznie.
+#
+# Jesli Release z danym tagiem juz istnieje, workflow po prostu konczy sie bez zmian — nie ma
+# ryzyka nadpisania wydania, a zwykle commity (bez podbicia wersji) nic nie publikuja.
+#
+# gh CLI uzyte ponizej jest preinstalowane i uwierzytelnione na runnerze GitHub Actions
+# (przez GITHUB_TOKEN) — to nie jest to samo co lokalny brak gh na Twoim komputerze.
+
+name: Release NexPlay
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'RLHub2/RLHub2.csproj'      # wersja mieszka tutaj — podbicie zawsze rusza ten plik
+      - 'installer/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch: {}             # pozwala tez odpalic recznie z zakladki Actions
+
+permissions:
+  contents: write                   # potrzebne, zeby utworzyc Release i tag
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Odczytaj wersje z csproj
+        id: ver
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content RLHub2/RLHub2.csproj)).Project.PropertyGroup.Version |
+               Where-Object { $_ } | Select-Object -First 1
+          if (-not $v) { throw "Nie znaleziono <Version> w RLHub2/RLHub2.csproj" }
+          "version=$v"  >> $env:GITHUB_OUTPUT
+          "tag=v$v"     >> $env:GITHUB_OUTPUT
+          Write-Host "Wersja: $v (tag v$v)"
+
+      - name: Sprawdz, czy Release juz istnieje
+        id: check
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ steps.ver.outputs.tag }}"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag juz istnieje — pomijam budowanie."
+            "skip=true" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "Release $tag nie istnieje — buduje i publikuje."
+            "skip=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Setup .NET 8
+        if: steps.check.outputs.skip == 'false'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Zainstaluj Inno Setup
+        if: steps.check.outputs.skip == 'false'
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Zbuduj instalator (build-installer.ps1)
+        if: steps.check.outputs.skip == 'false'
+        shell: pwsh
+        run: .\installer\build-installer.ps1
+
+      - name: Opublikuj Release z instalatorem
+        if: steps.check.outputs.skip == 'false'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ver   = "${{ steps.ver.outputs.version }}"
+          $tag   = "${{ steps.ver.outputs.tag }}"
+          $setup = "installer\Output\NexPlay-Setup-$ver.exe"
+          if (-not (Test-Path $setup)) { throw "Brak zbudowanego instalatora: $setup" }
+          gh release create $tag $setup `
+            --title "NexPlay $ver" `
+            --generate-notes `
+            --target $env:GITHUB_SHA
+          Write-Host "Opublikowano Release $tag z assetem $setup"
